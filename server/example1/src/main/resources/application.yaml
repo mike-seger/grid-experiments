@@ -1,0 +1,6 @@
+
+logging.level:
+  reactor.netty: trace
+  org.springframework: trace
+  org.springframework.http.server.reactive: trace
+  org.springframework.web.reactive: trace
