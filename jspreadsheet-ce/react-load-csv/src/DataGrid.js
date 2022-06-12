@@ -2,10 +2,9 @@ import React, { useRef, useEffect } from "react";
 import jspreadsheet from "jspreadsheet-ce";
 
 import "../node_modules/jspreadsheet-ce/dist/jspreadsheet.css";
-//import "../node_modules/jspreadsheet-ce/dist/jexcel.css";
-import "./styles.css";
+import "./DataGrid.css";
 
-export default function App() {
+export default function DataGrid() {
   const jRef = useRef(null);
   const options = {
     csv:'http://localhost:8080/resource/data.csv',

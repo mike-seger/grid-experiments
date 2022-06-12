@@ -1,12 +1,12 @@
 import { StrictMode } from "react";
 import ReactDOM from "react-dom";
 
-import App from "./App";
+import DataGrid from "./DataGrid";
 
-const rootElement = document.getElementById("root");
+const dataGrid = document.getElementById("dataGrid1");
 ReactDOM.render(
   <StrictMode>
-    <App />
+    <DataGrid />
   </StrictMode>,
-  rootElement
+  dataGrid
 );
