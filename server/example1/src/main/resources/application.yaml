@@ -1,6 +1,7 @@
 
 logging.level:
   reactor.netty: trace
+  reactor.netty.channel.ChannelOperations: info
   org.springframework: trace
   org.springframework.http.server.reactive: trace
   org.springframework.web.reactive: trace

@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <base href='https://bossanova.uk//templates/default/'>
+    <title>Grouping multiple spreadsheets in tabs</title>
+    <!-- <meta itemprop='title' property='og:title' name='title' content='Grouping multiple spreadsheets in tabs'>
+    <meta itemprop='author' property='og:author' name='author' content='Spreadsheet'>
+    <meta itemprop='keywords' property='og:keywords' name='keywords'
+        content='Jexcel, javascript, multiple spreadsheets, tabs'>
+    <meta itemprop='description' property='og:description' name='description'
+        content='Grouping multiple spreasheets in tabs.'> -->
+
+    <!-- <meta name='viewport' id="viewport" content='width=device-width,initial-scale=1,user-scalable=no' />
+    <meta name='format-detection' content="telephone=no" /> -->
+    <meta http-equiv="Content-Type" content="text/html;charset=utf-8">
+
+    <!-- <meta itemprop="name" content="Jspreadsheet CE">
+    <meta itemprop="image" content="https://bossanova.uk/jspreadsheet/logo.png">
+    <meta itemprop="url" content="https://bossanova.uk/jspreadsheet"> -->
+
+
+    <!-- <meta name="google-site-verification" content="fNDemv4nALjUDIqXc7xPfHDEV24wtpD9xsEKLkTIYSk" /> -->
+
+    <!-- <link rel="icon" href="https://bossanova.uk/jspreadsheet/favicon.ico" type="image/x-icon"> -->
+
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans|Roboto|Material+Icons" />
+    <!-- <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Oswald:wght@400&display=swap"> -->
+
+    <!-- <script type="text/javascript"
+        src="https://cdn.rawgit.com/google/code-prettify/master/loader/run_prettify.js"></script> -->
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/jsuites/dist/jsuites.min.css" type="text/css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/jsuites/dist/jsuites.layout.min.css" type="text/css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/jsuites/dist/jsuites.mobile.min.css" type="text/css" />
+<!-- 
+    <link rel="stylesheet" href="css/code.css" type="text/css" />
+    <link rel="stylesheet" href="css/style.css" type="text/css" /> -->
+
+</head>
+
+<body>
+
+    <div id='required'>
+        <link rel="stylesheet" href="https://bossanova.uk/jspreadsheet/v4/jexcel.css" type="text/css" />
+        <script type="text/javascript" src="/jspreadsheet/v4/jexcel.js"></script>
+    </div>
+
+    <div>
+
+
+        <section>
+            <div class='row container' style='flex-wrap:nowrap;'>
+
+                <div id='menu' class='column f1 big-screen-only jmenu' style='min-width: 260px; max-width: 260px;'>
+                    <div class="section">
+                    </div>
+                </div>
+                <div class='column f3'>
+                    <div id='featured'></div>
+                    <div id='content'>
+                        <div class="section">
+                            <div class="section-content">
+
+                                <div id="spreadsheet"></div>
+
+                                <br>
+
+                                <input type="button" value="Add new tab" onclick="add()" class="jbutton dark">
+                                <input type="button" value="Download selected tab" onclick="download()"
+                                    class="jbutton dark">
+
+
+                                <script>
+                                    /**
+                                     * Add new worksheet
+                                     */
+                                    var add = function () {
+                                        var sheets = [];
+
+                                        sheets.push({
+                                            sheetName: prompt('Create a new tab', 'New tab ' + document.getElementById('spreadsheet').jexcel.length),
+                                            minDimensions: [10, 10]
+                                        });
+
+                                        jspreadsheet.tabs(document.getElementById('spreadsheet'), sheets);
+                                    }
+
+                                    /**
+                                     * Download current worksheet
+                                     */
+                                    var download = function () {
+                                        // Get selected tab
+                                        var worksheet = document.getElementById('spreadsheet').children[0].querySelector('.selected').getAttribute('data-spreadsheet');
+                                        // Download
+                                        document.getElementById('spreadsheet').jexcel[worksheet].download();
+                                    }
+
+                                    document.addEventListener('DOMContentLoaded', function () {
+                                        var sheets = [
+                                            {
+                                                sheetName: 'Countries',
+                                                minDimensions: [10, 10]
+                                            },
+                                            {
+                                                sheetName: 'Cities',
+                                                minDimensions: [10, 10]
+                                            }
+                                        ];
+
+                                        jspreadsheet.tabs(document.getElementById('spreadsheet'), sheets);
+                                    });
+                                </script>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/lemonadejs@1.7.0/dist/lemonade.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/jsuites/dist/jsuites.min.js"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/jsuites/dist/jsuites.layout.min.js"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/jsuites/dist/jsuites.mobile.min.js"></script>
+
+
+</body>
+
+</html>

@@ -2,6 +2,8 @@ import React, { useRef, useEffect } from "react";
 import jspreadsheet from "jspreadsheet-ce";
 
 import "../node_modules/jspreadsheet-ce/dist/jspreadsheet.css";
+//import "../node_modules/jspreadsheet-ce/dist/jexcel.css";
+import "./styles.css";
 
 export default function App() {
   const jRef = useRef(null);

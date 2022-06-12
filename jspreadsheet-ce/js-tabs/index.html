@@ -1,0 +1,55 @@
+<html>
+<script src="https://bossanova.uk/jspreadsheet/v4/jexcel.js"></script>
+<script src="https://jsuites.net/v4/jsuites.js"></script>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans|Roboto|Material+Icons" />
+
+<link rel="stylesheet" href="https://jsuites.net/v4/jsuites.css" type="text/css" />
+<link rel="stylesheet" href="https://bossanova.uk/jspreadsheet/v4/jexcel.css" type="text/css" />
+ 
+<div id="spreadsheet"></div>
+ 
+<input type="button" value="Add new tab" onclick="add()" style="width:150px;">
+<input type="button" value="Download selected tab" onclick="download()" style="width:150px;">
+ 
+<script>
+/**
+ * Add new worksheet
+ */
+var add = function() {
+    var sheets = [];
+ 
+    sheets.push({
+        sheetName: prompt('Create a new tab', 'New tab ' + document.getElementById('spreadsheet').jexcel.length),
+        minDimensions:[10,10]
+    });
+ 
+    jspreadsheet.tabs(document.getElementById('spreadsheet'), sheets);
+}
+ 
+/**
+ * Download current worksheet
+ */
+var download = function() {
+    // Get selected tab
+    var worksheet = document.getElementById('spreadsheet').children[0].querySelector('.selected').getAttribute('data-spreadsheet');
+    // Download
+    document.getElementById('spreadsheet').jexcel[worksheet].download();
+}
+ 
+/**
+ * Create worksheet container with two jexcel instances
+ */
+var sheets = [
+    {
+        sheetName: 'Countries',
+        minDimensions:[10,10]
+    },
+    {
+        sheetName: 'Cities',
+        minDimensions:[10,10]
+    }
+];
+ 
+jspreadsheet.tabs(document.getElementById('spreadsheet'), sheets);
+</script>
+</html>

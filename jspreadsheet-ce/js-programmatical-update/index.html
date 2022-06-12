@@ -1,0 +1,78 @@
+<html>
+<!-- <script src="https://jspreadsheet.com/v8/jspreadsheet.js"></script> -->
+<script src="https://bossanova.uk/jspreadsheet/v4/jexcel.js"></script>
+<script src="https://jsuites.net/v4/jsuites.js"></script>
+<link rel="stylesheet" href="https://bossanova.uk/jspreadsheet/v4/jexcel.css" type="text/css" />
+<link rel="stylesheet" href="https://jsuites.net/v4/jsuites.css" type="text/css" />
+<!-- <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans|Roboto|Material+Icons" /> -->
+ 
+<div id="spreadsheet1"></div>
+ 
+<script>
+var data1 = [
+    [ 'Cheese', 10, 1.10, '=B1*C1'],
+    [ 'Apples', 30, 0.40, '=B2*C2'],
+    [ 'Carrots', 15, 0.45, '=B3*C3'],
+    [ 'Oranges', 20, 0.49, '=B4*C4'],
+];
+ 
+jspreadsheet.setLicense('YWYwOWM1NjYzNzRiNWYzOWU5N2RmOTkzMzdhOGI4MWM4ZGZlZDk4ZmQwNWM4ZmE1ZmZjZWE0MTk1YWY4ZTQxNzhlZGYwNTdjNTg1OTRmZTY1YTMzY2M0M2IwNWM2MGRmMmMzNTkwMWZmMjFiZTBkMjA5MDVlY2RhNDVhYWY0ZmIsZXlKdVlXMWxJam9pU25Od2NtVmhaSE5vWldWMElpd2laR0YwWlNJNk1UWTRNelF4TkRBd01Dd2laRzl0WVdsdUlqcGJJbXB6YUdWc2JDNXVaWFFpTENKcWMzQnlaV0ZrYzJobFpYUXVZMjl0SWl3aVkzTmlMbUZ3Y0NJc0luVmxMbU52YlM1aWNpSXNJblZ1YVhSbFpDNWxaSFZqWVhScGIyNGlMQ0p6WVc5eWIyTnJMbU52YlNJc0luVmxMbU52YlM1aWNpSXNJblZ1YVhSbFpDNWxaSFZqWVhScGIyNGlMQ0pzYjJOaGJHaHZjM1FpWFN3aWNHeGhiaUk2SWpNaUxDSnpZMjl3WlNJNld5SjJOeUlzSW5ZNElpd2lkamtpTENKd1lYSnpaWElpTENKemFHVmxkSE1pTENKbWIzSnRjeUlzSW5KbGJtUmxjaUlzSW1admNtMTFiR0VpTENKamFHRnlkSE1pTENKcGJYQnZjblJsY2lJc0luWmhiR2xrWVhScGIyNXpJaXdpWm05eWJYTWlMQ0ptYjNKdGRXeGhJaXdpY21WdVpHVnlJaXdpY0dGeWMyVnlJaXdpYVcxd2IzSjBaWElpWFgwPQ==');
+
+var table1 = jspreadsheet(document.getElementById('spreadsheet1'), {
+    data:data1,
+    columns: [
+        {
+            title: 'Product',
+            type: 'autocomplete',
+            source:[ 'Apples','Bananas','Carrots','Oranges','Cheese','Pears' ],
+            width:'300px',
+        },
+        {
+            title: 'Quantity',
+            type: 'number',
+            width:'100px',
+        },
+        {
+            title: 'Price',
+            type: 'number',
+            width:'100px',
+        },
+        {
+            title: 'Total',
+            type: 'number',
+            width:'100px',
+        },
+    ],
+    rowResize: true,
+    columnDrag: true,
+});
+</script>
+ 
+<br>
+ 
+<!-- <style>
+    #spreadsheet1 tr:nth-child(even) {
+      background-color: #eee;
+    }
+
+    #spreadsheet1 td {
+      text-align: left !important;
+      font-family: sans-serif;
+      font-weight: 350;
+    }
+</style> -->
+
+<ol class='example'>
+    <li><a onclick="table1.insertColumn()">Insert a new blank column at the end of the table</a></li>
+    <li><a onclick="table1.insertColumn(5, 0, 1, null);">Insert five new blank columns at the beginning of the table</a></li>
+    <li><a onclick="table1.insertColumn([ '0.99', '1.22', '3.11', '2.21' ]);">Insert a new column with pre-populated values at the end of the table</a></li>
+    <li><a onclick="table1.insertRow()">Insert a new blank row at the end of the table</a></li>
+    <li><a onclick="table1.insertRow([ 'Pears', 10, 0.59, '=B2*C2' ], 1);">Insert a new pre-populated row just after the second row</a></li>
+    <li><a onclick="table1.insertRow(10);">Create ten rows at the end of the table</a></li>
+    <li><a onclick="table1.deleteRow(0, 1);">Delete the first row</a></li>
+    <li><a onclick="table1.deleteColumn();">Delete the last column</a></li>
+    <li><a onclick="table1.moveRow(3, 0);">Move the forth row to the first position</a></li>
+    <li><a onclick="table1.moveColumn(0, 2);">Move the first column to the third position</a></li>
+</ol>
+ 
+</html>

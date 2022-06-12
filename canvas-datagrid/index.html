@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <title>Create a new grid</title>
+  <link rel="stylesheet" type="text/css" href="/css/result-light.css">
+
+  <script type="text/javascript" src="https://canvas-datagrid.js.org/canvas-datagrid.js"></script>
+  <style>
+      #grid { height: 300px; } #grid canvas, #grid canvas-datagrid { --cdg-height: 300px; }
+  </style>
+</head>
+<body>
+  <div id="grid"></div>
+
+  <script type="text/javascript">
+    window.addEventListener('load', function () {
+      var parentNode = document.getElementById('grid');
+      // create a new grid
+      var grid = canvasDatagrid({
+          parentNode: parentNode,
+          data: [
+              {col1: 'foo', col2: 0, col3: 'a'},
+              {col1: 'bar', col2: 1, col3: 'b'},
+              {col1: 'baz', col2: 2, col3: 'c'}
+          ]
+      });
+  });
+  </script>
+
+</body>
+</html>

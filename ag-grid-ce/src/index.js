@@ -1,10 +1,12 @@
-import React, { useState } from 'react';
+// import React, { useState } from 'react';
 import { render } from 'react-dom';
-import { AgGridReact } from 'ag-grid-react';
+//import { AgGridReact } from 'ag-grid-react';
+import App from './App';
 
-import 'ag-grid-community/dist/styles/ag-grid.css';
-import 'ag-grid-community/dist/styles/ag-theme-alpine.css';
+// import 'ag-grid-community/dist/styles/ag-grid.css';
+// import 'ag-grid-community/dist/styles/ag-theme-alpine.css';
 
+/*
 const App = () => {
    const [rowData] = useState([
        {make: "Toyota", model: "Celica", price: 35000},
@@ -27,5 +29,6 @@ const App = () => {
        </div>
    );
 };
+*/
 
 render(<App />, document.getElementById('root'));

@@ -1,12 +1,17 @@
 plugins {
 	id 'org.springframework.boot' version '2.7.0'
 	id 'io.spring.dependency-management' version '1.0.11.RELEASE'
+	id "com.gorylenko.gradle-git-properties" version "2.3.2"
 	id 'java'
 }
 
-group = 'com.net128.app.jspreadsheet'
+group = 'com.net128.app.griddata'
 version = '0.0.1-SNAPSHOT'
 sourceCompatibility = '17'
+
+springBoot {
+    buildInfo()
+}
 
 repositories {
 	mavenCentral()
@@ -14,6 +19,7 @@ repositories {
 
 dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-webflux'
+	compileOnly "org.springframework.boot:spring-boot-devtools"
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 }
 
