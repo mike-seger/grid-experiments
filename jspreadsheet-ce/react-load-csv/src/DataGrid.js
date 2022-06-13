@@ -7,7 +7,8 @@ import "./DataGrid.css";
 export default function DataGrid() {
   const jRef = useRef(null);
   const options = {
-    csv:'http://localhost:8080/resource/data.csv',
+//    csv:'http://localhost:8080/resource/data.csv',
+    csv:'./data.csv',
     csvHeaders:true,
     tableOverflow:true,
     columns: [
