@@ -1,0 +1,76 @@
+<html>
+<!-- 
+<script src="https://bossanova.uk/jspreadsheet/v4/jexcel.js"></script>
+<link rel="stylesheet" href="https://bossanova.uk/jspreadsheet/v4/jexcel.css" type="text/css" /> 
+
+<link rel="stylesheet" href="https://jsuites.net/v4/jsuites.css" type="text/css" />
+-->
+<script src="https://jsuites.net/v4/jsuites.js"></script>
+<link rel="stylesheet" href="jexcel.css" type="text/css" />
+<script type="text/javascript" src="jexcel.js"></script>
+<style>
+    body, html {
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+    }
+    #spreadsheet1 {
+        width: 100%;
+    }
+
+    .dataGrid * {
+        font-family: sans-serif;
+        text-align: left !important; 
+    }
+</style>
+<link rel="stylesheet" href="grid.css">
+<style>
+    :root {
+        --jexcel_header_color: #263238;
+        --jexcel_header_color_highlighted: #000;
+        --jexcel_header_background: #aed2ff;
+        --jexcel_header_background_highlighted: #dcdcdc;
+        --jexcel_content_color: #000;
+        --jexcel_content_color_highlighted: #000;
+        --jexcel_content_background: #fff;
+        --jexcel_content_background_highlighted: #fafafa;
+        --jexcel_menu_background: #fff;
+        --jexcel_menu_background_highlighted: #ebebeb;
+        --jexcel_menu_color: #555;
+        --jexcel_menu_color_highlighted: #555;
+        --jexcel_menu_box_shadow: 2px 2px 2px 0px rgba(143, 144, 145, 1);
+        --jexcel_border_color: #ccc;
+        --jexcel_border_color_highlighted: #000;
+        --active_color: #007aff;
+    }
+    </style>
+
+<div id="spreadsheet1" class="dataGrid"></div>
+ 
+<p><button id='download'>Export spreadsheet as CSV</button></p>
+ <!--
+    https://bossanova.uk/jspreadsheet/v4/docs/quick-reference
+    https://bossanova.uk/jspreadsheet/v4/cases/themes
+ -->
+<script>
+var theSpreadsheet = jspreadsheet(document.getElementById('spreadsheet1'), {
+    csv:'data.csv',
+    csvHeaders:true,
+    tableOverflow:true,
+    tableWidth:'100%',
+    tableHeight:'500px'
+    // ,
+    // columns: [
+    //     { type:'text', width:300 },
+    //     { type:'text', width:80 },
+    //     { type:'dropdown', width:120, source:['England','Wales','Northern Ireland','Scotland'] },
+    //     { type:'text', width:120 },
+    //     { type:'text', width:120 },
+    //  ]
+});
+ 
+document.getElementById('download').onclick = function () {
+    theSpreadsheet.download();
+}
+</script>
+</html>
