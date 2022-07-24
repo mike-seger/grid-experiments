@@ -3,11 +3,10 @@
 	
 	<link rel="stylesheet" href="https://jsuites.net/v4/jsuites.css" type="text/css" />
 	<link rel="stylesheet" href="https://bossanova.uk/jspreadsheet/v4/jexcel.css" type="text/css" /> 
-
-	<link rel="stylesheet" href="jexcel-custom.css" type="text/css" />
-
 	<script src="https://jsuites.net/v4/jsuites.js"></script>
 	<script src="https://bossanova.uk/jspreadsheet/v4/jexcel.js"></script>
+
+	<link rel="stylesheet" href="jexcel-custom.css" type="text/css" />
 
 	<style>
 		body, html {
@@ -23,35 +22,6 @@
 			display: flex;
 		}
 
-
-		/* .dataSelector {
-			margin: 6px 0 10px 0;
-			vertical-align: top;
-		}
-
-		.controlbar {
-			vertical-align: middle;
-			padding: 8px 15px 8px 5px;
-		}
-
-		.controlbar * {
-			margin: 0 15px 0 0;
-			height: 26px;
-		}
-
-		#ds-selector {
-			margin-top: 2px;
-			height: 25px
-		}
-
-		.controlbar .control-label {
-			margin-top: -8px;
-			padding-top: 12px;
-			height: 15px;
-			display: inline-block;
-		}
- */
-
 		.content {
 			flex-grow: 1;
 		}
@@ -60,22 +30,8 @@
 <body>
 	<div id="container">
 		<div id="toolbar"></div> 
-		<div class="content dataGrid" id="spreadsheet1"></div>
+		<div class="content" id="spreadsheet1"></div>
 	</div>
-
-	<!-- <div id="container">
-		<div class="controlbar">
-			<div class="control-label">Load Data:</div>
-			<select id="ds-selector" class="dataSelector">
-				<option value="museums">museums</option>
-				<option value="cities">cities</option>
-				<option value="mlb_players">mlb players</option>
-			</select>
-			<button id='save'>Save changes...</button>
-			<button id='download'>Download CSV</button>
-		</div>
-		<div class="content dataGrid" id="spreadsheet1"></div>
-	</div> -->
 
 	<script>
 	var spreadsheet1 = document.getElementById('spreadsheet1')
@@ -96,23 +52,11 @@
 		}
 		console.log('New data is loaded');
 		const js = instance.jspreadsheet;
-		const nCols = js.colgroup.length;
 		const hMargin = 5;
-		var colWidths = [];
-		for(var i = 0; i<nCols; i++) {
-			var colData = js.getColumnData(i);
-			var longestString = findLongestString(colData);
-			colWidths.push(stringWidth(longestString)+2*hMargin);
-		}
 		let headers = js.getHeaders().split(',');
-		for(var i = 0; i<nCols; i++) {
-			const len = stringWidth(headers[i])+2*hMargin;
-			if(len>colWidths[i]) colWidths[i] = len;
-		}
-
-		const sum = colWidths.reduce((partialSum, a) => partialSum + a, 0);
-		for(var i = 0; i<nCols; i++) {
-			js.setWidth(i, colWidths[i]);
+		for(var i = 0; i<headers.length; i++) {
+			var longestString = findLongestString(js.getColumnData(i));
+			js.setWidth(i, Math.max(stringWidth(longestString), stringWidth(headers[i]))+2*hMargin);
 		}
 	}
 
@@ -120,10 +64,8 @@
 		if(dataSources.includes(dataSource)) {
 			return;
 		}
-		dataSources.push(dataSource);
-		var sheets = [];
-		var js = spreadsheet1;
-		sheets.push({
+		dataSources.push(dataSource);	
+		jspreadsheet.tabs(spreadsheet1, [{
 			sheetName: dataSource,
 			csv: 'data/'+dataSource+'.csv',
 			csvHeaders:true,
@@ -131,9 +73,7 @@
 			tableWidth:'100%',
 			tableHeight:'89%',
 			onload: loaded,
-		});
-	
-		jspreadsheet.tabs(spreadsheet1, sheets);
+		}]);
 	}
 
 	var download = function() {
@@ -144,10 +84,6 @@
 	function save() {
 		console.log("Save data...");
 	}
-
-	// document.getElementById('ds-selector').onchange = function () { addDs(this.value); }
-	// document.getElementById('save').onclick = save
-	// document.getElementById('download').onclick = download
 
 	jSuites.toolbar(document.getElementById('toolbar'), {
 		container: true,
@@ -164,7 +100,6 @@
 				data: [ 'museums', 'cities', 'mlb_players' ],
 				width: '160px',
 				onchange: function(a,b,c,d) {
-					console.log('data-source: ' + d);
 					addDs(d);
 				}
 			},
