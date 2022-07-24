@@ -5,6 +5,8 @@
 	<link rel="stylesheet" href="https://bossanova.uk/jspreadsheet/v4/jexcel.css" type="text/css" /> 
 	<script src="https://jsuites.net/v4/jsuites.js"></script>
 	<script src="https://bossanova.uk/jspreadsheet/v4/jexcel.js"></script>
+	<script src="https://cdn.jsdelivr.net/npm/d3-dsv@3"></script>
+	<!-- <script src="csv-lib.js"></script> -->
 
 	<link rel="stylesheet" href="jexcel-custom.css" type="text/css" />
 
@@ -23,6 +25,7 @@
 		}
 
 		.content {
+			margin: 8px 0 0 0;
 			flex-grow: 1;
 		}
 	</style>
@@ -35,7 +38,8 @@
 
 	<script>
 	var spreadsheet1 = document.getElementById('spreadsheet1')
-	var dataSources = [];
+	var dataSourceNames = [];
+	var downloadFormat = "TSV";
 
 	function stringWidth(text) {
 		const font = "16px sans-serif"	
@@ -53,7 +57,7 @@
 		console.log('New data is loaded');
 		const js = instance.jspreadsheet;
 		const hMargin = 5;
-		let headers = js.getHeaders().split(',');
+		const headers = js.getHeaders().split(',');
 		for(var i = 0; i<headers.length; i++) {
 			var longestString = findLongestString(js.getColumnData(i));
 			js.setWidth(i, Math.max(stringWidth(longestString), stringWidth(headers[i]))+2*hMargin);
@@ -61,13 +65,14 @@
 	}
 
 	function addDs(dataSource) {
-		if(dataSources.includes(dataSource)) {
+		const dataSourceName = dataSource.name;
+		if(dataSourceNames.includes(dataSourceName)) {
 			return;
 		}
-		dataSources.push(dataSource);	
+		dataSourceNames.push(dataSourceName);	
 		jspreadsheet.tabs(spreadsheet1, [{
-			sheetName: dataSource,
-			csv: 'data/'+dataSource+'.csv',
+			sheetName: dataSourceName,
+			csv: dataSource.uri,
 			csvHeaders:true,
 			tableOverflow:true,
 			tableWidth:'100%',
@@ -76,45 +81,83 @@
 		}]);
 	}
 
+	function downloadCsvFile(fileName, data) {
+		var csv = d3.tsvFormatBody(data);
+		var hiddenA = document.createElement('a');
+		hiddenA.href = 'data:text/csv;charset=utf-8,' + encodeURI(csv);
+		hiddenA.target = '_blank';
+		hiddenA.download = fileName;
+		hiddenA.click();
+	}
+
+	function getCurrentData() {
+		const worksheet = spreadsheet1.children[0].querySelector('.selected').getAttribute('data-spreadsheet');
+		const js = spreadsheet1.jexcel[worksheet];
+		var data = js.getData();
+		data.splice(0, 0, js.getHeaders().split(','));
+		return data;
+	}
+
 	var download = function() {
-		var worksheet = spreadsheet1.children[0].querySelector('.selected').getAttribute('data-spreadsheet');
-		spreadsheet1.jexcel[worksheet].download();
+		const data = getCurrentData();
+		console.log(data);
+		downloadCsvFile("data.csv", data);
 	}
 
 	function save() {
 		console.log("Save data...");
 	}
 
-	jSuites.toolbar(document.getElementById('toolbar'), {
-		container: true,
-		items:[
-			{
-				type: 'label',
-				content: 'Load Data',
-				onclick: function() {
-					console.log('action');
+	function createToolbar(dataSources) {
+		jSuites.toolbar(document.getElementById('toolbar'), {
+			container: true,
+			items:[
+				{
+					type: 'label',
+					content: 'Load Data',
+					onclick: function() {
+						console.log('action');
+					}
+				},
+				{
+					type: 'select',
+					data: Object.keys(dataSources),
+					onchange: function(a,b,c,d) {
+						addDs(dataSources[d]);
+					}
+				},
+				{
+					type: 'label',
+					content: 'Save changes...',
+					onclick: save
+				},
+				{
+					type: 'select',
+					data: ["TSV", "CSV"],
+					onchange: function(a,b,c,d) {
+						downloadFormat = d;
+					}
+				},
+				{
+					type: 'label',
+					content: 'Download CSV',
+					onclick: download
 				}
-			},
-			{
-				type: 'select',
-				data: [ 'museums', 'cities', 'mlb_players' ],
-				width: '160px',
-				onchange: function(a,b,c,d) {
-					addDs(d);
-				}
-			},
-			{
-				type: 'label',
-				content: 'Save changes...',
-				onclick: save
-			},
-			{
-				type: 'label',
-				content: 'Download CSV',
-				onclick: download
-			}
-		]
-	});
+			]
+		});
+	}
+
+	async function loadDsList() {
+		const response = await fetch('config.json');
+		const configuration = await response.json();
+		console.log(configuration);
+		const dataSources = configuration.dataSources;
+		console.log(Object.keys(dataSources));
+		createToolbar(dataSources);
+	}
+
+	loadDsList();
+
 	</script>
 </body>
 </html>
