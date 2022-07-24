@@ -6,8 +6,8 @@
 }
 
 .jexcel_tabs .jexcel_tab_link.selected {
-    background-color: #d5d5d5;
-    font-weight: bold;;
+    background-color: #e2e2e2;
+    font-weight: 400;
 }
 
 /* TEXT FORMAT */
@@ -18,15 +18,14 @@
 
 /* COLORS */
 
-/* .jexcel_page_selected, */
 .jexcel_toolbar,
 .jexcel > tbody > tr > td:first-child,
 .jexcel > tfoot > tr > td,
 .jexcel > thead > tr > td {
-	background-color: #c7daef;
+	background-color: #e8ecf0;
 }
 
 .jexcel > tbody > tr.selected > td:first-child,
 .jexcel > thead > tr > td.selected{
-    background-color:#99bbee;
+    background-color:#d6e0ef;
 }

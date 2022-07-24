@@ -17,15 +17,16 @@
 			overflow: hidden;
 		}
 
-		.dataSelector {
-			margin: 6px 0 10px 0;
-			vertical-align: top;
-		}
-
 		.container {
 			width: calc(100vw - 5px);
 			height: calc(100vh - 80px);
 			display: flex;
+		}
+
+
+		/* .dataSelector {
+			margin: 6px 0 10px 0;
+			vertical-align: top;
 		}
 
 		.controlbar {
@@ -36,10 +37,6 @@
 		.controlbar * {
 			margin: 0 15px 0 0;
 			height: 26px;
-		}
-
-		.content {
-			flex-grow: 1;
 		}
 
 		#ds-selector {
@@ -53,12 +50,22 @@
 			height: 15px;
 			display: inline-block;
 		}
+ */
+
+		.content {
+			flex-grow: 1;
+		}
 	</style>
 </head>
 <body>
 	<div id="container">
+		<div id="toolbar"></div> 
+		<div class="content dataGrid" id="spreadsheet1"></div>
+	</div>
+
+	<!-- <div id="container">
 		<div class="controlbar">
-			<div class="control-label">Load Data:</div> 
+			<div class="control-label">Load Data:</div>
 			<select id="ds-selector" class="dataSelector">
 				<option value="museums">museums</option>
 				<option value="cities">cities</option>
@@ -68,7 +75,7 @@
 			<button id='download'>Download CSV</button>
 		</div>
 		<div class="content dataGrid" id="spreadsheet1"></div>
-	</div>
+	</div> -->
 
 	<script>
 	var spreadsheet1 = document.getElementById('spreadsheet1')
@@ -138,9 +145,41 @@
 		console.log("Save data...");
 	}
 
-	document.getElementById('ds-selector').onchange = function () { addDs(this.value); }
-	document.getElementById('save').onclick = save
-	document.getElementById('download').onclick = download
+	// document.getElementById('ds-selector').onchange = function () { addDs(this.value); }
+	// document.getElementById('save').onclick = save
+	// document.getElementById('download').onclick = download
+
+	jSuites.toolbar(document.getElementById('toolbar'), {
+		container: true,
+		items:[
+			{
+				type: 'label',
+				content: 'Load Data',
+				onclick: function() {
+					console.log('action');
+				}
+			},
+			{
+				type: 'select',
+				data: [ 'museums', 'cities', 'mlb_players' ],
+				width: '160px',
+				onchange: function(a,b,c,d) {
+					console.log('data-source: ' + d);
+					addDs(d);
+				}
+			},
+			{
+				type: 'label',
+				content: 'Save changes...',
+				onclick: save
+			},
+			{
+				type: 'label',
+				content: 'Download CSV',
+				onclick: download
+			}
+		]
+	});
 	</script>
 </body>
 </html>
