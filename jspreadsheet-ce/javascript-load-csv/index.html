@@ -1,17 +1,14 @@
 <html>
 <head>
-	<!-- 
+	
 	<link rel="stylesheet" href="https://jsuites.net/v4/jsuites.css" type="text/css" />
-	<script src="https://bossanova.uk/jspreadsheet/v4/jexcel.js"></script>
-	-->
-
-	<!-- <link rel="stylesheet" href="jexcel.css" type="text/css" /> -->
 	<link rel="stylesheet" href="https://bossanova.uk/jspreadsheet/v4/jexcel.css" type="text/css" /> 
 
-	<script src="https://jsuites.net/v4/jsuites.js"></script>
+	<link rel="stylesheet" href="jexcel-custom.css" type="text/css" />
 
-	<!-- <script src="https://bossanova.uk/jspreadsheet/v4/jexcel.js"></script> -->
-	<script type="text/javascript" src="jexcel.js"></script>
+	<script src="https://jsuites.net/v4/jsuites.js"></script>
+	<script src="https://bossanova.uk/jspreadsheet/v4/jexcel.js"></script>
+
 	<style>
 		body, html {
 			font-family: sans-serif;
@@ -28,12 +25,10 @@
 		.container {
 			width: calc(100vw - 5px);
 			height: calc(100vh - 80px);
-			/* background: #eee; */
 			display: flex;
 		}
 
 		.controlbar {
-			/* background: orangered; */
 			vertical-align: middle;
 			padding: 8px 15px 8px 5px;
 		}
@@ -45,7 +40,6 @@
 
 		.content {
 			flex-grow: 1;
-			/* background: purple; */
 		}
 
 		#ds-selector {
@@ -60,8 +54,6 @@
 			display: inline-block;
 		}
 	</style>
-
-	<link rel="stylesheet" href="jexcel-custom.css" type="text/css" />
 </head>
 <body>
 	<div id="container">
@@ -83,7 +75,7 @@
 	var dataSources = [];
 
 	function stringWidth(text) {
-		const font = "bold 12pt arial"	
+		const font = "16px sans-serif"	
 		const canvas = document.createElement("canvas");	
 		const context = canvas.getContext("2d");	
 		context.font = font;	
@@ -96,20 +88,24 @@
 			return arr.reduce((a, b)=> a.length > b.length ? a : b);
 		}
 		console.log('New data is loaded');
-		var js = instance.jspreadsheet;
-		var nCols = js.colgroup.length;
-		var colWidtths = [];
+		const js = instance.jspreadsheet;
+		const nCols = js.colgroup.length;
+		const hMargin = 5;
+		var colWidths = [];
 		for(var i = 0; i<nCols; i++) {
 			var colData = js.getColumnData(i);
 			var longestString = findLongestString(colData);
-			colWidtths.push(stringWidth(longestString));
+			colWidths.push(stringWidth(longestString)+2*hMargin);
+		}
+		let headers = js.getHeaders().split(',');
+		for(var i = 0; i<nCols; i++) {
+			const len = stringWidth(headers[i])+2*hMargin;
+			if(len>colWidths[i]) colWidths[i] = len;
 		}
 
-		const pageW = instance.offsetWidth - 75;
-		const sum = colWidtths.reduce((partialSum, a) => partialSum + a, 0);
+		const sum = colWidths.reduce((partialSum, a) => partialSum + a, 0);
 		for(var i = 0; i<nCols; i++) {
-			var w = colWidtths[i]/(1.0*sum)*pageW;
-			js.setWidth(i, w);
+			js.setWidth(i, colWidths[i]);
 		}
 	}
 
@@ -122,7 +118,7 @@
 		var js = spreadsheet1;
 		sheets.push({
 			sheetName: dataSource,
-			csv:dataSource+".csv",
+			csv: 'data/'+dataSource+'.csv',
 			csvHeaders:true,
 			tableOverflow:true,
 			tableWidth:'100%',

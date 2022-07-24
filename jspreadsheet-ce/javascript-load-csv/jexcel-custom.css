@@ -5,6 +5,11 @@
     margin: 0 5px 0 0;
 }
 
+.jexcel_tabs .jexcel_tab_link.selected {
+    background-color: #d5d5d5;
+    font-weight: bold;;
+}
+
 /* TEXT FORMAT */
 .jexcel * {
     font-family: sans-serif;
@@ -13,8 +18,8 @@
 
 /* COLORS */
 
+/* .jexcel_page_selected, */
 .jexcel_toolbar,
-.jexcel_page_selected,
 .jexcel > tbody > tr > td:first-child,
 .jexcel > tfoot > tr > td,
 .jexcel > thead > tr > td {
@@ -24,8 +29,4 @@
 .jexcel > tbody > tr.selected > td:first-child,
 .jexcel > thead > tr > td.selected{
     background-color:#99bbee;
-}
-
-.jexcel_tabs .jexcel_tab_link.selected {
-    background-color: #ccc;
 }
