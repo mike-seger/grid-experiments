@@ -26,23 +26,29 @@
             font-family: sans-serif;
             text-align: left !important; 
         }
+
+        .dataSelector {
+            margin: 6px 0 10px 0;
+        }
     </style>
 
     <link rel="stylesheet" href="colors.css" type="text/css" />
 </head>
 <body>
+    <select id="ds-selector" class="dataSelector">
+        <option value="">select data source...</option>
+        <option value="museums.csv">museums</option>
+        <option value="citites.csv">cities</option>
+        <option value="mlb_players.csv">mlb players</option>
+    </select>
+
     <div id="spreadsheet1" class="dataGrid"></div>
     
-    <p><button id='download'>Export spreadsheet as CSV</button></p>
-    <!--
-        https://bossanova.uk/jspreadsheet/v4/docs/quick-reference
-        https://bossanova.uk/jspreadsheet/v4/cases/themes
-        https://bossanova.uk/jspreadsheet/v3/docs/programmatically-changes
+    <p>
+        <button id='save'>Save changes...</button>
+        <button id='download'>Download CSV</button>
+    </p>
 
-        autoWidth PRO
-        https://www.skypack.dev/view/@jspreadsheet/autowidth
-        https://github.com/GBonnaire/jspreadsheet-plugins-and-editors/tree/master/plugins/src/autoWidth
-    -->
     <script>
     function stringWidth(text) {
         const font = "bold 12pt arial"	
@@ -75,16 +81,26 @@
         }
     }
 
-    var theSpreadsheet = jspreadsheet(document.getElementById('spreadsheet1'), {
-        csv:'data.csv',
-        csvHeaders:true,
-        tableOverflow:true,
-        tableWidth:'100%',
-        tableHeight:'500px',
-        width: '100%',
-        onload: loaded,
-    });
+    var theSpreadsheet;
+    function selectDs(dataSource) {
+        theSpreadsheet = 
+            jspreadsheet(document.getElementById('spreadsheet1'), {
+                csv:dataSource,
+                csvHeaders:true,
+                tableOverflow:true,
+                tableWidth:'100%',
+                tableHeight:'500px',
+                width: '100%',
+                onload: loaded,
+            });
+    }
 
+    function save() {
+        console.log("Save data...");
+    }
+
+    document.getElementById('ds-selector').onchange = function () { selectDs(this.value); }
+    document.getElementById('save').onclick = function () { save(); }
     document.getElementById('download').onclick = function () { theSpreadsheet.download(); }
     </script>
 </body>
