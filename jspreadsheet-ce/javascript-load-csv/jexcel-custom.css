@@ -1,0 +1,31 @@
+/* TABS */
+
+.jexcel_tabs .jexcel_tab_link {
+    padding: 4px 7px 4px 7px;
+    margin: 0 5px 0 0;
+}
+
+/* TEXT FORMAT */
+.jexcel * {
+    font-family: sans-serif;
+    text-align: left !important; 
+}
+
+/* COLORS */
+
+.jexcel_toolbar,
+.jexcel_page_selected,
+.jexcel > tbody > tr > td:first-child,
+.jexcel > tfoot > tr > td,
+.jexcel > thead > tr > td {
+	background-color: #c7daef;
+}
+
+.jexcel > tbody > tr.selected > td:first-child,
+.jexcel > thead > tr > td.selected{
+    background-color:#99bbee;
+}
+
+.jexcel_tabs .jexcel_tab_link.selected {
+    background-color: #ccc;
+}

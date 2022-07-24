@@ -14,14 +14,10 @@
 	<script type="text/javascript" src="jexcel.js"></script>
 	<style>
 		body, html {
+			font-family: sans-serif;
 			width: calc(100%-8px);
 			height: 100%;
 			overflow: hidden;
-		}
-
-		.dataGrid * {
-			font-family: sans-serif;
-			text-align: left !important; 
 		}
 
 		.dataSelector {
@@ -32,36 +28,45 @@
 		.container {
 			width: calc(100vw - 5px);
 			height: calc(100vh - 80px);
-			background: #eee;
+			/* background: #eee; */
 			display: flex;
 		}
 
 		.controlbar {
-			background: orangered;
+			/* background: orangered; */
 			vertical-align: middle;
 			padding: 8px 15px 8px 5px;
 		}
 
 		.controlbar * {
 			margin: 0 15px 0 0;
+			height: 26px;
 		}
 
 		.content {
 			flex-grow: 1;
-			background: purple;
+			/* background: purple; */
 		}
 
 		#ds-selector {
 			margin-top: 2px;
+			height: 25px
 		}
 
+		.controlbar .control-label {
+			margin-top: -8px;
+			padding-top: 12px;
+			height: 15px;
+			display: inline-block;
+		}
 	</style>
 
-	<link rel="stylesheet" href="colors.css" type="text/css" />
+	<link rel="stylesheet" href="jexcel-custom.css" type="text/css" />
 </head>
 <body>
 	<div id="container">
 		<div class="controlbar">
+			<div class="control-label">Load Data:</div> 
 			<select id="ds-selector" class="dataSelector">
 				<option value="museums">museums</option>
 				<option value="cities">cities</option>
@@ -100,7 +105,7 @@
 			colWidtths.push(stringWidth(longestString));
 		}
 
-		const pageW = instance.offsetWidth - 85;//pageDim.w-90;
+		const pageW = instance.offsetWidth - 75;
 		const sum = colWidtths.reduce((partialSum, a) => partialSum + a, 0);
 		for(var i = 0; i<nCols; i++) {
 			var w = colWidtths[i]/(1.0*sum)*pageW;
@@ -122,8 +127,6 @@
 			tableOverflow:true,
 			tableWidth:'100%',
 			tableHeight:'89%',
-			// width: '100%',
-			// height: '800px',
 			onload: loaded,
 		});
 	
