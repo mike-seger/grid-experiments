@@ -3,10 +3,11 @@
 	
 	<link rel="stylesheet" href="https://jsuites.net/v4/jsuites.css" type="text/css" />
 	<link rel="stylesheet" href="https://bossanova.uk/jspreadsheet/v4/jexcel.css" type="text/css" /> 
+	<link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+	
 	<script src="https://jsuites.net/v4/jsuites.js"></script>
 	<script src="https://bossanova.uk/jspreadsheet/v4/jexcel.js"></script>
 	<script src="https://cdn.jsdelivr.net/npm/d3-dsv@3"></script>
-	<!-- <script src="csv-lib.js"></script> -->
 
 	<link rel="stylesheet" href="jexcel-custom.css" type="text/css" />
 
@@ -64,7 +65,7 @@
 		}
 	}
 
-	function addDs(dataSource) {
+	function addDataSource(dataSource) {
 		const dataSourceName = dataSource.name;
 		if(dataSourceNames.includes(dataSourceName)) {
 			return;
@@ -81,16 +82,22 @@
 		}]);
 	}
 
-	function downloadCsvFile(fileName, data) {
-		var csv = d3.tsvFormatBody(data);
+	function downloadSvFile(fileName, data) {
+		var result;
+		var mimetype = "text/csv";
+		if(downloadFormat == "TSV") {
+			result = d3.tsvFormatBody(data);
+			mimetype = "text/tab-separated-values";
+		} else result = d3.csvFormatBody(data);
 		var hiddenA = document.createElement('a');
-		hiddenA.href = 'data:text/csv;charset=utf-8,' + encodeURI(csv);
+		hiddenA.href = 'data:'+mimetype+';charset=utf-8,' + encodeURI(result);
 		hiddenA.target = '_blank';
-		hiddenA.download = fileName;
+		hiddenA.download = fileName+'.'+downloadFormat.toLowerCase();
 		hiddenA.click();
 	}
 
 	function getCurrentData() {
+		if(!spreadsheet1.children[0]) return [];
 		const worksheet = spreadsheet1.children[0].querySelector('.selected').getAttribute('data-spreadsheet');
 		const js = spreadsheet1.jexcel[worksheet];
 		var data = js.getData();
@@ -99,9 +106,10 @@
 	}
 
 	var download = function() {
+		if(!spreadsheet1.children[0]) return;
 		const data = getCurrentData();
 		console.log(data);
-		downloadCsvFile("data.csv", data);
+		downloadSvFile("data", data);
 	}
 
 	function save() {
@@ -113,41 +121,30 @@
 			container: true,
 			items:[
 				{
-					type: 'label',
-					content: 'Load Data',
-					onclick: function() {
-						console.log('action');
-					}
-				},
-				{
 					type: 'select',
 					data: Object.keys(dataSources),
-					onchange: function(a,b,c,d) {
-						addDs(dataSources[d]);
-					}
+					onchange: function(a,b,c,d) { addDataSource(dataSources[d]); }
 				},
 				{
-					type: 'label',
-					content: 'Save changes...',
+					type: 'icon',
+					content: 'save',
 					onclick: save
 				},
 				{
 					type: 'select',
 					data: ["TSV", "CSV"],
-					onchange: function(a,b,c,d) {
-						downloadFormat = d;
-					}
+					onchange: function(a,b,c,d) { downloadFormat = d; }
 				},
 				{
-					type: 'label',
-					content: 'Download CSV',
+					type: 'icon',
+					content: 'vertical_align_bottom',
 					onclick: download
 				}
 			]
 		});
 	}
 
-	async function loadDsList() {
+	async function loadConfiguration() {
 		const response = await fetch('config.json');
 		const configuration = await response.json();
 		console.log(configuration);
@@ -156,7 +153,7 @@
 		createToolbar(dataSources);
 	}
 
-	loadDsList();
+	loadConfiguration();
 
 	</script>
 </body>
