@@ -60,7 +60,7 @@
 		const hMargin = 5;
 		const headers = js.getHeaders().split(',');
 		for(var i = 0; i<headers.length; i++) {
-			var longestString = findLongestString(js.getColumnData(i));
+			const longestString = findLongestString(js.getColumnData(i));
 			js.setWidth(i, Math.max(stringWidth(longestString), stringWidth(headers[i]))+2*hMargin);
 		}
 	}
@@ -96,19 +96,25 @@
 		hiddenA.click();
 	}
 
-	function getCurrentData() {
-		if(!spreadsheet1.children[0]) return [];
+	function getCurrentJexcel() {
+		if(!spreadsheet1.children[0]) return undefined;
 		const worksheet = spreadsheet1.children[0].querySelector('.selected').getAttribute('data-spreadsheet');
-		const js = spreadsheet1.jexcel[worksheet];
+		return spreadsheet1.jexcel[worksheet];
+	}
+
+	function getCurrentData() {
+		const worksheet = spreadsheet1.children[0].querySelector('.selected').getAttribute('data-spreadsheet');
+		const js = getCurrentJexcel();
+		if(!js) return [];
 		var data = js.getData();
 		data.splice(0, 0, js.getHeaders().split(','));
 		return data;
 	}
 
 	var download = function() {
-		if(!spreadsheet1.children[0]) return;
 		const data = getCurrentData();
 		console.log(data);
+		if(data.length==0) return;
 		downloadSvFile("data", data);
 	}
 
