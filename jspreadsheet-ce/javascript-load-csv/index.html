@@ -1,134 +1,91 @@
 <html>
-<!-- 
-<link rel="stylesheet" href="https://jsuites.net/v4/jsuites.css" type="text/css" />
-<script src="https://bossanova.uk/jspreadsheet/v4/jexcel.js"></script>
--->
+<head>
+    <!-- 
+    <link rel="stylesheet" href="https://jsuites.net/v4/jsuites.css" type="text/css" />
+    <script src="https://bossanova.uk/jspreadsheet/v4/jexcel.js"></script>
+    -->
 
-<!-- <link rel="stylesheet" href="jexcel.css" type="text/css" /> -->
-<link rel="stylesheet" href="https://bossanova.uk/jspreadsheet/v4/jexcel.css" type="text/css" /> 
+    <!-- <link rel="stylesheet" href="jexcel.css" type="text/css" /> -->
+    <link rel="stylesheet" href="https://bossanova.uk/jspreadsheet/v4/jexcel.css" type="text/css" /> 
 
-<script src="https://jsuites.net/v4/jsuites.js"></script>
+    <script src="https://jsuites.net/v4/jsuites.js"></script>
 
-<!-- <script src="https://bossanova.uk/jspreadsheet/v4/jexcel.js"></script> -->
-<script type="text/javascript" src="jexcel.js"></script>
-<style>
-    body, html {
-        width: 99%;
-        height: 100%;
-        overflow: hidden;
+    <!-- <script src="https://bossanova.uk/jspreadsheet/v4/jexcel.js"></script> -->
+    <script type="text/javascript" src="jexcel.js"></script>
+    <style>
+        body, html {
+            width: 99%;
+            height: 100%;
+            overflow: hidden;
+        }
+        #spreadsheet1 {
+            width: 100%;
+        }
+
+        .dataGrid * {
+            font-family: sans-serif;
+            text-align: left !important; 
+        }
+    </style>
+
+    <link rel="stylesheet" href="colors.css" type="text/css" />
+</head>
+<body>
+    <div id="spreadsheet1" class="dataGrid"></div>
+    
+    <p><button id='download'>Export spreadsheet as CSV</button></p>
+    <!--
+        https://bossanova.uk/jspreadsheet/v4/docs/quick-reference
+        https://bossanova.uk/jspreadsheet/v4/cases/themes
+        https://bossanova.uk/jspreadsheet/v3/docs/programmatically-changes
+
+        autoWidth PRO
+        https://www.skypack.dev/view/@jspreadsheet/autowidth
+        https://github.com/GBonnaire/jspreadsheet-plugins-and-editors/tree/master/plugins/src/autoWidth
+    -->
+    <script>
+    function stringWidth(text) {
+        const font = "bold 12pt arial"	
+        const canvas = document.createElement("canvas");	
+        const context = canvas.getContext("2d");	
+        context.font = font;	
+        const { width } = context.measureText(text);	
+        return width;
     }
-    #spreadsheet1 {
-        width: 100%;
+
+    var loaded = function(instance) {
+        function findLongestString(arr) {
+            return arr.reduce((a, b)=> a.length > b.length ? a : b);
+        }
+        console.log('New data is loaded');
+        var js = instance.jspreadsheet;
+        var nCols = js.colgroup.length;
+        var colWidtths = [];
+        for(var i = 0; i<nCols; i++) {
+            var colData = js.getColumnData(i);
+            var longestString = findLongestString(colData);
+            colWidtths.push(stringWidth(longestString));
+        }
+
+        const pageW = instance.offsetWidth - 85;//pageDim.w-90;
+        const sum = colWidtths.reduce((partialSum, a) => partialSum + a, 0);
+        for(var i = 0; i<nCols; i++) {
+            var w = colWidtths[i]/(1.0*sum)*pageW;
+            js.setWidth(i, w);
+        }
     }
 
-    .dataGrid * {
-        font-family: sans-serif;
-        text-align: left !important; 
-    }
-</style>
+    var theSpreadsheet = jspreadsheet(document.getElementById('spreadsheet1'), {
+        csv:'data.csv',
+        csvHeaders:true,
+        tableOverflow:true,
+        tableWidth:'100%',
+        tableHeight:'500px',
+        width: '100%',
+        onload: loaded,
+    });
 
-<link rel="stylesheet" href="colors.css" type="text/css" />
-
-<div id="spreadsheet1" class="dataGrid"></div>
- 
-<p><button id='download'>Export spreadsheet as CSV</button></p>
- <!--
-    https://bossanova.uk/jspreadsheet/v4/docs/quick-reference
-    https://bossanova.uk/jspreadsheet/v4/cases/themes
-    https://bossanova.uk/jspreadsheet/v3/docs/programmatically-changes
-
-    autoWidth PRO
-    https://www.skypack.dev/view/@jspreadsheet/autowidth
-    https://github.com/GBonnaire/jspreadsheet-plugins-and-editors/tree/master/plugins/src/autoWidth
- -->
-<script>
-
-function getPageDim(){
-  if(window.innerWidth !== undefined && window.innerHeight !== undefined) { 
-    var w = window.innerWidth;
-    var h = window.innerHeight;
-  } else {  
-    var w = document.documentElement.clientWidth;
-    var h = document.documentElement.clientHeight;
-  }
-  var txt = "Page size: width=" + w + ", height=" + h;
-  console.log(txt);
-  return {w: w, h: h }
-}
-
-function findLongestString(arr) {
-  return arr.reduce((a, b)=> a.length > b.length ? a : b);
-}
-
-var loaded = function(instance) {
-  console.log('New data is loaded');
-  var pageDim = getPageDim(); 
-  var js = instance.jspreadsheet;
-  var nCols = js.colgroup.length;
-  //console.log(instance.jspreadsheet.colgroup.length);
-  var colWidtths = [];
-  for(var i = 0; i<nCols; i++) {
-    var colData = js.getColumnData(i);
-    var longestString = findLongestString(colData);
-    colWidtths.push(longestString.length);
-  }
-
-  const pageW = pageDim.w-90;
-  const sum = colWidtths.reduce((partialSum, a) => partialSum + a, 0);
-  for(var i = 0; i<nCols; i++) {
-    var w = colWidtths[i]/(1.0*sum)*pageW;
-    js.setWidth(i, w);
-  }
-}
-
-var pageDim = getPageDim();
-
-function percentW(percent) {
-    var val = percent * (pageDim.w-120) / 100.0 ;
-    return val;
-}
-
-var theSpreadsheet = jspreadsheet(document.getElementById('spreadsheet1'), {
-    csv:'data.csv',
-    csvHeaders:true,
-    tableOverflow:true,
-    tableWidth:'100%',
-    tableHeight:'500px',
-    width: '100%',
-    //colWidths: [ 480, 60, 160, 180, 160 ],
-    //colWidths: [ percentW(47), percentW(6), percentW(15), percentW(17), percentW(15) ],
-    // columns: [
-    //     {width: percentW(47)}, 
-    //     {width: percentW(6)}, 
-    //     {width: percentW(15)}, 
-    //     {width: percentW(17)},
-    //     {width: percentW(15)}
-    // ],
-        // {width:'47vw'}, 
-        // {width: '6vw'}, 
-        // {width:'15vw'}, 
-        // {width:'17vw'},
-        // {width:'15vw'}
-
-        // {width:'480px'}, 
-        // {width: '60px'}, 
-        // {width:'160px'}, 
-        // {width:'180px'},
-        // {width:'160px'}
-    //],
-    onload: loaded,
-    // ,
-    // columns: [
-    //     { type:'text', width:300 },
-    //     { type:'text', width:80 },
-    //     { type:'dropdown', width:120, source:['England','Wales','Northern Ireland','Scotland'] },
-    //     { type:'text', width:120 },
-    //     { type:'text', width:120 },
-    //  ]
-});
-
-document.getElementById('download').onclick = function () {
-    theSpreadsheet.download();
-}
-</script>
+    document.getElementById('download').onclick = function () { theSpreadsheet.download(); }
+    </script>
+</body>
 </html>
