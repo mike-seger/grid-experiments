@@ -25,7 +25,6 @@ dependencies {
 	implementation "org.springframework.boot:spring-boot-starter-web"
 	implementation "com.fasterxml.jackson.dataformat:jackson-dataformat-csv:2.13.3"
 	implementation "commons-io:commons-io:2.11.0"
-	implementation "org.liquibase:liquibase-core"
 
 	implementation "org.springdoc:springdoc-openapi-ui:1.6.9"
 	implementation "org.springdoc:springdoc-openapi-data-rest:1.6.9"

@@ -1,12 +1,18 @@
 package com.net128.app.jpa.adminux.data;
 
-import lombok.Data;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import lombok.*;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
 
 @Entity
-@Data
+@ToString
+@AllArgsConstructor
+@NoArgsConstructor
+@Getter
+@Setter
+@JsonPropertyOrder({"id","firstName","lastName","address","city","country"})
 public class Person extends Identifiable {
 	@Column(nullable = false)
 	private String firstName;

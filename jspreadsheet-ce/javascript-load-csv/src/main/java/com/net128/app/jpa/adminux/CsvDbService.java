@@ -27,28 +27,27 @@ import java.util.zip.ZipOutputStream;
 @Slf4j
 public class CsvDbService {
 	private final EntityManager entityManager;
-	private Set<JpaRepository<?, Long>> jpaRepositories;
 	private final Map<String, Class<?>> entityMap;
 	private final Map<Class<?>, JpaRepository<?, Long>> entityRepoMap;
-	private final CsvMapper readerMapper = new CsvMapper()
-		.enable(CsvParser.Feature.TRIM_SPACES)
-		.enable(CsvParser.Feature.SKIP_EMPTY_LINES)
-		.enable(CsvParser.Feature.EMPTY_STRING_AS_NULL);
-	private final CsvSchema readerSchema = CsvSchema.emptySchema()
-		.withHeader().withLineSeparator(new String(CsvSchema.DEFAULT_LINEFEED));
-	private final CsvSchema readerTsvSchema = readerSchema
-		.withColumnSeparator('\t')
-		.withoutQuoteChar();
+	private final CsvMapper readerMapper;
+	private final CsvSchema readerSchema ;
+	private final CsvSchema readerTsvSchema;
 
 	public CsvDbService(EntityManager entityManager, Set<JpaRepository<?, Long>> jpaRepositories) {
 		this.entityManager = entityManager;
-		this.jpaRepositories = jpaRepositories;
 		entityMap = getEntityMap();
 		entityRepoMap =	jpaRepositories.stream().collect(Collectors.toMap(JpaUtils::getEntity, j -> j));
+		readerMapper = new CsvMapper()
+			.enable(CsvParser.Feature.TRIM_SPACES)
+			.enable(CsvParser.Feature.SKIP_EMPTY_LINES)
+			.enable(CsvParser.Feature.EMPTY_STRING_AS_NULL);
+		readerSchema = CsvSchema.emptySchema()
+				.withHeader().withLineSeparator(new String(CsvSchema.DEFAULT_LINEFEED));
+		readerTsvSchema = readerSchema.withColumnSeparator('\t').withoutQuoteChar();
 	}
 
 	public void writeAllCsvZipped(OutputStream os,
-		  List<String> entities, boolean tabSeparated) throws IOException {
+		  List<String> entities, Boolean tabSeparated) throws IOException {
 		try (var zos = new ZipOutputStream(os)) {
 			for(var entity : entities)
 				writeCsvZipEntry(zos, entity, tabSeparated);
@@ -57,7 +56,8 @@ public class CsvDbService {
 		}
 	}
 
-	private void writeCsvZipEntry(ZipOutputStream zipOutputStream, String entity, boolean tabSeparated) throws IOException {
+	private void writeCsvZipEntry(ZipOutputStream zipOutputStream, String entity, Boolean tabSeparated) throws IOException {
+		if(tabSeparated==null) tabSeparated=true;
 		try (var bos = new ByteArrayInputStream(writeCsv(entity, tabSeparated).getBytes())) {
 			var fileName = entity + (tabSeparated?".tsv":".csv");
 			zipOutputStream.putNextEntry(new ZipEntry(fileName));
@@ -66,14 +66,15 @@ public class CsvDbService {
 		zipOutputStream.closeEntry();
 	}
 
-	public String writeCsv(String entity, boolean tabSeparated) throws IOException {
+	public String writeCsv(String entity, Boolean tabSeparated) throws IOException {
 		try (var bos = new ByteArrayOutputStream()) {
 			writeCsv(bos, entity, tabSeparated);
 			return bos.toString();
 		}
 	}
 
-	public void writeCsv(OutputStream os, String entity, boolean tabSeparated) throws IOException {
+	public void writeCsv(OutputStream os, String entity, Boolean tabSeparated) throws IOException {
+		if(tabSeparated==null) tabSeparated=true;
 		var entityClass = getEntityClass(entity);
 		var jpaRepository = getEntityRepository(entityClass);
 		var jsonFactory = new CsvFactory().configure(
@@ -94,7 +95,12 @@ public class CsvDbService {
 	}
 
 	@SuppressWarnings("unchecked")
-	public <T> void readCsv(InputStream inputStream, String entityName, boolean tabSeparated) throws IOException {
+	public <T> void readCsv(InputStream inputStream, String entityName, Boolean tabSeparated) throws IOException {
+		if(tabSeparated==null) {
+			SvInputStream svInputStream = new SvInputStream(inputStream, 2048);
+			tabSeparated = svInputStream.isTsv();
+			inputStream = svInputStream;
+		}
 		Class<T> entityClass = (Class<T>) getEntityClass(entityName);
 		JpaRepository<T, Long> jpaRepository =
 			(JpaRepository<T, Long>) getEntityRepository(entityClass);
@@ -104,17 +110,19 @@ public class CsvDbService {
 
 	private <T> int saveEntities(InputStream inputStream, JpaRepository<T, Long> jpaRepository,
 		Class<T> entityClass, boolean tabSeparated) throws IOException {
-		var reader = genericCsvReader(entityClass, inputStream, tabSeparated);
-		var count = 0;
-		if(reader!=null) {
-			while(reader.hasNext()) {
-				var item = reader.next();
-				jpaRepository.save(item);
-				count++;
+		try (InputStream is = inputStream) {
+			var reader = genericCsvReader(entityClass, is, tabSeparated);
+			var count = 0;
+			if (reader != null) {
+				while (reader.hasNext()) {
+					var item = reader.next();
+					jpaRepository.save(item);
+					count++;
+				}
+				log.info("Saved {} items of {}", count, entityClass.getSimpleName());
 			}
-			log.info("Saved {} items of {}", count, entityClass.getSimpleName());
+			return count;
 		}
-		return count;
 	}
 
 	public <T> MappingIterator<T> genericCsvReader(Class<T> clazz,
@@ -127,8 +135,6 @@ public class CsvDbService {
 	public List<String> getEntities() {
 		return entityMap.keySet().stream().sorted().collect(Collectors.toList());
 	}
-
-	//public void writeAllCs
 
 	private Class<?> getEntityClass(String entityName) {
 		var entityClass = entityMap.get(entityName);
@@ -154,4 +160,5 @@ public class CsvDbService {
 		return str.replaceAll("([A-Z][a-z])", "_$1")
 			.replaceAll("^_", "").toUpperCase();
 	}
+
 }
