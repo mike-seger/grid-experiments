@@ -1,0 +1,8 @@
+{
+    "dataSources": {
+        "persons": {
+            "name": "persons",
+            "uri": "data/persons.csv"
+        }
+    }
+}

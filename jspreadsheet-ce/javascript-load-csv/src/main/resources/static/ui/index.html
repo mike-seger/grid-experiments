@@ -51,6 +51,11 @@
 		return width;
 	}
 
+	function maxStringWidth(texts) {
+		const max = texts.reduce((element,max) => stringWidth(element) > stringWidth(max) ? element : max, 0)
+		return stringWidth(max);
+	}
+
 	var loaded = function(instance) {
 		function findLongestString(arr) {
 			return arr.reduce((a, b)=> a.length > b.length ? a : b);
@@ -67,7 +72,9 @@
 
 	function addDataSource(dataSource) {
 		const dataSourceName = dataSource.name;
-		if(dataSourceNames.includes(dataSourceName)) {
+		const pos = dataSourceNames.indexOf(dataSourceName)
+		if(pos>=0) {
+			selectWorkSheet(pos);
 			return;
 		}
 		dataSourceNames.push(dataSourceName);	
@@ -76,7 +83,6 @@
 			csv: dataSource.uri,
 			csvHeaders:true,
 			tableOverflow:true,
-			tableWidth:'100%',
 			tableHeight:'89%',
 			onload: loaded,
 		}]);
@@ -96,9 +102,23 @@
 		hiddenA.click();
 	}
 
+	function getWorkSheetTabs() {
+		return spreadsheet1.querySelectorAll('.jexcel_tab_link');
+	}
+
+	function getCurrentWorkSheet() {
+		return spreadsheet1.children[0].querySelector('.selected').getAttribute('data-spreadsheet');
+	}
+
+	function selectWorkSheet(num) {
+		const tabs = getWorkSheetTabs()
+		if(!tabs || tabs.length<num) return;
+		tabs[num].click();
+	}
+
 	function getCurrentJexcel() {
 		if(!spreadsheet1.children[0]) return undefined;
-		const worksheet = spreadsheet1.children[0].querySelector('.selected').getAttribute('data-spreadsheet');
+		const worksheet = getCurrentWorkSheet()
 		return spreadsheet1.jexcel[worksheet];
 	}
 
@@ -129,6 +149,7 @@
 				{
 					type: 'select',
 					data: Object.keys(dataSources),
+					width: maxStringWidth(Object.keys(dataSources))+15,
 					onchange: function(a,b,c,d) { addDataSource(dataSources[d]); }
 				},
 				{
@@ -151,7 +172,8 @@
 	}
 
 	async function loadConfiguration() {
-		const response = await fetch('config.json');
+		const configUrl = location.port==8000? 'config.json' : 'config-dyn.json'
+		const response = await fetch(configUrl);
 		const configuration = await response.json();
 		console.log(configuration);
 		const dataSources = configuration.dataSources;

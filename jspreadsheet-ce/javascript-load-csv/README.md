@@ -1,18 +1,34 @@
 # howto
 
-## Start local server
+
+## Spring Boot application (Server)
+
 ```
-python -m http.server 8000
+./gradlew bootRun
 ```
 
-## Access application
+### Access Swagger-UI
+http://localhost:8080/swagger-ui/index.html
+
+## JS application (Client)
+
+The root is in:
+src/main/resources/static
+
+### Start local http server
+```
+python3 -m http.server 8000
+```
+
+### Access application
 http://localhost:8000/
 
-## Links
+### Links
 - https://bossanova.uk/jspreadsheet/v4/docs/quick-reference
 - https://bossanova.uk/jspreadsheet/v4/cases/themes
 - https://bossanova.uk/jspreadsheet/v3/docs/programmatically-changes
 - https://bossanova.uk/jspreadsheet/v4/examples/tabs
+- https://jspreadsheet.com/v8/docs/data
 - https://jsuites.net/v4/toolbar
 - https://github.com/d3/d3-dsv
 
