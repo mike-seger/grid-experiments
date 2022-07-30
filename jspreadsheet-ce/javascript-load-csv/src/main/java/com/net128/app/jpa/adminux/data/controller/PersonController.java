@@ -1,4 +1,4 @@
-package com.net128.app.jpa.adminux;
+package com.net128.app.jpa.adminux.data.controller;
 
 import com.net128.app.jpa.adminux.data.Person;
 import com.net128.app.jpa.adminux.data.PersonRepository;

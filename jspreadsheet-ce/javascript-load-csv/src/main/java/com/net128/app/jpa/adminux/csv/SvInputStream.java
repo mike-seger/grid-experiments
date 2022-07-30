@@ -1,4 +1,4 @@
-package com.net128.app.jpa.adminux;
+package com.net128.app.jpa.adminux.csv;
 
 import java.io.IOException;
 import java.io.InputStream;

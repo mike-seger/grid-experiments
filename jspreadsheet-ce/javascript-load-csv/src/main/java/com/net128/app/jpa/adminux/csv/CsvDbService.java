@@ -1,4 +1,4 @@
-package com.net128.app.jpa.adminux;
+package com.net128.app.jpa.adminux.csv;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.MappingIterator;
@@ -7,36 +7,28 @@ import com.fasterxml.jackson.dataformat.csv.CsvFactory;
 import com.fasterxml.jackson.dataformat.csv.CsvMapper;
 import com.fasterxml.jackson.dataformat.csv.CsvParser;
 import com.fasterxml.jackson.dataformat.csv.CsvSchema;
+import com.net128.app.jpa.adminux.data.util.JpaMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Service;
 
-import javax.persistence.EntityManager;
-import javax.persistence.metamodel.Type;
 import java.io.*;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
 @Service
 @Slf4j
 public class CsvDbService {
-	private final EntityManager entityManager;
-	private final Map<String, Class<?>> entityMap;
-	private final Map<Class<?>, JpaRepository<?, Long>> entityRepoMap;
 	private final CsvMapper readerMapper;
 	private final CsvSchema readerSchema ;
 	private final CsvSchema readerTsvSchema;
+	private final JpaMapper jpaMapper;
 
-	public CsvDbService(EntityManager entityManager, Set<JpaRepository<?, Long>> jpaRepositories) {
-		this.entityManager = entityManager;
-		entityMap = getEntityMap();
-		entityRepoMap =	jpaRepositories.stream().collect(Collectors.toMap(JpaUtils::getEntity, j -> j));
+	public CsvDbService(JpaMapper jpaMapper) {
+		this.jpaMapper = jpaMapper;
 		readerMapper = new CsvMapper()
 			.enable(CsvParser.Feature.TRIM_SPACES)
 			.enable(CsvParser.Feature.SKIP_EMPTY_LINES)
@@ -75,8 +67,8 @@ public class CsvDbService {
 
 	public void writeCsv(OutputStream os, String entity, Boolean tabSeparated) throws IOException {
 		if(tabSeparated==null) tabSeparated=true;
-		var entityClass = getEntityClass(entity);
-		var jpaRepository = getEntityRepository(entityClass);
+		var entityClass = jpaMapper.getEntityClass(entity);
+		var jpaRepository = jpaMapper.getEntityRepository(entityClass);
 		var jsonFactory = new CsvFactory().configure(
 			JsonGenerator.Feature.AUTO_CLOSE_TARGET, false);
 		var mapper = new CsvMapper().schemaFor(entityClass)
@@ -101,11 +93,11 @@ public class CsvDbService {
 			tabSeparated = svInputStream.isTsv();
 			inputStream = svInputStream;
 		}
-		Class<T> entityClass = (Class<T>) getEntityClass(entityName);
+		Class<T> entityClass = (Class<T>) jpaMapper.getEntityClass(entityName);
 		JpaRepository<T, Long> jpaRepository =
-			(JpaRepository<T, Long>) getEntityRepository(entityClass);
+			(JpaRepository<T, Long>) jpaMapper.getEntityRepository(entityClass);
 		jpaRepository.deleteAll();
-			saveEntities(inputStream, jpaRepository, entityClass, tabSeparated);
+		saveEntities(inputStream, jpaRepository, entityClass, tabSeparated);
 	}
 
 	private <T> int saveEntities(InputStream inputStream, JpaRepository<T, Long> jpaRepository,
@@ -131,34 +123,4 @@ public class CsvDbService {
 			.with(tabSeparated?readerTsvSchema:readerSchema)
 			.readValues(inputStream);
 	}
-
-	public List<String> getEntities() {
-		return entityMap.keySet().stream().sorted().collect(Collectors.toList());
-	}
-
-	private Class<?> getEntityClass(String entityName) {
-		var entityClass = entityMap.get(entityName);
-		if(entityClass == null)
-			throw new ValidationException("Unable to find entity class for: "+entityName);
-		return entityClass;
-	}
-
-	private Map<String, Class<?>> getEntityMap() {
-		return entityManager.getMetamodel().getEntities()
-			.stream().collect(Collectors.toMap(
-				e -> camel2Snake(e.getName()), Type::getJavaType));
-	}
-
-	private JpaRepository<?, Long> getEntityRepository(Class<?> entityClass) {
-		var repo = entityRepoMap.get(entityClass);
-		if(repo == null)
-			throw new ValidationException("Unable to get repository for entity class: "+entityClass.getSimpleName());
-		return repo;
-	}
-
-	private String camel2Snake(String str) {
-		return str.replaceAll("([A-Z][a-z])", "_$1")
-			.replaceAll("^_", "").toUpperCase();
-	}
-
 }

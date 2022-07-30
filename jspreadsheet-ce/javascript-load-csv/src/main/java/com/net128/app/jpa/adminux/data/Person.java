@@ -5,6 +5,8 @@ import lombok.*;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 
 @Entity
 @ToString
@@ -27,5 +29,6 @@ public class Person extends Identifiable {
 	private String city;
 
 	@Column(nullable = false)
-	private String country;
+	@Enumerated(EnumType.STRING)
+	private Country country;
 }

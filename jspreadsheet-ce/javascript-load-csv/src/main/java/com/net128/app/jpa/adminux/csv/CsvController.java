@@ -1,6 +1,11 @@
-package com.net128.app.jpa.adminux;
+package com.net128.app.jpa.adminux.csv;
 
+import com.net128.app.jpa.adminux.data.util.Attribute;
+import com.net128.app.jpa.adminux.data.util.JpaMapper;
 import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -11,20 +16,29 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletResponse;
 import java.io.*;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
+import java.time.Instant;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
+import java.util.stream.Collectors;
 
+@SuppressWarnings("unused")
+@Slf4j
 @RestController
 @RequestMapping("/api/v1/admin/csv")
 public class CsvController {
 	private final CsvDbService csvDbService;
+	private final JpaMapper jpaMapper;
 	private final String appName;
 
-	public CsvController(CsvDbService csvDbService,
-		 @Value("${spring.application.name}") String appName) {
+	private final static String uploadMsg = "Successfully uploaded: ";
+	private final static String uploadFailedMsg = "Failed uploading: ";
+
+	public CsvController(CsvDbService csvDbService, JpaMapper jpaMapper, @Value("${spring.application.name}") String appName) {
 		this.csvDbService = csvDbService;
 		this.appName = appName;
+		this.jpaMapper = jpaMapper;
 	}
 
 	@GetMapping(produces = { APPLICATION_ZIP, TEXT_TSV, TEXT_CSV, MediaType.TEXT_PLAIN_VALUE })
@@ -43,10 +57,9 @@ public class CsvController {
 				response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
 				response.setContentType(MediaType.TEXT_PLAIN_VALUE);
 				var osw = new OutputStreamWriter(os);
-				osw.write("No entity given. Expected at least one of:\n"+csvDbService.getEntities());
+				osw.write("No entity given. Expected at least one of:\n"+jpaMapper.getEntities());
 			} else {
 				response.setStatus(HttpServletResponse.SC_OK);
-				//response.setContentType(tabSeparated?TEXT_TSV:TEXT_CSV);
 				writeCsv(os, entities, tabSeparated, zippedSingleTable, response);
 			}
 			os.flush();
@@ -67,10 +80,10 @@ public class CsvController {
 		var status = HttpStatus.OK;
 		try (InputStream is = new ByteArrayInputStream(csvData.getBytes())) {
 			csvDbService.readCsv(is, entity, tabSeparated);
-			message = "Upload the file successfully: "+entity;
+			message = uploadMsg+entity;
 		} catch(Exception e) {
 			status = HttpStatus.BAD_REQUEST;
-			message = "Could not upload the file: "+entity+"\n"+e.getMessage();
+			message = uploadFailedMsg+entity+"\n"+e.getMessage();
 		}
 		return ResponseEntity.status(status).body(message);
 	}
@@ -84,30 +97,51 @@ public class CsvController {
 		MultipartFile file
 	) {
 		String message;
-		String fileName="";
+		var fileName="";
+		var status = HttpStatus.OK;
 		try (InputStream is = file.getInputStream()) {
-			if(file.getOriginalFilename() == null) throw new IllegalArgumentException(
-				"file.originalFileName must not be empty"
-			);
+			if(file.getOriginalFilename() == null)
+				throw new IllegalArgumentException("file.originalFileName must not be empty");
 			fileName = file.getOriginalFilename();
 			var entity = fileName.replaceAll("[.].*", "");
 			csvDbService.readCsv(is, entity, tabSeparated);
-			message = "Upload the file successfully: "+fileName;
+			message = uploadMsg+fileName;
 		} catch(IOException e) {
-			message = "Could not upload the file: "+fileName+"\n"+e.getMessage();
+			message = uploadFailedMsg+fileName+"\n"+e.getMessage();
+			status = HttpStatus.BAD_REQUEST;
 		}
-		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(message);
+		return ResponseEntity.status(status).body(message);
 	}
 
 	@GetMapping(path = "/entities")
-	public List<String> getTables() {
-		return csvDbService.getEntities();
+	public List<String> getEntities() {
+		return jpaMapper.getEntities();
+	}
+
+	@GetMapping(path = "/attributes")
+	public Map<String, Attribute> getAttributes(@RequestParam("entity") String entity) {
+		return jpaMapper.getAttributes(entity);
+	}
+
+	@GetMapping(path = "/configuration")
+	public Configuration getConfiguration() {
+		var configuration = new Configuration();
+		jpaMapper.getEntities().forEach(e -> {
+			var attributes = jpaMapper.getAttributes(e);
+			configuration.addEntity(
+				e, capitalizeWords(e),
+				"?tabSeparated=false&entity="+e,
+				"?tabSeparated=false&entity="+e,
+					jpaMapper.getAttributes(e)
+			);
+		});
+		return configuration;
 	}
 
 	private void writeCsv(OutputStream os,
 		List<String> entities, boolean tabSeparated,
 		boolean zippedSingleTable, HttpServletResponse response) throws IOException {
-		var realEntities = entities.contains("*")? getTables():entities;
+		var realEntities = entities.contains("*")? getEntities():entities;
 		if(!zippedSingleTable && realEntities.size() == 1) {
 			response.setContentType(tabSeparated?TEXT_TSV:TEXT_CSV);
 			csvDbService.writeCsv(os, realEntities.get(0), tabSeparated);
@@ -119,10 +153,35 @@ public class CsvController {
 		}
 	}
 
+	@Data
+	static class Configuration {
+		TreeMap<String, Entity> entities = new TreeMap<>();
+		@Data
+		@AllArgsConstructor
+		static class Entity{
+			String id;
+			String name;
+			String getUri;
+			String putUri;
+			Map<String, Attribute> attributes;
+		}
+		void addEntity(String id, String name, String getUri, String putUri,
+				Map<String, Attribute> attributeMap) {
+			entities.put(id, new Entity(id, name, getUri, putUri, attributeMap));
+		}
+	}
+
+	private String capitalizeWords(String s) {
+		return Arrays.stream(s.split("[_.-]")).map(w -> {
+			if(w.isEmpty()) return w;
+			else return w.substring(0,1).toUpperCase()+w.substring(1).trim().toLowerCase(); }
+		).collect(Collectors.joining(" "));
+	}
+
 	private String timestampNow() { return isoTimeStampNow()
 		.replaceAll("\\..*", "").replaceAll("[^0-9]", ""); }
-	private String isoTimeStampNow() { return isoTimeStamp(LocalDateTime.now());}
-	private String isoTimeStamp(LocalDateTime ts) { return ts.format(DateTimeFormatter.ISO_INSTANT); }
+	private String isoTimeStampNow() { return isoTimeStamp(Instant.now());}
+	private String isoTimeStamp(Instant ts) { return ts.toString(); }
 
 	private final static String APPLICATION_ZIP = "application/zip";
 	private final static String TEXT_TSV = "text/tab-separated-values";

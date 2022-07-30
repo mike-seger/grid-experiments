@@ -1,4 +1,4 @@
-package com.net128.app.jpa.adminux;
+package com.net128.app.jpa.adminux.configuration;
 
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.Ordered;
@@ -24,7 +24,8 @@ public class StaticResourceConfiguration implements WebMvcConfigurer {
 
 	private static class IndexFallbackResourceResolver extends PathResourceResolver {
 		public Resource resolveResourceInternal(HttpServletRequest request,
-				String requestPath, List<? extends Resource> locations,
+				String requestPath,
+				List<? extends Resource> locations,
 				ResourceResolverChain chain) {
 			var resource = super.resolveResourceInternal(
 				request, requestPath, locations, chain);

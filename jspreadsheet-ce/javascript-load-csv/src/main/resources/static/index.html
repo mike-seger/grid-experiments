@@ -1,0 +1,22 @@
+<html>
+
+<script src="https://jsuites.net/v4/jsuites.js"></script>
+<script src="https://jsuites.net/v4/jsuites.webcomponents.js"></script>
+<link rel="stylesheet" href="https://jsuites.net/v4/jsuites.css" type="text/css" />
+
+<jsuites-modal title="Webcomponent Modal" closed="true" width="600" height="480">
+	This is an example how to create a modal based on the custom HTML javascript modal.
+</jsuites-modal>
+
+<input type='button' value='Open the modal'
+	   onclick="document.querySelector('jsuites-modal').modal.open()" class='plain'>
+
+<script>
+document.querySelector('jsuites-modal').addEventListener('onopen', function() {
+    console.log('Modal is open');
+});
+document.querySelector('jsuites-modal').addEventListener('onclose', function() {
+    console.log('Modal is closed');
+});
+</script>
+</html>

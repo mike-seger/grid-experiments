@@ -1,16 +1,19 @@
 {
     "dataSources": {
         "cities": {
-            "name": "cities",
-            "uri": "data/cities.csv"
+            "id": "cities",
+            "name": "Cities",
+            "getUri": "data/cities.csv"
         },
         "mlb_players": {
-            "name": "mlb_players",
-            "uri": "data/mlb_players.csv"
+            "id": "mlb_players",
+            "name": "MLB Players",
+            "getUri": "data/mlb_players.csv"
         },
         "museums": {
-            "name": "museums",
-            "uri": "data/museums.csv"
+            "id": "museums",
+            "name": "Museums",
+            "getUri": "data/museums.csv"
         }
     }
 }

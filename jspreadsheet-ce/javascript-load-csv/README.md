@@ -13,7 +13,7 @@ http://localhost:8080/swagger-ui/index.html
 ## JS application (Client)
 
 The root is in:
-src/main/resources/static
+src/main/resources/static/
 
 ### Start local http server
 ```

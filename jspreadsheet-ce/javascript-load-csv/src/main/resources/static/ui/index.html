@@ -1,16 +1,17 @@
-<html>
+<html lang="en">
 <head>
-	
-	<link rel="stylesheet" href="https://jsuites.net/v4/jsuites.css" type="text/css" />
-	<link rel="stylesheet" href="https://bossanova.uk/jspreadsheet/v4/jexcel.css" type="text/css" /> 
-	<link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
-	
+	<title>db adminux</title>
 	<script src="https://jsuites.net/v4/jsuites.js"></script>
+	<script src="https://jsuites.net/v4/jsuites.webcomponents.js"></script>
 	<script src="https://bossanova.uk/jspreadsheet/v4/jexcel.js"></script>
 	<script src="https://cdn.jsdelivr.net/npm/d3-dsv@3"></script>
 
-	<link rel="stylesheet" href="jexcel-custom.css" type="text/css" />
+	<link rel="stylesheet" href="https://jsuites.net/v4/jsuites.css" type="text/css" />
+	<link rel="stylesheet" href="https://bossanova.uk/jspreadsheet/v4/jexcel.css" type="text/css" />
+	<link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
 
+	<link rel="stylesheet" href="jexcel-custom.css" type="text/css" />
+	
 	<style>
 		body, html {
 			font-family: sans-serif;
@@ -19,28 +20,32 @@
 			overflow: hidden;
 		}
 
-		.container {
-			width: calc(100vw - 5px);
-			height: calc(100vh - 80px);
-			display: flex;
-		}
-
 		.content {
 			margin: 8px 0 0 0;
-			flex-grow: 1;
+			/* flex-grow: 1; */
 		}
 	</style>
 </head>
 <body>
-	<div id="container">
+	<div>
 		<div id="toolbar"></div> 
 		<div class="content" id="spreadsheet1"></div>
 	</div>
 
+	<jsuites-modal title="Saving Data" closed="true" width="600" height="400">
+		Server response: <div id="servertext"></div>
+	</jsuites-modal>
+
 	<script>
-	var spreadsheet1 = document.getElementById('spreadsheet1')
-	var dataSourceNames = [];
-	var downloadFormat = "TSV";
+	const spreadsheet1 = document.getElementById('spreadsheet1')
+	const serverMessage = document.querySelector('jsuites-modal')
+	const serverText = 	document.getElementById('servertext')
+
+	const hMargin = 5;
+
+	let entityIds = [];
+	let downloadFormat = "TSV";
+	let remoteBaseUri = "../api/v1/admin/csv";
 
 	function stringWidth(text) {
 		const font = "16px sans-serif"	
@@ -52,50 +57,80 @@
 	}
 
 	function maxStringWidth(texts) {
-		const max = texts.reduce((element,max) => stringWidth(element) > stringWidth(max) ? element : max, 0)
+		const max = texts.reduce((element,max) => 
+			stringWidth(element) > stringWidth(max) ? element : max, 0)
 		return stringWidth(max);
 	}
 
-	var loaded = function(instance) {
+	function autoResizeColumn(js, colIndex, header) {
 		function findLongestString(arr) {
 			return arr.reduce((a, b)=> a.length > b.length ? a : b);
 		}
-		console.log('New data is loaded');
-		const js = instance.jspreadsheet;
-		const hMargin = 5;
-		const headers = js.getHeaders().split(',');
-		for(var i = 0; i<headers.length; i++) {
-			const longestString = findLongestString(js.getColumnData(i));
-			js.setWidth(i, Math.max(stringWidth(longestString), stringWidth(headers[i]))+2*hMargin);
-		}
+
+		const longestString = findLongestString(js.getColumnData(colIndex));
+		js.setWidth(colIndex, Math.max(stringWidth(longestString), 
+			stringWidth(header))+2*hMargin);
 	}
 
-	function addDataSource(dataSource) {
-		const dataSourceName = dataSource.name;
-		const pos = dataSourceNames.indexOf(dataSourceName)
+	function autoResizeColumns(instance) {
+		const js = instance.jspreadsheet;
+		const headers = js.getHeaders().split(',');
+		for(let col = 0; col<headers.length; col++) 
+			autoResizeColumn(js, col, headers[col])
+	}
+
+	function cellChanged(instance, cell, col, row, value) {
+		try {
+			var cellName = jexcel.getColumnNameFromId([col,row]);
+			console.log(`Change on cell (${col}, ${row}) ${cellName} to: ${value}`);
+			const js = instance.jspreadsheet;
+			const headers = js.getHeaders().split(',');
+			autoResizeColumn(js, col, headers[col])
+		} catch(e) {
+			console.log(e);
+		}
+		return true;
+	}
+
+	function loaded(instance) {
+		console.log('New data is loaded');
+		autoResizeColumns(instance)
+	}
+
+	function addEntity(entity) {
+		const pos = entityIds.indexOf(entity.id)
 		if(pos>=0) {
 			selectWorkSheet(pos);
 			return;
 		}
-		dataSourceNames.push(dataSourceName);	
+		entityIds.push(entity.id);	
 		jspreadsheet.tabs(spreadsheet1, [{
-			sheetName: dataSourceName,
-			csv: dataSource.uri,
+			sheetName: entity.name,
+			csv: remoteBaseUri+entity.getUri,
 			csvHeaders:true,
 			tableOverflow:true,
 			tableHeight:'89%',
 			onload: loaded,
+			onchange: cellChanged,
+//			onchange: changed,
+			allowInsertColumn: false,
+			allowDeleteColumn: false,
+			allowRenameColumn: false,
+			allowManualInsertColumn: false,
+			allowExport: false,
+			rowResize: false,
+			fillscreen: false,
 		}]);
 	}
 
 	function downloadSvFile(fileName, data) {
-		var result;
-		var mimetype = "text/csv";
+		let result;
+		let mimetype = "text/csv";
 		if(downloadFormat == "TSV") {
 			result = d3.tsvFormatBody(data);
 			mimetype = "text/tab-separated-values";
 		} else result = d3.csvFormatBody(data);
-		var hiddenA = document.createElement('a');
+		let hiddenA = document.createElement('a');
 		hiddenA.href = 'data:'+mimetype+';charset=utf-8,' + encodeURI(result);
 		hiddenA.target = '_blank';
 		hiddenA.download = fileName+'.'+downloadFormat.toLowerCase();
@@ -106,8 +141,13 @@
 		return spreadsheet1.querySelectorAll('.jexcel_tab_link');
 	}
 
-	function getCurrentWorkSheet() {
-		return spreadsheet1.children[0].querySelector('.selected').getAttribute('data-spreadsheet');
+	function getCurrentWorkSheetIndex() {
+		return spreadsheet1.children[0].querySelector('.selected')
+			.getAttribute('data-spreadsheet');
+	}
+
+	function getCurrentEntityId() {
+		return entityIds[getCurrentWorkSheetIndex()];
 	}
 
 	function selectWorkSheet(num) {
@@ -118,49 +158,68 @@
 
 	function getCurrentJexcel() {
 		if(!spreadsheet1.children[0]) return undefined;
-		const worksheet = getCurrentWorkSheet()
+		const worksheet = getCurrentWorkSheetIndex()
 		return spreadsheet1.jexcel[worksheet];
 	}
 
 	function getCurrentData() {
-		const worksheet = spreadsheet1.children[0].querySelector('.selected').getAttribute('data-spreadsheet');
-		const js = getCurrentJexcel();
+		const js =  getCurrentJexcel();
 		if(!js) return [];
-		var data = js.getData();
+		let data = js.getData();
 		data.splice(0, 0, js.getHeaders().split(','));
 		return data;
 	}
 
-	var download = function() {
+	function download() {
 		const data = getCurrentData();
 		console.log(data);
 		if(data.length==0) return;
 		downloadSvFile("data", data);
 	}
 
-	function save() {
-		console.log("Save data...");
+	async function saveData(uri, data) {
+		const response = await fetch(uri, {
+			method: 'PUT',
+			headers: { 'Content-type': 'text/csv' },
+			body: d3.csvFormatBody(data),
+		});
+		const responseMessage = await response.text();
+		serverText.innerText = responseMessage;
+		serverMessage.modal.open();
+		console.log(responseMessage);
 	}
 
-	function createToolbar(dataSources) {
+	function save(entities) {
+		const data = getCurrentData();
+		console.log(data);
+		if(data.length===0) return;
+		console.log("Save data...: "+getCurrentEntityId());
+		const entity = entities[getCurrentEntityId()];
+		const uri = remoteBaseUri + entity.putUri;
+		console.log("URI: "+uri);
+		saveData(uri, data);
+	}
+
+	function createToolbar(entities) {
 		jSuites.toolbar(document.getElementById('toolbar'), {
 			container: true,
 			items:[
 				{
 					type: 'select',
-					data: Object.keys(dataSources),
-					width: maxStringWidth(Object.keys(dataSources))+15,
-					onchange: function(a,b,c,d) { addDataSource(dataSources[d]); }
+					data: Object.keys(entities),
+					render: function(e) { return '<span>' + entities[e].name + '</span>'; },
+					width: maxStringWidth(Object.keys(entities))+15,
+					onchange: function(a,b,c,d) { addEntity(entities[d]); }
 				},
 				{
 					type: 'icon',
 					content: 'save',
-					onclick: save
+					onclick: function() { save(entities); }
 				},
 				{
 					type: 'select',
 					data: ["TSV", "CSV"],
-					onchange: function(a,b,c,d) { downloadFormat = d; }
+					onchange: function(a,b,c,value) { downloadFormat = value; }
 				},
 				{
 					type: 'icon',
@@ -172,17 +231,16 @@
 	}
 
 	async function loadConfiguration() {
-		const configUrl = location.port==8000? 'config.json' : 'config-dyn.json'
+		const configUrl = location.port==8000? 'config.json' : remoteBaseUri+'/configuration'
 		const response = await fetch(configUrl);
 		const configuration = await response.json();
 		console.log(configuration);
-		const dataSources = configuration.dataSources;
-		console.log(Object.keys(dataSources));
-		createToolbar(dataSources);
+		const entities = configuration.entities;
+		console.log(Object.keys(entities));
+		createToolbar(entities);
 	}
 
 	loadConfiguration();
-
 	</script>
 </body>
 </html>

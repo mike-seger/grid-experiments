@@ -1,12 +1,16 @@
 /* TABS */
 
 .jexcel_tabs .jexcel_tab_link {
-    padding: 7px 7px 7px 7px;
-    margin: 0 5px 0 0;
+    display: none;
 }
 
-.jexcel_tabs .jexcel_tab_link.selected {
-    font-weight: 600;
+.jexcel_content {
+    padding: 0;
+}
+
+.jexcel_corner {
+    margin: 0 -3px -3px 0;
+    display: none;
 }
 
 /* TEXT FORMAT */
