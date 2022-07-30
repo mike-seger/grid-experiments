@@ -160,11 +160,12 @@ public class CsvController {
 			String name;
 			String getUri;
 			String putUri;
-			LinkedHashMap<String, Attribute> attributes;
+			List<Attribute> attributes;
 		}
 		void addEntity(String id, String name, String getUri, String putUri,
 				LinkedHashMap<String, Attribute> attributeMap) {
-			entities.put(id, new Entity(id, name, getUri, putUri, attributeMap));
+			entities.put(id, new Entity(id, name, getUri, putUri,
+				new ArrayList<>(attributeMap.values())));
 		}
 	}
 

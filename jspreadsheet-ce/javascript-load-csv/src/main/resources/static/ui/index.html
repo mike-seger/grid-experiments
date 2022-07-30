@@ -121,9 +121,27 @@
 		}
 		entityIds.push(entity.id);
 		entities[entity.id] = entity;
+
+		let columns = []
+		if(entity.attributes) {
+			//var attrs = Object.keys(entity.attributes);
+			for (const properties of entity.attributes) {
+				let column = {}
+				console.log(properties);
+				if(properties.type === "Enum") column = {
+					type: 'dropdown', title: properties.name, name: properties.name,
+					source: properties.enumConstants};
+				else column = {
+					type: 'text', title: properties.name, name: properties.name };
+				columns.push(column);
+			}
+
+			console.log(columns);
+		}
 		jspreadsheet.tabs(spreadsheet1, [{
 			sheetName: entity.name,
 			csv: remoteBaseUri+entity.getUri,
+			columns: columns,
 			csvHeaders:true,
 			tableOverflow:true,
 			tableHeight:'89%',
