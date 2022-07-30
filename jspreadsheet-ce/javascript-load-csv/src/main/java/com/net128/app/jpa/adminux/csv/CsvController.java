@@ -17,10 +17,7 @@ import org.springframework.web.multipart.MultipartFile;
 import javax.servlet.http.HttpServletResponse;
 import java.io.*;
 import java.time.Instant;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @SuppressWarnings("unused")
@@ -163,10 +160,10 @@ public class CsvController {
 			String name;
 			String getUri;
 			String putUri;
-			Map<String, Attribute> attributes;
+			LinkedHashMap<String, Attribute> attributes;
 		}
 		void addEntity(String id, String name, String getUri, String putUri,
-				Map<String, Attribute> attributeMap) {
+				LinkedHashMap<String, Attribute> attributeMap) {
 			entities.put(id, new Entity(id, name, getUri, putUri, attributeMap));
 		}
 	}

@@ -44,6 +44,7 @@
 	const hMargin = 5;
 
 	let entityIds = [];
+	let entities = {};
 	let downloadFormat = "TSV";
 	let remoteBaseUri = "../api/v1/admin/csv";
 
@@ -79,6 +80,17 @@
 			autoResizeColumn(js, col, headers[col])
 	}
 
+	function setColumnParams(js, col, header) {
+		console.log(`col: ${col} - ${header}`);
+	}
+
+	function setAllColumnParams(instance, entity) {
+		const js = instance.jspreadsheet;
+		const headers = js.getHeaders().split(',');
+		for(let col = 0; col<headers.length; col++) 
+			setColumnParams(js, col, headers[col])
+	}
+
 	function cellChanged(instance, cell, col, row, value) {
 		try {
 			var cellName = jexcel.getColumnNameFromId([col,row]);
@@ -87,14 +99,18 @@
 			const headers = js.getHeaders().split(',');
 			autoResizeColumn(js, col, headers[col])
 		} catch(e) {
-			console.log(e);
+			console.error(e);
 		}
 		return true;
 	}
 
 	function loaded(instance) {
+		// { type: 'dropdown', title: 'Stock', width: '100px', source: ['No','Yes'] },
 		console.log('New data is loaded');
-		autoResizeColumns(instance)
+		autoResizeColumns(instance);
+		let entity = getCurrentEntity(getCurrentEntity());
+		console.log(entity);
+		setAllColumnParams(instance, entity);
 	}
 
 	function addEntity(entity) {
@@ -103,7 +119,8 @@
 			selectWorkSheet(pos);
 			return;
 		}
-		entityIds.push(entity.id);	
+		entityIds.push(entity.id);
+		entities[entity.id] = entity;
 		jspreadsheet.tabs(spreadsheet1, [{
 			sheetName: entity.name,
 			csv: remoteBaseUri+entity.getUri,
@@ -112,7 +129,6 @@
 			tableHeight:'89%',
 			onload: loaded,
 			onchange: cellChanged,
-//			onchange: changed,
 			allowInsertColumn: false,
 			allowDeleteColumn: false,
 			allowRenameColumn: false,
@@ -120,6 +136,9 @@
 			allowExport: false,
 			rowResize: false,
 			fillscreen: false,
+			columnDrag:true,
+			columnSorting:false,
+			filters: true,
 		}]);
 	}
 
@@ -148,6 +167,10 @@
 
 	function getCurrentEntityId() {
 		return entityIds[getCurrentWorkSheetIndex()];
+	}
+
+	function getCurrentEntity() {
+		return entities[getCurrentEntityId()];
 	}
 
 	function selectWorkSheet(num) {
