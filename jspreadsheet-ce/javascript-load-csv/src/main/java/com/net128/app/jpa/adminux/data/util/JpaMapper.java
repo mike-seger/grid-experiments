@@ -10,10 +10,7 @@ import java.lang.reflect.Array;
 import java.lang.reflect.GenericArrayType;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Repository
@@ -29,10 +26,18 @@ public class JpaMapper {
 		entityRepoMap =	jpaRepositories.stream().collect(Collectors.toMap(JpaMapper::getEntity, j -> j));
 	}
 	public LinkedHashMap<String, Attribute> getAttributes(String entity) {
-		return getMetaAttributes(entity).stream().collect(
+		var result = getMetaAttributes(entity).stream().sorted(Comparator.comparing(javax.persistence.metamodel.Attribute::getName)).collect(
 			Collectors.toMap(
 				javax.persistence.metamodel.Attribute::getName,
 				Attribute::new, (v1,v2) -> v1, LinkedHashMap::new));
+		if(result.containsKey("id")) {
+			var id = result.remove("id");
+			var old = result;
+			result = new LinkedHashMap<String, Attribute>();
+			result.put(id.name, id);
+			result.putAll(old);
+		}
+		return result;
 	}
 
 	public List<String> getEntities() {

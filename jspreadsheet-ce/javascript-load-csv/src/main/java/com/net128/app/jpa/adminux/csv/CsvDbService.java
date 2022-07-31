@@ -1,8 +1,7 @@
 package com.net128.app.jpa.adminux.csv;
 
 import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.databind.MappingIterator;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.*;
 import com.fasterxml.jackson.dataformat.csv.CsvFactory;
 import com.fasterxml.jackson.dataformat.csv.CsvMapper;
 import com.fasterxml.jackson.dataformat.csv.CsvParser;
@@ -69,13 +68,20 @@ public class CsvDbService {
 		if(tabSeparated==null) tabSeparated=true;
 		var entityClass = jpaMapper.getEntityClass(entity);
 		var jpaRepository = jpaMapper.getEntityRepository(entityClass);
-		var jsonFactory = new CsvFactory().configure(
-			JsonGenerator.Feature.AUTO_CLOSE_TARGET, false);
+		var jsonFactory = new CsvFactory()
+			.configure(JsonGenerator.Feature.AUTO_CLOSE_TARGET, false)	;
 		var mapper = new CsvMapper().schemaFor(entityClass)
-			.withLineSeparator("\n").withHeader();
+			.withLineSeparator("\n").withHeader()
+			.withColumnReordering(true)
+			.sortedBy(jpaMapper.getAttributes(entity).keySet().toArray(new String[0]));
+		//for(var column : jpaMapper.getAttributes( entity).keySet()) mapper.column(column);
 		if(tabSeparated) mapper = mapper.withColumnSeparator('\t').withoutQuoteChar();
 		try (var cos = os) {
-			var writer = new ObjectMapper(jsonFactory).writer(mapper).writeValues(cos);
+			var writer = new ObjectMapper(jsonFactory)
+
+				//.configure(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS, true)
+				.writer(mapper).writeValues(cos);
+
 			AtomicInteger count = new AtomicInteger();
 			jpaRepository.findAll().forEach(e -> {
 				try { writer.write(e);
