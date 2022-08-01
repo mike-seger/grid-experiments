@@ -1,5 +1,6 @@
 package com.net128.app.jpa.adminux.data;
 
+import com.net128.app.jpa.adminux.data.util.Props;
 import lombok.Data;
 
 import javax.persistence.GeneratedValue;
@@ -11,10 +12,10 @@ import java.util.Objects;
 @MappedSuperclass
 @Data
 public abstract class Identifiable {
+	@Props.Hidden
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
-
 	@Override
 	public boolean equals(Object o) {
 		if (this == o) return true;

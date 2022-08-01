@@ -1,6 +1,8 @@
 <html lang="en">
 <head>
 	<title>db adminux</title>
+
+<!--
 	<script src="https://jsuites.net/v4/jsuites.js"></script>
 	<script src="https://jsuites.net/v4/jsuites.webcomponents.js"></script>
 	<script src="https://bossanova.uk/jspreadsheet/v4/jexcel.js"></script>
@@ -9,7 +11,15 @@
 	<link rel="stylesheet" href="https://jsuites.net/v4/jsuites.css" type="text/css" />
 	<link rel="stylesheet" href="https://bossanova.uk/jspreadsheet/v4/jexcel.css" type="text/css" />
 	<link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+-->	
+	<script src="local/jsuites.js"></script>
+	<script src="local/jsuites.webcomponents.js"></script>
+	<script src="local/jexcel.js"></script>
+	<script src="local/d3-dsv@3.js"></script>
 
+	<link rel="stylesheet" href="local/jsuites.css" type="text/css" />
+	<link rel="stylesheet" href="local/jexcel.css" type="text/css" />
+	<link rel="stylesheet" href="local/Material-Icons.css" />
 	<link rel="stylesheet" href="jexcel-custom.css" type="text/css" />
 	
 	<style>
@@ -22,7 +32,6 @@
 
 		.content {
 			margin: 8px 0 0 0;
-			/* flex-grow: 1; */
 		}
 	</style>
 </head>
@@ -42,6 +51,8 @@
 	const serverText = 	document.getElementById('servertext')
 
 	const hMargin = 5;
+	const dropdownMargin = 23;
+	const calendarMargin = 30;
 
 	let entityIds = [];
 	let entities = {};
@@ -68,9 +79,15 @@
 			return arr.reduce((a, b)=> a.length > b.length ? a : b);
 		}
 
+		const colConfig = js.getConfig().columns[colIndex];
+		console.log(colConfig);
+		let extraMargin=0;
+		if(colConfig.type === 'dropdown') extraMargin = dropdownMargin;
+		else if(colConfig.type === 'calendar') extraMargin = calendarMargin;
+
 		const longestString = findLongestString(js.getColumnData(colIndex));
 		js.setWidth(colIndex, Math.max(stringWidth(longestString), 
-			stringWidth(header))+2*hMargin);
+			stringWidth(header)) + 2*hMargin + extraMargin);
 	}
 
 	function autoResizeColumns(instance) {
@@ -105,12 +122,29 @@
 	}
 
 	function loaded(instance) {
-		// { type: 'dropdown', title: 'Stock', width: '100px', source: ['No','Yes'] },
 		console.log('New data is loaded');
 		autoResizeColumns(instance);
 		let entity = getCurrentEntity(getCurrentEntity());
 		console.log(entity);
 		setAllColumnParams(instance, entity);
+	}
+
+	function createColumns(attributes) {
+		let columns = []
+		//var attrs = Object.keys(entity.attributes);
+		for (const properties of attributes) {
+			let column = {}
+			console.log(properties);
+			if(properties.hidden) column = {
+				type: 'hidden', title: properties.name, name: properties.name };
+			else if(properties.type === "Enum") column = {
+				type: 'dropdown', title: properties.name, name: properties.name,
+				source: properties.enumConstants};
+			else column = {
+				type: 'text', title: properties.name, name: properties.name };
+			columns.push(column);
+		}
+		return columns;
 	}
 
 	function addEntity(entity) {
@@ -124,18 +158,7 @@
 
 		let columns = []
 		if(entity.attributes) {
-			//var attrs = Object.keys(entity.attributes);
-			for (const properties of entity.attributes) {
-				let column = {}
-				console.log(properties);
-				if(properties.type === "Enum") column = {
-					type: 'dropdown', title: properties.name, name: properties.name,
-					source: properties.enumConstants};
-				else column = {
-					type: 'text', title: properties.name, name: properties.name };
-				columns.push(column);
-			}
-
+			columns = createColumns(entity.attributes);
 			console.log(columns);
 		}
 		jspreadsheet.tabs(spreadsheet1, [{
@@ -154,7 +177,7 @@
 			allowExport: false,
 			rowResize: false,
 			fillscreen: false,
-			columnDrag:true,
+			//columnDrag:true,
 			columnSorting:false,
 			filters: true,
 		}]);

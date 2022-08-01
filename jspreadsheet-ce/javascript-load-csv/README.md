@@ -15,6 +15,8 @@ http://localhost:8080/swagger-ui/index.html
 The root is in:
 src/main/resources/static/
 
+http://localhost:8080/ui/index.html
+
 ### Start local http server
 ```
 python3 -m http.server 8000

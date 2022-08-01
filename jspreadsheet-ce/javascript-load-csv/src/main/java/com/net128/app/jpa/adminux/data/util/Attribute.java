@@ -16,6 +16,8 @@ public class Attribute {
 	AttributeType type;
 	Set<String> enumConstants;
 
+	boolean hidden;
+
 	Attribute(javax.persistence.metamodel.Attribute<?, ?> attribute) {
 		name = attribute.getName();
 		var javaType = attribute.getJavaType();
@@ -29,6 +31,7 @@ public class Attribute {
 			enumConstants = Arrays.stream(javaType.getEnumConstants())
 					.map(Object::toString).collect(Collectors.toSet());
 		} else type = AttributeType.String;
+		hidden = Props.isHiddenField(attribute.getJavaMember().getDeclaringClass(), name);
 		log.info(name + ": " + attribute.getJavaType() + " -> " + type);
 	}
 }
