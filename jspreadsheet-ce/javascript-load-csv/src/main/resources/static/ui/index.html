@@ -48,6 +48,7 @@
 	<script>
 	const spreadsheet1 = document.getElementById('spreadsheet1')
 	const serverMessage = document.querySelector('jsuites-modal')
+	const toolBar = document.getElementById('toolbar');
 	const serverText = 	document.getElementById('servertext')
 
 	const hMargin = 5;
@@ -123,12 +124,14 @@
 	function loaded(instance) {
 		console.log('New data is loaded');
 		autoResizeColumns(instance);
-		let entity = getCurrentEntity(getCurrentEntity());
+		let entity = getCurrentEntity();
 		console.log(entity);
 		setAllColumnParams(instance, entity);
-
-		const filterRow = document.querySelector('.jexcel > thead > tr:nth-child(2)');
-		if(filterRow) filterRow.style.display = "none";
+		const index = getCurrentWorkSheetIndex();
+		initAllFilterStates(index);
+		syncAllIconStates(index);
+		// const filterRow = document.querySelector('.jexcel > thead > tr:nth-child(2)');
+		// if(filterRow) filterRow.style.display = "none";
 		// let js = getCurrentJexcel();
 		// js.filter.style.display = null;
 	}
@@ -150,7 +153,11 @@
 		return columns;
 	}
 
-	function addEntity(entity) {
+	function tableChanged() {
+		console.log("tableChanged");
+	}
+
+	function switchToEntity(entity) {
 		let pos = entityIds.indexOf(entity.id)
 		if(pos>=0) {
 			selectWorkSheet(pos);
@@ -174,6 +181,7 @@
 			tableHeight:'89%',
 			onload: loaded,
 			onchange: cellChanged,
+			onafterchanges: tableChanged,
 			allowInsertColumn: false,
 			allowDeleteColumn: false,
 			allowRenameColumn: false,
@@ -185,6 +193,7 @@
 			columnSorting:false,
 			filters: true,
 		}]);
+		//syncAllIconStates(entityIds.length-1);
 	}
 
 	function downloadSvFile(fileName, data) {
@@ -222,6 +231,7 @@
 		const tabs = getWorkSheetTabs()
 		if(!tabs || tabs.length<num) return;
 		tabs[num].click();
+		syncAllIconStates(num);
 	}
 
 	function getJexcel(num) {
@@ -272,6 +282,37 @@
 		saveData(uri, data);
 	}
 
+	function syncIconStates(index, selector, iconIndex) {
+		const filterRow = document.querySelectorAll(selector)[index];
+		if(filterRow) {
+			const filterState = !(filterRow.style.display === 'none');
+			const toolBarItems = toolBar.querySelectorAll(".jtoolbar-item");
+			console.log("filterState - "+ selector +":"+filterState);
+			if(toolBarItems && toolBarItems.length>iconIndex) {
+				if(filterState) toolBarItems[iconIndex].classList.add("jtoolbar-active");
+				else toolBarItems[iconIndex].classList.remove("jtoolbar-active");
+			}
+		}
+	}
+
+	function syncAllIconStates(index) {
+		//const index = getCurrentWorkSheetIndex();
+		syncIconStates(index, '.jexcel > thead > tr:nth-child(2)', 4);
+		syncIconStates(index, '.jexcel_filter', 5);
+	}
+
+	function initFilterState(index, selector) {
+		const filterRow = document.querySelectorAll(selector)[index];
+		if(filterRow)
+			filterRow.style.display = 'none';
+	}
+
+	function initAllFilterStates(index) {
+		initFilterState(index, '.jexcel > thead > tr:nth-child(2)');
+		initFilterState(index, '.jexcel_filter');
+	}
+
+
 	function toggleFunc(icon, selector) {
 		let js = getCurrentJexcel();
 		if(!js) return true;
@@ -286,7 +327,7 @@
 	}
 
 	function createToolbar(entities) {
-		jSuites.toolbar(document.getElementById('toolbar'), {
+		jSuites.toolbar(toolBar, {
 			container: true,
 			items:[
 				{
@@ -294,7 +335,7 @@
 					data: Object.keys(entities),
 					render: function(e) { return '<span>' + entities[e].name + '</span>'; },
 					width: maxStringWidth(Object.keys(entities))+15,
-					onchange: function(a,b,c,d) { addEntity(entities[d]); }
+					onchange: function(a,b,c,d) { switchToEntity(entities[d]); }
 				},
 				{
 					type: 'icon',
@@ -316,15 +357,6 @@
 					content: 'filter_list',
 					onclick: function(a,b,c) {
 						return toggleFunc(c,'.jexcel > thead > tr:nth-child(2)');
-						// let js = getCurrentJexcel();
-						// if(!js) return true;
-						// c.classList.toggle("jtoolbar-active");
-						// const active = js.filter.style.display === 'none';
-						// const filterRow = document.querySelector('.jexcel > thead > tr:nth-child(2)');
-						// if(filterRow) {
-						// 	if(active) filterRow.style.display = null;
-						// 	else filterRow.style.display = "none";
-						// }
 					},
 					state: true,
 					active: false,
@@ -334,15 +366,6 @@
 					content: 'search',
 					onclick: function(a,b,c) {
 						return toggleFunc(c, '.jexcel_filter');
-						// let js = getCurrentJexcel();
-						// if(!js) return true;
-						// c.classList.toggle("jtoolbar-active");
-						// const filterRow = document.querySelector('.jexcel_filter');
-						// if(filterRow) {
-						// 	const active = filterRow.style.display === 'none';
-						// 	if(active) filterRow.style.display = null;
-						// 	else filterRow.style.display = "none";
-						// }
 					},
 					state: true,
 					active: false,
