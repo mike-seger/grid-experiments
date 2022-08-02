@@ -10,13 +10,18 @@ import org.springframework.stereotype.Component;
 public class DataLoader implements ApplicationRunner {
 
     private final PersonRepository personRepository;
+    private final CarRepository carRepository;
 
     @Autowired
-    public DataLoader(PersonRepository personRepository) {
+    public DataLoader(PersonRepository personRepository, CarRepository carRepository) {
         this.personRepository = personRepository;
+        this.carRepository = carRepository;
     }
 
     public void run(ApplicationArguments args) {
+        carRepository.save(new Car("Ferrari", 1234));
+        carRepository.save(new Car("Honda", 123));
+
         personRepository.save(new Person(
             "firstName 1","lastName 1","address 1","city 1",Country.Switzerland));
         personRepository.save(new Person(

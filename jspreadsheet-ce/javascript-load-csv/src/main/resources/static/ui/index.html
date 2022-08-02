@@ -81,13 +81,12 @@
 
 		const colConfig = js.getConfig().columns[colIndex];
 		console.log(colConfig);
-		let extraMargin=0;
-		if(colConfig.type === 'dropdown') extraMargin = dropdownMargin;
-		else if(colConfig.type === 'calendar') extraMargin = calendarMargin;
 
 		const longestString = findLongestString(js.getColumnData(colIndex));
-		js.setWidth(colIndex, Math.max(stringWidth(longestString), 
-			stringWidth(header)) + 2*hMargin + extraMargin);
+		let w = Math.max(stringWidth(longestString), stringWidth(header));
+		if(colConfig.type === 'dropdown') w += dropdownMargin;
+		else if(colConfig.type === 'calendar') w += calendarMargin;
+		js.setWidth(colIndex, w + 2*hMargin);
 	}
 
 	function autoResizeColumns(instance) {
@@ -127,11 +126,15 @@
 		let entity = getCurrentEntity(getCurrentEntity());
 		console.log(entity);
 		setAllColumnParams(instance, entity);
+
+		const filterRow = document.querySelector('.jexcel > thead > tr:nth-child(2)');
+		if(filterRow) filterRow.style.display = "none";
+		// let js = getCurrentJexcel();
+		// js.filter.style.display = null;
 	}
 
 	function createColumns(attributes) {
 		let columns = []
-		//var attrs = Object.keys(entity.attributes);
 		for (const properties of attributes) {
 			let column = {}
 			console.log(properties);
@@ -148,7 +151,7 @@
 	}
 
 	function addEntity(entity) {
-		const pos = entityIds.indexOf(entity.id)
+		let pos = entityIds.indexOf(entity.id)
 		if(pos>=0) {
 			selectWorkSheet(pos);
 			return;
@@ -166,6 +169,7 @@
 			csv: remoteBaseUri+entity.getUri,
 			columns: columns,
 			csvHeaders:true,
+			defaultColAlign: 'left',
 			tableOverflow:true,
 			tableHeight:'89%',
 			onload: loaded,
@@ -177,7 +181,7 @@
 			allowExport: false,
 			rowResize: false,
 			fillscreen: false,
-			//columnDrag:true,
+			search: true,
 			columnSorting:false,
 			filters: true,
 		}]);
@@ -220,10 +224,14 @@
 		tabs[num].click();
 	}
 
+	function getJexcel(num) {
+		if(!spreadsheet1.children[0]) return undefined;
+		return spreadsheet1.jexcel[num];
+	}
+
 	function getCurrentJexcel() {
 		if(!spreadsheet1.children[0]) return undefined;
-		const worksheet = getCurrentWorkSheetIndex()
-		return spreadsheet1.jexcel[worksheet];
+		return getJexcel(getCurrentWorkSheetIndex());
 	}
 
 	function getCurrentData() {
@@ -289,6 +297,40 @@
 					type: 'icon',
 					content: 'vertical_align_bottom',
 					onclick: download
+				},
+				{
+					type: 'icon',
+					content: 'filter_list',
+					onclick: function(a,b,c) {
+						let js = getCurrentJexcel();
+						if(!js) return true;
+						c.classList.toggle("jtoolbar-active");
+						const active = js.filter.style.display === 'none';
+						const filterRow = document.querySelector('.jexcel > thead > tr:nth-child(2)');
+						if(filterRow) {
+							if(active) filterRow.style.display = null;
+							else filterRow.style.display = "none";
+						}
+					},
+					state: true,
+					active: false,
+				},
+				{
+					type: 'icon',
+					content: 'search',
+					onclick: function(a,b,c) {
+						let js = getCurrentJexcel();
+						if(!js) return true;
+						c.classList.toggle("jtoolbar-active");
+						const filterRow = document.querySelector('.jexcel_filter');
+						if(filterRow) {
+							const active = filterRow.style.display === 'none';
+							if(active) filterRow.style.display = null;
+							else filterRow.style.display = "none";
+						}
+					},
+					state: true,
+					active: false,
 				}
 			]
 		});

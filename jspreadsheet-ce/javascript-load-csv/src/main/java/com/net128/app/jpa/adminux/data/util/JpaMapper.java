@@ -33,7 +33,7 @@ public class JpaMapper {
 		if(result.containsKey("id")) {
 			var id = result.remove("id");
 			var old = result;
-			result = new LinkedHashMap<String, Attribute>();
+			result = new LinkedHashMap<>();
 			result.put(id.name, id);
 			result.putAll(old);
 		}
