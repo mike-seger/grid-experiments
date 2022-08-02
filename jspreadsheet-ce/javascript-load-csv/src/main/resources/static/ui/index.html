@@ -272,6 +272,19 @@
 		saveData(uri, data);
 	}
 
+	function toggleFunc(icon, selector) {
+		let js = getCurrentJexcel();
+		if(!js) return true;
+		icon.classList.toggle("jtoolbar-active");
+		const index = getCurrentWorkSheetIndex();
+		const filterRow = document.querySelectorAll(selector)[index];
+		if(filterRow) {
+			const active = filterRow.style.display === 'none';
+			if(active) filterRow.style.display = null;
+			else filterRow.style.display = "none";
+		}
+	}
+
 	function createToolbar(entities) {
 		jSuites.toolbar(document.getElementById('toolbar'), {
 			container: true,
@@ -302,15 +315,16 @@
 					type: 'icon',
 					content: 'filter_list',
 					onclick: function(a,b,c) {
-						let js = getCurrentJexcel();
-						if(!js) return true;
-						c.classList.toggle("jtoolbar-active");
-						const active = js.filter.style.display === 'none';
-						const filterRow = document.querySelector('.jexcel > thead > tr:nth-child(2)');
-						if(filterRow) {
-							if(active) filterRow.style.display = null;
-							else filterRow.style.display = "none";
-						}
+						return toggleFunc(c,'.jexcel > thead > tr:nth-child(2)');
+						// let js = getCurrentJexcel();
+						// if(!js) return true;
+						// c.classList.toggle("jtoolbar-active");
+						// const active = js.filter.style.display === 'none';
+						// const filterRow = document.querySelector('.jexcel > thead > tr:nth-child(2)');
+						// if(filterRow) {
+						// 	if(active) filterRow.style.display = null;
+						// 	else filterRow.style.display = "none";
+						// }
 					},
 					state: true,
 					active: false,
@@ -319,15 +333,16 @@
 					type: 'icon',
 					content: 'search',
 					onclick: function(a,b,c) {
-						let js = getCurrentJexcel();
-						if(!js) return true;
-						c.classList.toggle("jtoolbar-active");
-						const filterRow = document.querySelector('.jexcel_filter');
-						if(filterRow) {
-							const active = filterRow.style.display === 'none';
-							if(active) filterRow.style.display = null;
-							else filterRow.style.display = "none";
-						}
+						return toggleFunc(c, '.jexcel_filter');
+						// let js = getCurrentJexcel();
+						// if(!js) return true;
+						// c.classList.toggle("jtoolbar-active");
+						// const filterRow = document.querySelector('.jexcel_filter');
+						// if(filterRow) {
+						// 	const active = filterRow.style.display === 'none';
+						// 	if(active) filterRow.style.display = null;
+						// 	else filterRow.style.display = "none";
+						// }
 					},
 					state: true,
 					active: false,
