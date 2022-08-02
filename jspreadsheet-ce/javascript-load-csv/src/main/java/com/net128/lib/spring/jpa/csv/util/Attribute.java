@@ -1,4 +1,4 @@
-package com.net128.app.jpa.adminux.data.util;
+package com.net128.lib.spring.jpa.csv.util;
 
 import lombok.Data;
 import lombok.NoArgsConstructor;

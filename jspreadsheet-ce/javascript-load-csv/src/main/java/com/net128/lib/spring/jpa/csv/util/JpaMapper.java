@@ -1,6 +1,6 @@
-package com.net128.app.jpa.adminux.data.util;
+package com.net128.lib.spring.jpa.csv.util;
 
-import com.net128.app.jpa.adminux.data.ValidationException;
+import com.net128.lib.spring.jpa.csv.ValidationException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;

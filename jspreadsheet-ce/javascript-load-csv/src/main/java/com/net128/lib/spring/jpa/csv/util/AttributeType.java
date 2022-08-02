@@ -1,3 +1,3 @@
-package com.net128.app.jpa.adminux.data.util;
+package com.net128.lib.spring.jpa.csv.util;
 
 enum AttributeType {String, Int, Float, Enum}

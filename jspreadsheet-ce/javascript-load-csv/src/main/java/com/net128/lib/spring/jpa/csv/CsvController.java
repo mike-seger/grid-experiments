@@ -1,12 +1,13 @@
-package com.net128.app.jpa.adminux.csv;
+package com.net128.lib.spring.jpa.csv;
 
-import com.net128.app.jpa.adminux.data.util.Attribute;
-import com.net128.app.jpa.adminux.data.util.JpaMapper;
+import com.net128.lib.spring.jpa.csv.util.Attribute;
+import com.net128.lib.spring.jpa.csv.util.JpaMapper;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.ComponentScan;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -24,6 +25,7 @@ import java.util.stream.Collectors;
 @Slf4j
 @RestController
 @RequestMapping("/api/v1/admin/csv")
+@ComponentScan(basePackageClasses = CsvController.class)
 public class CsvController {
 	private final CsvDbService csvDbService;
 	private final JpaMapper jpaMapper;

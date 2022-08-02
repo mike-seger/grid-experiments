@@ -1,4 +1,4 @@
-package com.net128.app.jpa.adminux.data;
+package com.net128.lib.spring.jpa.csv;
 
 public class ValidationException extends RuntimeException {
 	public ValidationException(String message) {

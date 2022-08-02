@@ -1,4 +1,4 @@
-package com.net128.app.jpa.adminux.csv;
+package com.net128.lib.spring.jpa.csv;
 
 import java.io.IOException;
 import java.io.InputStream;

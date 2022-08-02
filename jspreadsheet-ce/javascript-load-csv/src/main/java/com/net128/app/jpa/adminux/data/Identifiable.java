@@ -1,6 +1,6 @@
 package com.net128.app.jpa.adminux.data;
 
-import com.net128.app.jpa.adminux.data.util.Props;
+import com.net128.lib.spring.jpa.csv.util.Props;
 import lombok.Data;
 
 import javax.persistence.GeneratedValue;

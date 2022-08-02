@@ -22,6 +22,7 @@ public class StaticResourceConfiguration implements WebMvcConfigurer {
 			.addResolver(new IndexFallbackResourceResolver());
 	}
 
+	@SuppressWarnings("NullableProblems")
 	private static class IndexFallbackResourceResolver extends PathResourceResolver {
 		public Resource resolveResourceInternal(HttpServletRequest request,
 				String requestPath,

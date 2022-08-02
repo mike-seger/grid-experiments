@@ -1,4 +1,4 @@
-package com.net128.app.jpa.adminux.csv;
+package com.net128.lib.spring.jpa.csv;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.*;
@@ -6,7 +6,7 @@ import com.fasterxml.jackson.dataformat.csv.CsvFactory;
 import com.fasterxml.jackson.dataformat.csv.CsvMapper;
 import com.fasterxml.jackson.dataformat.csv.CsvParser;
 import com.fasterxml.jackson.dataformat.csv.CsvSchema;
-import com.net128.app.jpa.adminux.data.util.JpaMapper;
+import com.net128.lib.spring.jpa.csv.util.JpaMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
 import org.springframework.data.jpa.repository.JpaRepository;
