@@ -1,13 +1,16 @@
-spring.jpa.hibernate.ddl-auto: create-drop
+spring.jpa.hibernate.ddl-auto: none
 spring.application.name: adminux
 spring.jpa.open-in-view: true
-spring.jpa.defer-datasource-initialization: true
+#spring.jpa.defer-datasource-initialization: false
+
+#liquibase:
+#  change-log: classpath:/db/changelog/db.changelog-master.yaml
 
 spring:
   datasource:
-    url: jdbc:h2:~/test
+    url: jdbc:h2:mem:adminux
     username: sa
-    password:
+    password: sa
     driverClassName: org.h2.Driver
   h2:
     console.enabled: true
@@ -16,3 +19,18 @@ spring:
       SORT_PROPERTIES_ALPHABETICALLY: true
     serialization:
       ORDER_MAP_ENTRIES_BY_KEYS: true
+  jpa.properties.hibernate.dialect: org.hibernate.dialect.H2Dialect
+
+spring.liquibase:
+  change-log: classpath:db/changelog/db.changelog-master.yaml
+  url: jdbc:h2:mem:adminux
+  user: sa
+  password: sa
+
+loggimg.level:
+  root: trace
+  org.h2: trace
+  com.zaxxer: trace
+  liquibase: trace
+
+#debug: true

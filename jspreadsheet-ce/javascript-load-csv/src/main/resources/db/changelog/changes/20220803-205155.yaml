@@ -1,0 +1,68 @@
+databaseChangeLog:
+- logicalFilePath: 20220803-205155.yaml
+- changeSet:
+    id: 1659559917295-1
+    author: adminux
+    changes:
+    - createTable:
+        columns:
+        - column:
+            autoIncrement: true
+            constraints:
+              nullable: false
+              primaryKey: true
+              primaryKeyName: carPK
+            name: id
+            type: LONG
+        - column:
+            constraints:
+              nullable: false
+            name: brand
+            type: VARCHAR(255)
+        - column:
+            constraints:
+              nullable: false
+            name: price
+            type: DOUBLE
+        tableName: car
+- changeSet:
+    id: 1659559917295-2
+    author: adminux
+    changes:
+    - createTable:
+        columns:
+        - column:
+            autoIncrement: true
+            constraints:
+              nullable: false
+              primaryKey: true
+              primaryKeyName: personPK
+            name: id
+            type: LONG
+        - column:
+            constraints:
+              nullable: false
+            name: address
+            type: VARCHAR(255)
+        - column:
+            constraints:
+              nullable: false
+            name: city
+            type: VARCHAR(255)
+        - column:
+            constraints:
+              nullable: false
+            name: country
+            type: VARCHAR(255)
+        - column:
+            constraints:
+              nullable: false
+            name: first_name
+            type: VARCHAR(255)
+        - column:
+            constraints:
+              nullable: false
+            name: last_name
+            type: VARCHAR(255)
+        tableName: person
+

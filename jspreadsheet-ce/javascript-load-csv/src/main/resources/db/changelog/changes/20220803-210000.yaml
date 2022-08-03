@@ -1,0 +1,24 @@
+databaseChangeLog:
+  - logicalFilePath: 20220803-210000-person.yaml
+  - changeSet:
+      id: load data
+      author: adminux
+      changes:
+        - loadData:
+            relativeToChangelogFile: true
+            file: ../data/20220803-210000-persons.tsv
+            separator: '	'
+            quotchar: '"'
+            tableName: PERSON
+        - loadData:
+            relativeToChangelogFile: true
+            file: ../data/20220803-210000-cars.tsv
+            separator: '	'
+            quotchar: '"'
+            tableName: CAR
+        - loadData:
+            relativeToChangelogFile: true
+            file: ../data/cities-1000.tsv
+            separator: '	'
+            quotchar: '"'
+            tableName: CITY

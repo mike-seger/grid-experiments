@@ -1,6 +1,7 @@
 plugins {
 	id "org.springframework.boot" version "2.7.2"
 	id "io.spring.dependency-management" version "1.0.12.RELEASE"
+	id "org.liquibase.gradle" version "2.0.4"
 	id "java"
 }
 
@@ -30,9 +31,11 @@ dependencies {
 	implementation "org.springdoc:springdoc-openapi-ui:1.6.9"
 	implementation "org.springdoc:springdoc-openapi-data-rest:1.6.9"
 
+	implementation "org.liquibase:liquibase-core:4.14.0"
+
 	compileOnly "org.projectlombok:lombok"
 	developmentOnly "org.springframework.boot:spring-boot-devtools"
-	runtimeOnly "com.h2database:h2"
+	runtimeOnly 'com.h2database:h2:2.1.212'
 	annotationProcessor "org.projectlombok:lombok"
 	testImplementation "org.springframework.boot:spring-boot-starter-test"
 }
@@ -40,3 +43,9 @@ dependencies {
 tasks.named("test") {
 	useJUnitPlatform()
 }
+
+/*ext {
+	entityPackage = "com.net128.app.jpa.adminux.data"
+}*/
+
+apply from: "liquibase.gradle"
