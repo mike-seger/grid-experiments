@@ -20,7 +20,7 @@
 	<link rel="stylesheet" href="local/lib/jsuites.css" type="text/css" />
 	<link rel="stylesheet" href="local/lib/jexcel.css" type="text/css" />
 	<link rel="stylesheet" href="local/lib/Material-Icons.css" />
-	<link rel="stylesheet" href="jexcel-custom.css" type="text/css" />
+	<link rel="stylesheet" href="jexcel-custom.css" type="text/css" charset="utf-8" />
 	
 	<style>
 		body, html {
@@ -61,7 +61,7 @@
 	const serverText = 	document.getElementById('servertext')
 
 	const hMargin = 5;
-	const dropdownMargin = 23;
+	const dropdownMargin = 11;
 	const calendarMargin = 30;
 
 	let entityIds = [];
@@ -93,7 +93,10 @@
 		console.log(colConfig);
 
 		const longestString = findLongestString(js.getColumnData(colIndex));
-		let w = Math.max(stringWidth(longestString), stringWidth(header));
+		const sortableMargin = getCurrentEntity().sortable === true?
+			dropdownMargin:0;
+		let w = Math.max(stringWidth(longestString), 
+			stringWidth(header)+sortableMargin);
 		if(colConfig.type === 'dropdown') w += dropdownMargin;
 		else if(colConfig.type === 'calendar') w += calendarMargin;
 		js.setWidth(colIndex, w + 2*hMargin);
@@ -133,34 +136,71 @@
 	function loaded(instance) {
 		console.log('New data is loaded');
 		autoResizeColumns(instance);
-		let entity = getCurrentEntity();
+		const entity = getCurrentEntity();
 		console.log(entity);
 		setAllColumnParams(instance, entity);
 		const index = getCurrentWorkSheetIndex();
 		initAllFilterStates(index);
 		syncAllIconStates(index);
-		// const filterRow = document.querySelector('.jexcel > thead > tr:nth-child(2)');
-		// if(filterRow) filterRow.style.display = "none";
-		// let js = getCurrentJexcel();
-		// js.filter.style.display = null;
+	}
+
+	function getCurrentSheetConfig() {
+		return getCurrentJexcel().getConfig();
+	}
+
+	function getCurrentSheetColConfig(col) {
+		return getCurrentSheetConfig().columns[col];
+	}
+
+	function directionSort(direction) {
+		const col = getCurrentJexcel().selectedCoord.col;
+		const type = getCurrentSheetColConfig(col).type;
+
+		return function(a, b) {
+
+			let valueA = a[1];
+			let valueB = b[1];
+
+			if(type === 'numeric') {
+				valueA = new Number(a[1]);
+				valueB = new Number(b[1]);
+			}
+
+			if (! direction) {
+				return (valueA === '' && valueB !== '') ? 1 : (valueA !== '' && valueB === '') ? -1 : (valueA > valueB) ? 1 : (valueA < valueB) ? -1 :  0;
+			} else {
+				return (valueA === '' && valueB !== '') ? 1 : (valueA !== '' && valueB === '') ? -1 : (valueA > valueB) ? -1 : (valueA < valueB) ? 1 :  0;
+			}
+		}
+	}
+
+	function columnsName(name) {
+		let colName = name;
+		if(colName.endsWith("Perc")) {
+			colName = colName.replace(/Perc$/, " %")
+		}
+		return colName;
 	}
 
 	function createColumns(attributes) {
 		let columns = []
 		for (const properties of attributes) {
 			let column = {}
+			const title = columnsName(properties.name);
 			console.log(properties);
 			if(properties.hidden) column = {
-				type: 'hidden', title: properties.name, name: properties.name };
+				type: 'hidden', title: title, name: properties.name };
 			else if(properties.type === "Float") column = {
-				type: 'numeric', align: 'right', title: properties.name, name: properties.name};
+				type: 'numeric', align: 'right', title: title, 
+					name: properties.name, sorting: directionSort };
 			else if(properties.type === "Int") column = {
-				type: 'numeric', align: 'right', title: properties.name, name: properties.name};
+				type: 'numeric', align: 'right', title: title, 
+					name: properties.name, sorting: directionSort};
 			else if(properties.type === "Enum") column = {
-				type: 'dropdown', title: properties.name, name: properties.name,
+				type: 'dropdown', title: title, name: properties.name,
 				source: properties.enumConstants};
 			else column = {
-				type: 'text', title: properties.name, name: properties.name };
+				type: 'text', title: title, name: properties.name };
 			columns.push(column);
 		}
 		return columns;
@@ -168,6 +208,13 @@
 
 	function tableChanged() {
 		console.log("tableChanged");
+	}
+
+	function selected(target, col, row) {
+		if(row!=0) return false;
+		console.log(`selected: ${col} / ${row}`);
+		getCurrentJexcel().selectedCoord = { col: col, row: row };
+		return false;
 	}
 
 	function switchToEntity(entity) {
@@ -194,7 +241,10 @@
 			tableHeight:'89%',
 			onload: loaded,
 			onchange: cellChanged,
+			onselection: selected,
+			//onbeforesort: beforeSort,
 			onafterchanges: tableChanged,
+			//orderBy: directionSort,
 			allowInsertColumn: false,
 			allowDeleteColumn: false,
 			allowRenameColumn: false,
@@ -203,10 +253,10 @@
 			rowResize: false,
 			fillscreen: false,
 			search: true,
-			columnSorting:false,
+			columnSorting: entity.sortable,
 			filters: true,
+			sorting: directionSort,
 		}]);
-		//syncAllIconStates(entityIds.length-1);
 	}
 
 	function downloadSvFile(fileName, data) {
@@ -249,7 +299,11 @@
 
 	function getJexcel(num) {
 		if(!spreadsheet1.children[0]) return undefined;
-		return spreadsheet1.jexcel[num];
+		let js = spreadsheet1.jexcel[num];
+		if(js && !js.oldOrderBy && js.orderBy) {
+			js.oldOrderBy  = js.orderBy;
+		}
+		return js;
 	}
 
 	function getCurrentJexcel() {
@@ -309,7 +363,6 @@
 	}
 
 	function syncAllIconStates(index) {
-		//const index = getCurrentWorkSheetIndex();
 		syncIconStates(index, '.jexcel > thead > tr:nth-child(2)', 4);
 		syncIconStates(index, '.jexcel_filter', 5);
 	}
@@ -324,7 +377,6 @@
 		initFilterState(index, '.jexcel > thead > tr:nth-child(2)');
 		initFilterState(index, '.jexcel_filter');
 	}
-
 
 	function toggleFunc(icon, selector) {
 		let js = getCurrentJexcel();

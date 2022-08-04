@@ -1,5 +1,6 @@
 package com.net128.lib.spring.jpa.csv.util;
 
+import com.net128.app.jpa.adminux.data.Identifiable;
 import com.net128.lib.spring.jpa.csv.ValidationException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -25,6 +26,7 @@ public class JpaMapper {
 		entityClassMap = getEntityClassMap();
 		entityRepoMap =	jpaRepositories.stream().collect(Collectors.toMap(JpaMapper::getEntity, j -> j));
 	}
+
 	public LinkedHashMap<String, Attribute> getAttributes(String entity) {
 		var result = getMetaAttributes(entity).stream().sorted(Comparator.comparing(javax.persistence.metamodel.Attribute::getName)).collect(
 			Collectors.toMap(
@@ -68,8 +70,12 @@ public class JpaMapper {
 
 	public JpaRepository<?, Long> getEntityRepository(Class<?> entityClass) {
 		var repo = entityRepoMap.get(entityClass);
-		if(repo == null)
-			throw new ValidationException("Unable to get repository for entity class: "+entityClass.getSimpleName());
+		if(repo == null) {
+			if(Identifiable.class.isAssignableFrom(entityClass)) {
+				return entityRepoMap.get(Identifiable.class);
+			}
+			throw new ValidationException("Unable to get repository for entity class: " + entityClass.getSimpleName());
+		}
 		return repo;
 	}
 

@@ -13,6 +13,21 @@ public class Props {
     @Retention(RetentionPolicy.RUNTIME)
     public @interface Hidden{}
 
+    @Target({ METHOD, FIELD, ANNOTATION_TYPE, CONSTRUCTOR, PARAMETER, TYPE_USE })
+    @Retention(RetentionPolicy.RUNTIME)
+    public @interface Sortable{}
+
+    public static boolean isHSortable(Class<?> clazz) {
+        try {
+            return Arrays.stream(clazz.getDeclaredAnnotations())
+                .anyMatch(x -> Objects.equals(
+                    x.annotationType().getCanonicalName(),
+                    Sortable.class.getCanonicalName()));
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
     public static boolean isHiddenField(Class<?> clazz, String field) {
         try {
             return Arrays.stream(clazz.getDeclaredField(field).getDeclaredAnnotations())

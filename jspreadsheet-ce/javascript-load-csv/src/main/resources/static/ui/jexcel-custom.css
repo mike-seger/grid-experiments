@@ -2,6 +2,27 @@
     border-top: 0;
 }
 
+.jexcel_content > table > thead > tr > td.arrow-down,
+.jexcel_content > table > thead > tr > td.arrow-up {
+    margin-right: 15px;
+    text-decoration: none;
+    font-size-adjust: 0.8;
+    font-size: 14px;
+    font-weight: bold;
+    text-align: left !important;
+    background-image: none;
+}
+
+.jexcel_content > table > thead > tr > td.arrow-down:after {
+    content: " ▼";
+    font-size: 11px;
+}
+
+.jexcel_content > table > thead > tr > td.arrow-up:after {
+    content: " ▲";
+    font-size: 11px;
+}
+
 /* TABS */
 
 .jexcel_tabs .jexcel_tab_link {

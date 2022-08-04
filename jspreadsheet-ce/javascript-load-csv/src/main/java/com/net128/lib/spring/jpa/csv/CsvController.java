@@ -2,6 +2,7 @@ package com.net128.lib.spring.jpa.csv;
 
 import com.net128.lib.spring.jpa.csv.util.Attribute;
 import com.net128.lib.spring.jpa.csv.util.JpaMapper;
+import com.net128.lib.spring.jpa.csv.util.Props;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -131,6 +132,7 @@ public class CsvController {
 				e, capitalizeWords(e),
 				"?tabSeparated=false&entity="+e,
 				"?tabSeparated=false&entity="+e,
+					Props.isHSortable(jpaMapper.getEntityClass(e)),
 					jpaMapper.getAttributes(e)
 			);
 		});
@@ -162,12 +164,12 @@ public class CsvController {
 			String name;
 			String getUri;
 			String putUri;
+			boolean sortable;
 			List<Attribute> attributes;
 		}
-		void addEntity(String id, String name, String getUri, String putUri,
+		void addEntity(String id, String name, String getUri, String putUri, boolean sortable,
 				LinkedHashMap<String, Attribute> attributeMap) {
-			entities.put(id, new Entity(id, name, getUri, putUri,
-				new ArrayList<>(attributeMap.values())));
+			entities.put(id, new Entity(id, name, getUri, putUri, 				sortable, new ArrayList<>(attributeMap.values())));
 		}
 	}
 

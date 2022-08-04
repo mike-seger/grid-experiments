@@ -1,7 +1,7 @@
 databaseChangeLog:
-- logicalFilePath: 20220804-075113.yaml
+- logicalFilePath: 20220804-132252.yaml
 - changeSet:
-    id: 1659599477042-1
+    id: 1659619377113-1
     author: adminux
     changes:
     - createTable:
@@ -26,7 +26,7 @@ databaseChangeLog:
             type: DOUBLE
         tableName: car
 - changeSet:
-    id: 1659599477042-2
+    id: 1659619377113-2
     author: adminux
     changes:
     - createTable:
@@ -81,7 +81,69 @@ databaseChangeLog:
             type: BIGINT
         tableName: city
 - changeSet:
-    id: 1659599477042-3
+    id: 1659619377113-3
+    author: adminux
+    changes:
+    - createTable:
+        columns:
+        - column:
+            autoIncrement: true
+            constraints:
+              nullable: false
+              primaryKey: true
+              primaryKeyName: country_populationPK
+            name: id
+            type: BIGINT
+        - column:
+            constraints:
+              nullable: false
+            name: area
+            type: INT
+        - column:
+            constraints:
+              nullable: false
+            name: country
+            type: VARCHAR(255)
+        - column:
+            name: fert_rate
+            type: DOUBLE
+        - column:
+            name: med_age
+            type: INT
+        - column:
+            name: migrants
+            type: INT
+        - column:
+            constraints:
+              nullable: false
+            name: net_change
+            type: INT
+        - column:
+            constraints:
+              nullable: false
+            name: per_sq_km
+            type: INT
+        - column:
+            constraints:
+              nullable: false
+            name: population
+            type: BIGINT
+        - column:
+            name: urban_pop_perc
+            type: DOUBLE
+        - column:
+            constraints:
+              nullable: false
+            name: world_share_perc
+            type: DOUBLE
+        - column:
+            constraints:
+              nullable: false
+            name: y_change_perc
+            type: DOUBLE
+        tableName: country_population
+- changeSet:
+    id: 1659619377113-4
     author: adminux
     changes:
     - createTable:

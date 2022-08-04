@@ -22,3 +22,9 @@ databaseChangeLog:
             separator: '	'
             quotchar: '"'
             tableName: CITY
+        - loadData:
+            relativeToChangelogFile: true
+            file: ../data/population_by_country_2020.csv
+            separator: ','
+            quotchar: '"'
+            tableName: COUNTRY_POPULATION
