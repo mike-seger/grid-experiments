@@ -142,8 +142,9 @@ public class CsvDbService {
 	private CsvMapper csvMapper() {
 		var csvMapper = new CsvMapper();
 		csvMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
-		csvMapper.registerModule(new JavaTimeModule())
+		csvMapper.findAndRegisterModules()
 			.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
+		csvMapper.configure(DeserializationFeature.ADJUST_DATES_TO_CONTEXT_TIME_ZONE, false);
 		return csvMapper;
 	}
 }
