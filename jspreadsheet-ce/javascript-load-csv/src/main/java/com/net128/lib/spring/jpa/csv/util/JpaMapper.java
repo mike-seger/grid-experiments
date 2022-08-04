@@ -3,6 +3,7 @@ package com.net128.lib.spring.jpa.csv.util;
 import com.net128.app.jpa.adminux.data.Identifiable;
 import com.net128.lib.spring.jpa.csv.ValidationException;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -20,18 +21,21 @@ public class JpaMapper {
 	private final EntityManager entityManager;
 	private final Map<String, Class<?>> entityClassMap;
 	private final Map<Class<?>, JpaRepository<?, Long>> entityRepoMap;
+	private final List<String> titleRegexes;
 
-	public JpaMapper(EntityManager entityManager, Set<JpaRepository<?, Long>> jpaRepositories) {
+	public JpaMapper(EntityManager entityManager, Set<JpaRepository<?, Long>> jpaRepositories, @Value("${com.net128.lib.spring.jpa.csv.util.title-format-regex}") List<String> titleRegexes) {
 		this.entityManager = entityManager;
+		this.titleRegexes = titleRegexes;
 		entityClassMap = getEntityClassMap();
 		entityRepoMap =	jpaRepositories.stream().collect(Collectors.toMap(JpaMapper::getEntity, j -> j));
 	}
 
 	public LinkedHashMap<String, Attribute> getAttributes(String entity) {
-		var result = getMetaAttributes(entity).stream().sorted(Comparator.comparing(javax.persistence.metamodel.Attribute::getName)).collect(
+		var result = getMetaAttributes(entity).stream()
+				.sorted(Comparator.comparing(javax.persistence.metamodel.Attribute::getName)).collect(
 			Collectors.toMap(
 				javax.persistence.metamodel.Attribute::getName,
-				Attribute::new, (v1,v2) -> v1, LinkedHashMap::new));
+				a -> new Attribute(a, titleRegexes), (v1,v2) -> v1, LinkedHashMap::new));
 		if(result.containsKey("id")) {
 			var id = result.remove("id");
 			var old = result;

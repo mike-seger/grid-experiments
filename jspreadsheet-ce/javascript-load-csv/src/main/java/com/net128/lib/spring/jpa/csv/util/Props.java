@@ -17,6 +17,10 @@ public class Props {
     @Retention(RetentionPolicy.RUNTIME)
     public @interface Sortable{}
 
+    @Target({ METHOD, FIELD, ANNOTATION_TYPE, CONSTRUCTOR, PARAMETER, TYPE_USE })
+    @Retention(RetentionPolicy.RUNTIME)
+    public @interface ReadOnly{}
+
     public static boolean isHSortable(Class<?> clazz) {
         try {
             return Arrays.stream(clazz.getDeclaredAnnotations())
@@ -28,14 +32,22 @@ public class Props {
         }
     }
 
-    public static boolean isHiddenField(Class<?> clazz, String field) {
+    public static boolean isAnnotatedField(Class<?> clazz, Class<?> annotationClass, String field) {
         try {
             return Arrays.stream(clazz.getDeclaredField(field).getDeclaredAnnotations())
-                .anyMatch(x -> Objects.equals(
-                    x.annotationType().getCanonicalName(),
-                    Hidden.class.getCanonicalName()));
+                    .anyMatch(x -> Objects.equals(
+                            x.annotationType().getCanonicalName(),
+                            annotationClass.getCanonicalName()));
         } catch (Exception e) {
             return false;
         }
+    }
+
+    public static boolean isReadOnlyField(Class<?> clazz, String field) {
+        return isAnnotatedField(clazz, ReadOnly.class, field);
+    }
+
+    public static boolean isHiddenField(Class<?> clazz, String field) {
+        return isAnnotatedField(clazz, Hidden.class, field);
     }
 }

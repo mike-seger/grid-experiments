@@ -174,19 +174,12 @@
 		}
 	}
 
-	function columnsName(name) {
-		let colName = name;
-		if(colName.endsWith("Perc")) {
-			colName = colName.replace(/Perc$/, " %")
-		}
-		return colName;
-	}
 
 	function createColumns(attributes) {
 		let columns = []
 		for (const properties of attributes) {
 			let column = {}
-			const title = columnsName(properties.name);
+			const title = properties.title;
 			console.log(properties);
 			if(properties.hidden) column = {
 				type: 'hidden', title: title, name: properties.name };

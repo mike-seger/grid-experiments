@@ -10,6 +10,7 @@ import java.time.OffsetDateTime;
 import java.time.ZonedDateTime;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -18,13 +19,19 @@ import java.util.stream.Collectors;
 @NoArgsConstructor
 public class Attribute {
 	String name;
+	String title;
 	AttributeType type;
 	Set<String> enumConstants;
-
 	boolean hidden;
+	boolean readOnly;
 
-	Attribute(javax.persistence.metamodel.Attribute<?, ?> attribute) {
+	Attribute(javax.persistence.metamodel.Attribute<?, ?> attribute, List<String> titleRegexes) {
 		name = attribute.getName();
+		title = name;
+		for(var regex : titleRegexes) {
+			int pos = regex.indexOf(';');
+			if(pos >= 0) title = title.replaceAll(regex.substring(0,pos), regex.substring(pos+1));
+		}
 		var javaType = attribute.getJavaType();
 		if (Number.class.isAssignableFrom(javaType) || javaType.isPrimitive()) {
 			var typeName = javaType.getName().toLowerCase();
@@ -46,6 +53,7 @@ public class Attribute {
 			type = AttributeType.Date;
 		} else type = AttributeType.String;
 		hidden = Props.isHiddenField(attribute.getJavaMember().getDeclaringClass(), name);
+		readOnly = Props.isReadOnlyField(attribute.getJavaMember().getDeclaringClass(), name);
 		log.info(name + ": " + attribute.getJavaType() + " -> " + type);
 	}
 }

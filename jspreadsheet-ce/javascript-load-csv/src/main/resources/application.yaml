@@ -33,4 +33,7 @@ loggimg.level:
   com.zaxxer: trace
   liquibase: trace
 
-#debug: true
+com.net128.lib.spring.jpa.csv.util:
+  title-format-regex: >
+    Perc$; %,
+    perSqKm$;/ ㎢
