@@ -6,6 +6,7 @@ import com.fasterxml.jackson.dataformat.csv.CsvFactory;
 import com.fasterxml.jackson.dataformat.csv.CsvMapper;
 import com.fasterxml.jackson.dataformat.csv.CsvParser;
 import com.fasterxml.jackson.dataformat.csv.CsvSchema;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.net128.lib.spring.jpa.csv.util.JpaMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
@@ -14,6 +15,7 @@ import org.springframework.stereotype.Service;
 
 import java.io.*;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
@@ -28,12 +30,12 @@ public class CsvDbService {
 
 	public CsvDbService(JpaMapper jpaMapper) {
 		this.jpaMapper = jpaMapper;
-		readerMapper = new CsvMapper()
+		readerMapper = csvMapper()
 			.enable(CsvParser.Feature.TRIM_SPACES)
 			.enable(CsvParser.Feature.SKIP_EMPTY_LINES)
 			.enable(CsvParser.Feature.EMPTY_STRING_AS_NULL);
 		readerSchema = CsvSchema.emptySchema()
-				.withHeader().withLineSeparator(new String(CsvSchema.DEFAULT_LINEFEED));
+			.withHeader().withLineSeparator(new String(CsvSchema.DEFAULT_LINEFEED));
 		readerTsvSchema = readerSchema.withColumnSeparator('\t').withoutQuoteChar();
 	}
 
@@ -70,23 +72,30 @@ public class CsvDbService {
 		var jpaRepository = jpaMapper.getEntityRepository(entityClass);
 		var jsonFactory = new CsvFactory()
 			.configure(JsonGenerator.Feature.AUTO_CLOSE_TARGET, false)	;
-		var mapper = new CsvMapper().schemaFor(entityClass)
+		var writerMapper = csvMapper().schemaFor(entityClass)
 			.withLineSeparator("\n").withHeader()
 			.withColumnReordering(true)
 			.sortedBy(jpaMapper.getAttributes(entity).keySet().toArray(new String[0]));
 		//for(var column : jpaMapper.getAttributes( entity).keySet()) mapper.column(column);
-		if(tabSeparated) mapper = mapper.withColumnSeparator('\t').withoutQuoteChar();
+		if(tabSeparated) writerMapper = writerMapper.withColumnSeparator('\t').withoutQuoteChar();
 		try (var cos = os) {
 			var writer = new ObjectMapper(jsonFactory)
 
 				//.configure(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS, true)
-				.writer(mapper).writeValues(cos);
+				.writer(writerMapper).writeValues(cos);
 
 			AtomicInteger count = new AtomicInteger();
+			AtomicBoolean hasErrors = new AtomicBoolean();
 			jpaRepository.findAll().forEach(e -> {
-				try { writer.write(e);
-				} catch (IOException ex) { log.error("Failed to write entity");}
-				count.getAndIncrement();
+				try {
+					writer.write(e);
+					count.getAndIncrement();
+				} catch (IOException ex) {
+					if(!hasErrors.get()) {
+						log.error("Failed to write entity", ex);
+						hasErrors.set(true);
+					}
+				}
 			});
 			log.info("Loaded {} items of {}", count.get(), entityClass.getSimpleName());
 		}
@@ -128,5 +137,13 @@ public class CsvDbService {
 		return readerMapper.readerFor(clazz)
 			.with(tabSeparated?readerTsvSchema:readerSchema)
 			.readValues(inputStream);
+	}
+
+	private CsvMapper csvMapper() {
+		var csvMapper = new CsvMapper();
+		csvMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+		csvMapper.registerModule(new JavaTimeModule())
+			.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
+		return csvMapper;
 	}
 }

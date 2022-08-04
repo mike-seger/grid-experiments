@@ -1,5 +1,5 @@
 databaseChangeLog:
-  - logicalFilePath: 20220803-210000-person.yaml
+  - logicalFilePath: 20220803-210000.yaml
   - changeSet:
       id: load data
       author: adminux

@@ -1,4 +1,4 @@
-geoname_id	name	country_code	country_name_en	population	modificationDate	coordinates
+geoname_id	name	country_code	country_name_en	population	modification_date	coordinates
 1796236	Shanghai	CN	China	22315474	2021-09-20	31.22222,121.45806
 1816670	Beijing	CN	China	18960744	2022-03-07	39.9075,116.39723
 1795565	Shenzhen	CN	China	17494398	2022-03-09	22.54554,114.0683

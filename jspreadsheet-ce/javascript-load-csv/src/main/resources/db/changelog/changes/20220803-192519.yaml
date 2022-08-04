@@ -1,7 +1,7 @@
 databaseChangeLog:
-- logicalFilePath: 20220803-205155.yaml
+- logicalFilePath: 20220803-232519.yaml
 - changeSet:
-    id: 1659559917295-1
+    id: 1659569123109-1
     author: adminux
     changes:
     - createTable:
@@ -13,7 +13,7 @@ databaseChangeLog:
               primaryKey: true
               primaryKeyName: carPK
             name: id
-            type: LONG
+            type: BIGINT
         - column:
             constraints:
               nullable: false
@@ -26,7 +26,57 @@ databaseChangeLog:
             type: DOUBLE
         tableName: car
 - changeSet:
-    id: 1659559917295-2
+    id: 1659569123109-2
+    author: adminux
+    changes:
+    - createTable:
+        columns:
+        - column:
+            autoIncrement: true
+            constraints:
+              nullable: false
+              primaryKey: true
+              primaryKeyName: cityPK
+            name: id
+            type: BIGINT
+        - column:
+            constraints:
+              nullable: false
+            name: coordinates
+            type: VARCHAR(255)
+        - column:
+            constraints:
+              nullable: false
+            name: country_code
+            type: VARCHAR(255)
+        - column:
+            constraints:
+              nullable: false
+            name: country_name_en
+            type: VARCHAR(255)
+        - column:
+            constraints:
+              nullable: false
+            name: geoname_id
+            type: VARCHAR(255)
+        - column:
+            constraints:
+              nullable: false
+            name: modification_date
+            type: date
+        - column:
+            constraints:
+              nullable: false
+            name: name
+            type: VARCHAR(255)
+        - column:
+            constraints:
+              nullable: false
+            name: population
+            type: BIGINT
+        tableName: city
+- changeSet:
+    id: 1659569123109-3
     author: adminux
     changes:
     - createTable:
@@ -38,7 +88,7 @@ databaseChangeLog:
               primaryKey: true
               primaryKeyName: personPK
             name: id
-            type: LONG
+            type: BIGINT
         - column:
             constraints:
               nullable: false
