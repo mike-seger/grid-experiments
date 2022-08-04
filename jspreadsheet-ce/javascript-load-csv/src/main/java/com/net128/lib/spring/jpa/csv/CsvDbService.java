@@ -1,7 +1,10 @@
 package com.net128.lib.spring.jpa.csv;
 
 import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.databind.*;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.MappingIterator;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.dataformat.csv.CsvFactory;
 import com.fasterxml.jackson.dataformat.csv.CsvMapper;
 import com.fasterxml.jackson.dataformat.csv.CsvParser;
@@ -79,7 +82,7 @@ public class CsvDbService {
 		//for(var column : jpaMapper.getAttributes( entity).keySet()) mapper.column(column);
 		if(tabSeparated) writerMapper = writerMapper.withColumnSeparator('\t').withoutQuoteChar();
 		try (var cos = os) {
-			var writer = new ObjectMapper(jsonFactory)
+			var writer = configureMapper(new ObjectMapper(jsonFactory))
 
 				//.configure(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS, true)
 				.writer(writerMapper).writeValues(cos);
@@ -139,12 +142,17 @@ public class CsvDbService {
 			.readValues(inputStream);
 	}
 
+	private ObjectMapper configureMapper(ObjectMapper om) {
+		return om.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
+			.findAndRegisterModules()
+			.registerModule(new JavaTimeModule())
+			.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false)
+			.configure(DeserializationFeature.ADJUST_DATES_TO_CONTEXT_TIME_ZONE, false);
+	}
+
 	private CsvMapper csvMapper() {
-		var csvMapper = new CsvMapper();
-		csvMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
-		csvMapper.findAndRegisterModules()
-			.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
-		csvMapper.configure(DeserializationFeature.ADJUST_DATES_TO_CONTEXT_TIME_ZONE, false);
+		CsvMapper csvMapper = new CsvMapper();
+		csvMapper = (CsvMapper)configureMapper(csvMapper);
 		return csvMapper;
 	}
 }

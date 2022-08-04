@@ -18,7 +18,7 @@ databaseChangeLog:
             tableName: CAR
         - loadData:
             relativeToChangelogFile: true
-            file: ../data/cities-1000.tsv
+            file: ../data/cities-1400.tsv
             separator: '	'
             quotchar: '"'
             tableName: CITY

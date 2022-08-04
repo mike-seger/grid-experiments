@@ -143,6 +143,10 @@
 			console.log(properties);
 			if(properties.hidden) column = {
 				type: 'hidden', title: properties.name, name: properties.name };
+			else if(properties.type === "Float") column = {
+				type: 'numeric', align: 'right', title: properties.name, name: properties.name};
+			else if(properties.type === "Int") column = {
+				type: 'numeric', align: 'right', title: properties.name, name: properties.name};
 			else if(properties.type === "Enum") column = {
 				type: 'dropdown', title: properties.name, name: properties.name,
 				source: properties.enumConstants};

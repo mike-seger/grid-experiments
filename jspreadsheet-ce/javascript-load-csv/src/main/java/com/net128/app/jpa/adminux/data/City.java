@@ -1,6 +1,5 @@
 package com.net128.app.jpa.adminux.data;
 
-import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import lombok.*;
 
 import javax.persistence.Column;
@@ -15,7 +14,7 @@ import java.time.LocalDate;
 @Setter
 public class City extends Identifiable {
 	@Column(nullable = false)
-	private String geonameId;
+	private long geonameId;
 
 	@Column(nullable = false)
 	private String name;
@@ -33,5 +32,8 @@ public class City extends Identifiable {
 	private LocalDate modificationDate;
 
 	@Column(nullable = false)
-	private String coordinates;
+	private double latitude;
+
+	@Column(nullable = false)
+	private double longitude;
 }

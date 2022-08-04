@@ -21,7 +21,7 @@ public class Attribute {
 	Attribute(javax.persistence.metamodel.Attribute<?, ?> attribute) {
 		name = attribute.getName();
 		var javaType = attribute.getJavaType();
-		if (Number.class.isAssignableFrom(javaType)) {
+		if (Number.class.isAssignableFrom(javaType) || javaType.isPrimitive()) {
 			if (javaType.getName().toLowerCase()
 					.matches(".*(long|integer|short|byte).*"))
 				type = AttributeType.Int;

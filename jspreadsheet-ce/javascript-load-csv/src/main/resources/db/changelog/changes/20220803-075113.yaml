@@ -1,7 +1,7 @@
 databaseChangeLog:
-- logicalFilePath: 20220803-232519.yaml
+- logicalFilePath: 20220804-075113.yaml
 - changeSet:
-    id: 1659569123109-1
+    id: 1659599477042-1
     author: adminux
     changes:
     - createTable:
@@ -26,7 +26,7 @@ databaseChangeLog:
             type: DOUBLE
         tableName: car
 - changeSet:
-    id: 1659569123109-2
+    id: 1659599477042-2
     author: adminux
     changes:
     - createTable:
@@ -42,11 +42,6 @@ databaseChangeLog:
         - column:
             constraints:
               nullable: false
-            name: coordinates
-            type: VARCHAR(255)
-        - column:
-            constraints:
-              nullable: false
             name: country_code
             type: VARCHAR(255)
         - column:
@@ -58,7 +53,17 @@ databaseChangeLog:
             constraints:
               nullable: false
             name: geoname_id
-            type: VARCHAR(255)
+            type: BIGINT
+        - column:
+            constraints:
+              nullable: false
+            name: latitude
+            type: DOUBLE
+        - column:
+            constraints:
+              nullable: false
+            name: longitude
+            type: DOUBLE
         - column:
             constraints:
               nullable: false
@@ -76,7 +81,7 @@ databaseChangeLog:
             type: BIGINT
         tableName: city
 - changeSet:
-    id: 1659569123109-3
+    id: 1659599477042-3
     author: adminux
     changes:
     - createTable:
