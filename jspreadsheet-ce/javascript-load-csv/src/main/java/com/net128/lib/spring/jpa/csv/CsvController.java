@@ -32,9 +32,9 @@ public class CsvController {
 	private final JpaMapper jpaMapper;
 	private final String appName;
 
-	private final static String uploadMsg = "Successfully uploaded: ";
+	private final static String uploadMsg = "Successfully uploaded items: ";
 	private final static String uploadFailedMsg = "Failed uploading: ";
-	private final static String deleteMsg = "Successfully deleted: ";
+	private final static String deleteMsg = "Successfully deleted items: ";
 	private final static String deleteFailedMsg = "Failed deleting: ";
 
 	public CsvController(CsvDbService csvDbService, JpaMapper jpaMapper, @Value("${spring.application.name}") String appName) {
@@ -75,13 +75,15 @@ public class CsvController {
 		@Schema( allowableValues = {"true", "false"}, description = "true: TSV output, false: CSV output" )
 		@RequestParam(name="tabSeparated", required = false)
 		Boolean tabSeparated,
+		@RequestParam(name="deleteAll", required = false)
+		Boolean deleteAll,
 		@RequestBody
 		String csvData
 	) {
 		String message;
 		var status = HttpStatus.OK;
 		try (InputStream is = new ByteArrayInputStream(csvData.getBytes())) {
-			var count = csvDbService.readCsv(is, entity, tabSeparated);
+			var count = csvDbService.readCsv(is, entity, tabSeparated, deleteAll);
 			message = uploadMsg+entity+" (count="+count+")";
 		} catch(Exception e) {
 			status = HttpStatus.BAD_REQUEST;
@@ -106,7 +108,7 @@ public class CsvController {
 				throw new IllegalArgumentException("file.originalFileName must not be empty");
 			fileName = file.getOriginalFilename();
 			var entity = fileName.replaceAll("[.].*", "");
-			csvDbService.readCsv(is, entity, tabSeparated);
+			csvDbService.readCsv(is, entity, tabSeparated, true);
 			message = uploadMsg+fileName;
 		} catch(IOException e) {
 			message = uploadFailedMsg+fileName+"\n"+e.getMessage();
@@ -124,8 +126,8 @@ public class CsvController {
 		var status = HttpStatus.OK;
 		String message;
 		try {
-			csvDbService.deleteIds(entity, ids);
-			message = deleteMsg;
+			var n = csvDbService.deleteIds(entity, ids);
+			message = deleteMsg+n;
 		} catch(Exception e) {
 			message = deleteFailedMsg+"\n"+e.getMessage();
 			status = HttpStatus.BAD_REQUEST;

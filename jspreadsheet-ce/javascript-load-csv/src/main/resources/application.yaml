@@ -27,8 +27,8 @@ spring.liquibase:
   user: sa
   password: sa
 
-loggimg.level:
-  root: trace
+logging.level:
+  root: info
   org.h2: trace
   com.zaxxer: trace
   liquibase: trace
@@ -36,4 +36,13 @@ loggimg.level:
 com.net128.lib.spring.jpa.csv.util:
   title-format-regex: >
     Perc$; %,
-    perSqKm$;/ ㎢
+    perSqKm$;/㎢,
+    SqKm; ㎢,
+    Change$; Δ,
+    Change %; Δ%,
+    popPer;pop. /,
+    popUrban;pop.urban,
+    population; population,
+    countryNameEn;country (EN),
+    modificationDate;mod.date,
+    medAge;age x̄

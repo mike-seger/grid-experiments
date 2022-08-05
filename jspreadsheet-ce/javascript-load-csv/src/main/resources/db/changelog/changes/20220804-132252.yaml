@@ -97,7 +97,7 @@ databaseChangeLog:
         - column:
             constraints:
               nullable: false
-            name: area
+            name: area_sq_km
             type: INT
         - column:
             constraints:
@@ -121,7 +121,7 @@ databaseChangeLog:
         - column:
             constraints:
               nullable: false
-            name: per_sq_km
+            name: pop_per_sq_km
             type: INT
         - column:
             constraints:
@@ -129,17 +129,17 @@ databaseChangeLog:
             name: population
             type: BIGINT
         - column:
-            name: urban_pop_perc
+            name: pop_urban_perc
             type: DOUBLE
         - column:
             constraints:
               nullable: false
-            name: world_share_perc
+            name: world_perc
             type: DOUBLE
         - column:
             constraints:
               nullable: false
-            name: y_change_perc
+            name: year_change_perc
             type: DOUBLE
         tableName: country_population
 - changeSet:

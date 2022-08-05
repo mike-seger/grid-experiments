@@ -14,6 +14,7 @@ import java.time.LocalDate;
 @Getter
 @Setter
 @Props.Sortable
+@Props.Identifiable
 public class City extends Identifiable {
 	@Column(nullable = false)
 	private long geonameId;

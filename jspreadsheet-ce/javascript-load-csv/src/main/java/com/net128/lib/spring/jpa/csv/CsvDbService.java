@@ -100,7 +100,7 @@ public class CsvDbService {
 
 	@SuppressWarnings("unchecked")
 	public <T> int readCsv(InputStream inputStream, String entityName,
-			Boolean tabSeparated) throws IOException {
+			Boolean tabSeparated, Boolean deleteAll) throws IOException {
 		if(tabSeparated==null) {
 			SvInputStream svInputStream = new SvInputStream(inputStream, 2048);
 			tabSeparated = svInputStream.isTsv();
@@ -109,16 +109,17 @@ public class CsvDbService {
 		Class<T> entityClass = (Class<T>) jpaMapper.getEntityClass(entityName);
 		JpaRepository<T, Long> jpaRepository =
 			(JpaRepository<T, Long>) jpaMapper.getEntityRepository(entityClass);
-		jpaRepository.deleteAll();
+		if(Boolean.TRUE.equals(deleteAll)) jpaRepository.deleteAll();
 		return saveEntities(inputStream, jpaRepository, entityClass, tabSeparated);
 	}
 
 	@SuppressWarnings("unchecked")
-	public <T> void deleteIds(String entityName, List<Long> ids) {
+	public <T> int deleteIds(String entityName, List<Long> ids) {
 		Class<T> entityClass = (Class<T>) jpaMapper.getEntityClass(entityName);
 		JpaRepository<T, Long> jpaRepository =
 			(JpaRepository<T, Long>) jpaMapper.getEntityRepository(entityClass);
 		jpaRepository.deleteAllById(ids);
+		return ids.size();
 	}
 
 	private <T> int saveEntities(InputStream inputStream, JpaRepository<T, Long> jpaRepository,

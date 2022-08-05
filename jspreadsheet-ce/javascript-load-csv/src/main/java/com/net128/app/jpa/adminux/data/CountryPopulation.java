@@ -22,16 +22,16 @@ public class CountryPopulation extends Identifiable {
 	private long population;
 
 	@Column(nullable = false)
-	private Double yChangePerc;
+	private Double yearChangePerc;
 
 	@Column(nullable = false)
 	private int netChange;
 
 	@Column(nullable = false)
-	private int perSqKm;
+	private int popPerSqKm;
 
 	@Column(nullable = false)
-	private int area;
+	private int areaSqKm;
 
 	@Column
 	private Integer migrants;
@@ -43,8 +43,8 @@ public class CountryPopulation extends Identifiable {
 	private Integer medAge;
 
 	@Column
-	private Double urbanPopPerc;
+	private Double popUrbanPerc;
 
 	@Column(nullable = false)
-	private double worldSharePerc;
+	private double worldPerc;
 }

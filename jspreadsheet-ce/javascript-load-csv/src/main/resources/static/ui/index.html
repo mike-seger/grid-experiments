@@ -67,6 +67,7 @@
 	let entityIds = [];
 	let entities = {};
 	let originalValiueHashes = {};
+	let hiddenA = null;
 
 	let downloadFormat = "TSV";
 	let remoteBaseUri = "../api/v1/admin/csv";
@@ -286,7 +287,8 @@
 			result = d3.tsvFormatBody(data);
 			mimetype = "text/tab-separated-values";
 		} else result = d3.csvFormatBody(data);
-		let hiddenA = document.createElement('a');
+		if(hiddenA) document.remove(hiddenA);
+		hiddenA = document.createElement('a');
 		hiddenA.href = 'data:'+mimetype+';charset=utf-8,' + encodeURI(result);
 		hiddenA.target = '_blank';
 		hiddenA.download = fileName+'.'+downloadFormat.toLowerCase();
@@ -347,10 +349,12 @@
 		downloadSvFile("data", data);
 	}
 
-	async function saveData(uri, data) {
+	async function saveData(uriRoot, data, deleteAll) {
 		if(data.length<=1) {
 			return;
 		}
+		let uri = uriRoot;
+		if(deleteAll) uri+="&deleteAll=true";
 		const response = await fetch(uri, {
 			method: 'PUT',
 			headers: { 'Content-type': 'text/csv' },
@@ -411,10 +415,14 @@
 		const saveUri = remoteBaseUri + entity.putUri;
 		const deleteUri = remoteBaseUri + entity.deleteUri;
 		console.log("URI: "+saveUri);
-		const modifiedData = getModifiedData(entity, data);
-		const deletedIds = getDeletedIds(entity, data);
-		deleteIds(deleteUri, deletedIds)
-		saveData(saveUri, modifiedData);
+		if(entity.identifiable) {
+			const modifiedData = getModifiedData(entity, data);
+			const deletedIds = getDeletedIds(entity, data);
+			deleteIds(deleteUri, deletedIds)
+			saveData(saveUri, modifiedData, false);
+		} else {
+			saveData(saveUri, data, true);
+		}
 		cacheOriginalValueHashes(entity);
 	}
 
