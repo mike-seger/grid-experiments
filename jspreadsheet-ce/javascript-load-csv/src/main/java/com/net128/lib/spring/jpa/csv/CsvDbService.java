@@ -14,11 +14,14 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Service;
 
 import java.io.*;
+import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
+
+import static java.util.Collections.emptyList;
 
 @Service
 @Slf4j
@@ -78,23 +81,31 @@ public class CsvDbService {
 			.sortedBy(jpaMapper.getAttributes(entity).keySet().toArray(new String[0]));
 		if(tabSeparated) writerMapper = writerMapper.withColumnSeparator('\t').withoutQuoteChar();
 		try (var cos = os) {
-			var writer = configureMapper(new ObjectMapper(jsonFactory))
-				.writer(writerMapper).writeValues(cos);
-
-			AtomicInteger count = new AtomicInteger();
-			AtomicBoolean hasErrors = new AtomicBoolean();
-			jpaRepository.findAll().forEach(e -> {
-				try {
-					writer.write(e);
-					count.getAndIncrement();
-				} catch (IOException ex) {
-					if(!hasErrors.get()) {
-						log.error("Failed to write entity", ex);
-						hasErrors.set(true);
+			try (var writer = configureMapper(new ObjectMapper(jsonFactory))
+				.writer(writerMapper).writeValues(cos)) {
+				var count = new AtomicInteger();
+				var errors = new ArrayList<>();
+				var items = jpaRepository.findAll();
+				items.forEach(e -> {
+					try {
+						writer.write(e);
+						count.getAndIncrement();
+					} catch (IOException ex) {
+						if (errors.size() > 0) {
+							log.error("Failed to write entity", ex);
+							errors.add(ex.getMessage());
+						}
 					}
+				});
+
+				if (errors.size() == 0) {
+					log.info("Loaded {} items of {}", count.get(), entityClass.getSimpleName());
+				} else {
+					var message = String.format("Failed to load %d items", items.size() * count.get());
+					throw new ValidationException(message);
 				}
-			});
-			log.info("Loaded {} items of {}", count.get(), entityClass.getSimpleName());
+				writer.flush();
+			}
 		}
 	}
 

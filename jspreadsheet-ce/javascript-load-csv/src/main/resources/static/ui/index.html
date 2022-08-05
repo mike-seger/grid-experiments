@@ -165,8 +165,14 @@
 
 	function loaded(instance) {
 		console.log('New data is loaded');
-		autoResizeColumns(instance);
 		const entity = getCurrentEntity();
+		const js = getCurrentJexcel();
+		if(js.getData().length==0) {
+			var newData = [];
+			newData.push(Array(entity.attributes.length).fill(''));
+			js.setData(newData);
+		}
+		autoResizeColumns(instance);
 		console.log(entity);
 		setAllColumnParams(instance, entity);
 		const index = getCurrentWorkSheetIndex();

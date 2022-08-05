@@ -154,7 +154,7 @@ databaseChangeLog:
               nullable: false
               primaryKey: true
               primaryKeyName: personPK
-            name: id
+            name: my_id
             type: BIGINT
         - column:
             constraints:
