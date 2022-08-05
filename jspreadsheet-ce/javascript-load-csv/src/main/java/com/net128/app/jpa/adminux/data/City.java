@@ -1,5 +1,6 @@
 package com.net128.app.jpa.adminux.data;
 
+import com.net128.lib.spring.jpa.csv.util.Props;
 import lombok.*;
 
 import javax.persistence.Column;
@@ -12,6 +13,7 @@ import java.time.LocalDate;
 @NoArgsConstructor
 @Getter
 @Setter
+@Props.Sortable
 public class City extends Identifiable {
 	@Column(nullable = false)
 	private long geonameId;

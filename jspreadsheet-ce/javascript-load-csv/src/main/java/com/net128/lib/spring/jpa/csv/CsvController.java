@@ -34,6 +34,8 @@ public class CsvController {
 
 	private final static String uploadMsg = "Successfully uploaded: ";
 	private final static String uploadFailedMsg = "Failed uploading: ";
+	private final static String deleteMsg = "Successfully deleted: ";
+	private final static String deleteFailedMsg = "Failed deleting: ";
 
 	public CsvController(CsvDbService csvDbService, JpaMapper jpaMapper, @Value("${spring.application.name}") String appName) {
 		this.csvDbService = csvDbService;
@@ -79,8 +81,8 @@ public class CsvController {
 		String message;
 		var status = HttpStatus.OK;
 		try (InputStream is = new ByteArrayInputStream(csvData.getBytes())) {
-			csvDbService.readCsv(is, entity, tabSeparated);
-			message = uploadMsg+entity;
+			var count = csvDbService.readCsv(is, entity, tabSeparated);
+			message = uploadMsg+entity+" (count="+count+")";
 		} catch(Exception e) {
 			status = HttpStatus.BAD_REQUEST;
 			message = uploadFailedMsg+entity+"\n"+e.getMessage();
@@ -89,7 +91,7 @@ public class CsvController {
 	}
 
 	@PostMapping(consumes = { TEXT_TSV, TEXT_CSV, MediaType.TEXT_PLAIN_VALUE })
-	public ResponseEntity<String> putCsv(
+	public ResponseEntity<String> postCsv(
 		@Schema( allowableValues = {"true", "false"}, description = "true: TSV output, false: CSV output" )
 		@RequestParam(name="tabSeparated", required = false)
 		Boolean tabSeparated,
@@ -113,6 +115,24 @@ public class CsvController {
 		return ResponseEntity.status(status).body(message);
 	}
 
+	@DeleteMapping
+	public ResponseEntity<String> deleteIds(
+		@RequestParam("entity")
+		String entity,
+		@RequestParam(name="id")
+		List<Long> ids) {
+		var status = HttpStatus.OK;
+		String message;
+		try {
+			csvDbService.deleteIds(entity, ids);
+			message = deleteMsg;
+		} catch(Exception e) {
+			message = deleteFailedMsg+"\n"+e.getMessage();
+			status = HttpStatus.BAD_REQUEST;
+		}
+		return ResponseEntity.status(status).body(message);
+	}
+
 	@GetMapping(path = "/entities")
 	public List<String> getEntities() {
 		return jpaMapper.getEntities();
@@ -128,12 +148,15 @@ public class CsvController {
 		var configuration = new Configuration();
 		jpaMapper.getEntities().forEach(e -> {
 			var attributes = jpaMapper.getAttributes(e);
+			var entity = jpaMapper.getEntityClass(e);
 			configuration.addEntity(
 				e, capitalizeWords(e),
 				"?tabSeparated=false&entity="+e,
 				"?tabSeparated=false&entity="+e,
-					Props.isHSortable(jpaMapper.getEntityClass(e)),
-					jpaMapper.getAttributes(e)
+				"?entity="+e+"&",
+				Props.isSortable(entity),
+				Props.isIdentifiable(entity),
+				jpaMapper.getAttributes(e)
 			);
 		});
 		return configuration;
@@ -149,7 +172,7 @@ public class CsvController {
 		} else {
 			var fileName = appName + "-data-export-" + timestampNow() + ".zip";
 			response.setContentType(APPLICATION_ZIP);
-			response.addHeader("Content-Disposition", "attackment; filename=\""+fileName+"\"");
+			response.addHeader("Content-Disposition", "attachment; filename=\""+fileName+"\"");
 			csvDbService.writeAllCsvZipped(os, realEntities, tabSeparated);
 		}
 	}
@@ -164,12 +187,14 @@ public class CsvController {
 			String name;
 			String getUri;
 			String putUri;
+			String deleteUri;
 			boolean sortable;
+			boolean identifiable;
 			List<Attribute> attributes;
 		}
-		void addEntity(String id, String name, String getUri, String putUri, boolean sortable,
-				LinkedHashMap<String, Attribute> attributeMap) {
-			entities.put(id, new Entity(id, name, getUri, putUri, 				sortable, new ArrayList<>(attributeMap.values())));
+		void addEntity(String id, String name, String getUri, String putUri, String deleteUri,
+			   boolean sortable, boolean identifiable, LinkedHashMap<String, Attribute> attributeMap) {
+			entities.put(id, new Entity(id, name, getUri, putUri, deleteUri, sortable, identifiable, new ArrayList<>(attributeMap.values())));
 		}
 	}
 

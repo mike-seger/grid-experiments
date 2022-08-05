@@ -1,10 +1,7 @@
 package com.net128.lib.spring.jpa.csv;
 
 import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.MappingIterator;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.databind.*;
 import com.fasterxml.jackson.dataformat.csv.CsvFactory;
 import com.fasterxml.jackson.dataformat.csv.CsvMapper;
 import com.fasterxml.jackson.dataformat.csv.CsvParser;
@@ -79,12 +76,9 @@ public class CsvDbService {
 			.withLineSeparator("\n").withHeader()
 			.withColumnReordering(true)
 			.sortedBy(jpaMapper.getAttributes(entity).keySet().toArray(new String[0]));
-		//for(var column : jpaMapper.getAttributes( entity).keySet()) mapper.column(column);
 		if(tabSeparated) writerMapper = writerMapper.withColumnSeparator('\t').withoutQuoteChar();
 		try (var cos = os) {
 			var writer = configureMapper(new ObjectMapper(jsonFactory))
-
-				//.configure(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS, true)
 				.writer(writerMapper).writeValues(cos);
 
 			AtomicInteger count = new AtomicInteger();
@@ -105,7 +99,8 @@ public class CsvDbService {
 	}
 
 	@SuppressWarnings("unchecked")
-	public <T> void readCsv(InputStream inputStream, String entityName, Boolean tabSeparated) throws IOException {
+	public <T> int readCsv(InputStream inputStream, String entityName,
+			Boolean tabSeparated) throws IOException {
 		if(tabSeparated==null) {
 			SvInputStream svInputStream = new SvInputStream(inputStream, 2048);
 			tabSeparated = svInputStream.isTsv();
@@ -115,19 +110,33 @@ public class CsvDbService {
 		JpaRepository<T, Long> jpaRepository =
 			(JpaRepository<T, Long>) jpaMapper.getEntityRepository(entityClass);
 		jpaRepository.deleteAll();
-		saveEntities(inputStream, jpaRepository, entityClass, tabSeparated);
+		return saveEntities(inputStream, jpaRepository, entityClass, tabSeparated);
+	}
+
+	@SuppressWarnings("unchecked")
+	public <T> void deleteIds(String entityName, List<Long> ids) {
+		Class<T> entityClass = (Class<T>) jpaMapper.getEntityClass(entityName);
+		JpaRepository<T, Long> jpaRepository =
+			(JpaRepository<T, Long>) jpaMapper.getEntityRepository(entityClass);
+		jpaRepository.deleteAllById(ids);
 	}
 
 	private <T> int saveEntities(InputStream inputStream, JpaRepository<T, Long> jpaRepository,
-		Class<T> entityClass, boolean tabSeparated) throws IOException {
+			 Class<T> entityClass, boolean tabSeparated) throws IOException {
 		try (InputStream is = inputStream) {
 			var reader = genericCsvReader(entityClass, is, tabSeparated);
 			var count = 0;
 			if (reader != null) {
 				while (reader.hasNext()) {
 					var item = reader.next();
-					jpaRepository.save(item);
-					count++;
+					try {
+						jpaRepository.save(item);
+						count++;
+					} catch(Exception e) {
+						throw new ValidationException(String.format(
+							"Line: %d.\nAttempted to save: %s.\nEncountered error: %s",
+							count+2, item, e.getMessage()), e);
+					}
 				}
 				log.info("Saved {} items of {}", count, entityClass.getSimpleName());
 			}
@@ -135,15 +144,20 @@ public class CsvDbService {
 		}
 	}
 
-	public <T> MappingIterator<T> genericCsvReader(Class<T> clazz,
+	private <T> MappingIterator<T> genericCsvReader(Class<T> clazz,
 			InputStream inputStream, boolean tabSeparated) throws IOException {
 		return readerMapper.readerFor(clazz)
 			.with(tabSeparated?readerTsvSchema:readerSchema)
 			.readValues(inputStream);
 	}
 
-	private ObjectMapper configureMapper(ObjectMapper om) {
-		return om.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
+	private ObjectMapper configureMapper(ObjectMapper mapper) {
+		final DeserializationConfig originalConfig = mapper.getDeserializationConfig();
+		final DeserializationConfig newConfig = originalConfig
+			.with(MapperFeature.ACCEPT_CASE_INSENSITIVE_ENUMS)
+			.with(MapperFeature.ACCEPT_CASE_INSENSITIVE_PROPERTIES);
+		mapper.setConfig(newConfig);
+		return mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
 			.findAndRegisterModules()
 			.registerModule(new JavaTimeModule())
 			.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false)

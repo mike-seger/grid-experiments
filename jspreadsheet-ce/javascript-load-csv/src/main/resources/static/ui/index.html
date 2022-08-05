@@ -66,6 +66,8 @@
 
 	let entityIds = [];
 	let entities = {};
+	let originalValiueHashes = {};
+
 	let downloadFormat = "TSV";
 	let remoteBaseUri = "../api/v1/admin/csv";
 
@@ -133,6 +135,33 @@
 		return true;
 	}
 
+	function hashCode(s){
+  		return s.split("").reduce(function(a,b){a=((a<<5)-a)+b.charCodeAt(0);return a&a},0);              
+	}
+
+	function isRowModified(entity, row, idIndex) {
+		const hc = hashCode(row.join());
+		const id = row[idIndex];
+		return hc !== originalValiueHashes[entity.name][id];
+	}
+
+	function getIdIndex(entity) {
+		return entity.attributes.findIndex(e => { return e.name === 'id'; });
+	}
+
+	function cacheOriginalValueHashes(entity) {
+		if(! entity.identifiable) return;
+		const idIndex = getIdIndex(entity);
+		if(idIndex<0) return;
+		const data = getCurrentData();
+		originalValiueHashes[entity.name] = {};
+		for(let i=1; i<data.length;i++) {
+			const row = data[i];
+			const id = row[idIndex];
+			originalValiueHashes[entity.name][id] = hashCode(row.join());
+		}
+	}
+
 	function loaded(instance) {
 		console.log('New data is loaded');
 		autoResizeColumns(instance);
@@ -142,6 +171,7 @@
 		const index = getCurrentWorkSheetIndex();
 		initAllFilterStates(index);
 		syncAllIconStates(index);
+		cacheOriginalValueHashes(entity);
 	}
 
 	function getCurrentSheetConfig() {
@@ -173,7 +203,6 @@
 			}
 		}
 	}
-
 
 	function createColumns(attributes) {
 		let columns = []
@@ -235,9 +264,7 @@
 			onload: loaded,
 			onchange: cellChanged,
 			onselection: selected,
-			//onbeforesort: beforeSort,
 			onafterchanges: tableChanged,
-			//orderBy: directionSort,
 			allowInsertColumn: false,
 			allowDeleteColumn: false,
 			allowRenameColumn: false,
@@ -308,7 +335,8 @@
 		const js =  getCurrentJexcel();
 		if(!js) return [];
 		let data = js.getData();
-		data.splice(0, 0, js.getHeaders().split(','));
+		const colConfig = js.getConfig().columns;
+		data.splice(0, 0, colConfig.map(c => c.name));
 		return data;
 	}
 
@@ -320,6 +348,9 @@
 	}
 
 	async function saveData(uri, data) {
+		if(data.length<=1) {
+			return;
+		}
 		const response = await fetch(uri, {
 			method: 'PUT',
 			headers: { 'Content-type': 'text/csv' },
@@ -331,15 +362,60 @@
 		console.log(responseMessage);
 	}
 
+	async function deleteIds(uri, deletedIds) {
+		if(deletedIds.length<=0) {
+			return;
+		}
+		const params = new URLSearchParams(deletedIds.map(id=>['id',id]));
+		const searchString = params.toString();
+		const response = await fetch(uri+params.toString(), {
+			method: 'DELETE'
+		});
+		const responseMessage = await response.text();
+		serverText.innerText = responseMessage;
+		serverMessage.modal.open();
+		console.log(responseMessage);
+	}
+
+	function getModifiedData(entity, data) {
+		if(! entity.identifiable) return data;
+		const idIndex = getIdIndex(entity);
+		if(idIndex<0) return data;
+		let modifiedData = []
+		modifiedData.push(data[0]);
+		for(let i=1; i<data.length;i++) {
+			const row = data[i];
+			if(isRowModified(entity, row, idIndex)) {
+				modifiedData.push(row);
+			}
+		}
+		return modifiedData;
+	}
+
+	function getDeletedIds(entity, data) {
+		if(! entity.identifiable) return [];
+		const idIndex = getIdIndex(entity);
+		if(idIndex<0) return [];
+		const ids = Object.keys(originalValiueHashes[entity.name]);
+		const currIds = data.map(r => r[idIndex]);
+		const deletedIds = ids.filter( x => !currIds.includes(x) );
+		return deletedIds;
+	}
+
 	function save(entities) {
 		const data = getCurrentData();
 		console.log(data);
 		if(data.length===0) return;
 		console.log("Save data...: "+getCurrentEntityId());
 		const entity = entities[getCurrentEntityId()];
-		const uri = remoteBaseUri + entity.putUri;
-		console.log("URI: "+uri);
-		saveData(uri, data);
+		const saveUri = remoteBaseUri + entity.putUri;
+		const deleteUri = remoteBaseUri + entity.deleteUri;
+		console.log("URI: "+saveUri);
+		const modifiedData = getModifiedData(entity, data);
+		const deletedIds = getDeletedIds(entity, data);
+		deleteIds(deleteUri, deletedIds)
+		saveData(saveUri, modifiedData);
+		cacheOriginalValueHashes(entity);
 	}
 
 	function syncIconStates(index, selector, iconIndex) {

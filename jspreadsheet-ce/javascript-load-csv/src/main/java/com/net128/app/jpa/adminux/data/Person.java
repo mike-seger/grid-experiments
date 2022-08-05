@@ -1,12 +1,10 @@
 package com.net128.app.jpa.adminux.data;
 
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.net128.lib.spring.jpa.csv.util.Props;
 import lombok.*;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.EnumType;
-import javax.persistence.Enumerated;
+import javax.persistence.*;
 
 @Entity
 @ToString
@@ -14,8 +12,13 @@ import javax.persistence.Enumerated;
 @NoArgsConstructor
 @Getter
 @Setter
-@JsonPropertyOrder({"id","firstName","lastName","address","city","country"})
-public class Person extends Identifiable {
+@Props.Identifiable
+public class Person {
+	@Props.Hidden
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	private Long myId;
+
 	@Column(nullable = false)
 	private String firstName;
 

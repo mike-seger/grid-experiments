@@ -12,7 +12,6 @@ import javax.persistence.Entity;
 @NoArgsConstructor
 @Getter
 @Setter
-@JsonPropertyOrder({"id","firstName","lastName","address","city","country"})
 public class Car extends Identifiable {
 	@Column(nullable = false)
 	private String brand;

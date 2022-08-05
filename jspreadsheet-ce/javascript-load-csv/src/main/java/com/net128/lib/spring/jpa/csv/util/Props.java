@@ -1,5 +1,6 @@
 package com.net128.lib.spring.jpa.csv.util;
 
+import java.lang.annotation.Inherited;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
@@ -13,20 +14,26 @@ public class Props {
     @Retention(RetentionPolicy.RUNTIME)
     public @interface Hidden{}
 
-    @Target({ METHOD, FIELD, ANNOTATION_TYPE, CONSTRUCTOR, PARAMETER, TYPE_USE })
+    @Target({ ANNOTATION_TYPE, TYPE_USE })
     @Retention(RetentionPolicy.RUNTIME)
+    @Inherited
+    public @interface Identifiable{}
+
+    @Target({ ANNOTATION_TYPE, TYPE_USE })
+    @Retention(RetentionPolicy.RUNTIME)
+    @Inherited
     public @interface Sortable{}
 
     @Target({ METHOD, FIELD, ANNOTATION_TYPE, CONSTRUCTOR, PARAMETER, TYPE_USE })
     @Retention(RetentionPolicy.RUNTIME)
     public @interface ReadOnly{}
 
-    public static boolean isHSortable(Class<?> clazz) {
+    public static boolean isAnnotatedClass(Class<?> clazz, Class<?> annotationClass) {
         try {
             return Arrays.stream(clazz.getDeclaredAnnotations())
                 .anyMatch(x -> Objects.equals(
                     x.annotationType().getCanonicalName(),
-                    Sortable.class.getCanonicalName()));
+                    annotationClass.getCanonicalName()));
         } catch (Exception e) {
             return false;
         }
@@ -35,12 +42,20 @@ public class Props {
     public static boolean isAnnotatedField(Class<?> clazz, Class<?> annotationClass, String field) {
         try {
             return Arrays.stream(clazz.getDeclaredField(field).getDeclaredAnnotations())
-                    .anyMatch(x -> Objects.equals(
-                            x.annotationType().getCanonicalName(),
-                            annotationClass.getCanonicalName()));
+                .anyMatch(x -> Objects.equals(
+                    x.annotationType().getCanonicalName(),
+                    annotationClass.getCanonicalName()));
         } catch (Exception e) {
             return false;
         }
+    }
+
+    public static boolean isIdentifiable(Class<?> clazz) {
+        return isAnnotatedClass(clazz, Identifiable.class);
+    }
+
+    public static boolean isSortable(Class<?> clazz) {
+        return isAnnotatedClass(clazz, Sortable.class);
     }
 
     public static boolean isReadOnlyField(Class<?> clazz, String field) {
