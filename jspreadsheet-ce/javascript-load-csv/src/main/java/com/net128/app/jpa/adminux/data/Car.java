@@ -1,6 +1,5 @@
 package com.net128.app.jpa.adminux.data;
 
-import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import lombok.*;
 
 import javax.persistence.Column;

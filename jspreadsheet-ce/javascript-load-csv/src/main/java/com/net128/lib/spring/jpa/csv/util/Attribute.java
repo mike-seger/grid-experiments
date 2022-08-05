@@ -25,9 +25,12 @@ public class Attribute {
 	boolean hidden;
 	boolean readOnly;
 
-	Attribute(javax.persistence.metamodel.Attribute<?, ?> attribute, List<String> titleRegexes) {
+	boolean isId;
+
+	Attribute(javax.persistence.metamodel.Attribute<?, ?> attribute, List<String> titleRegexes, boolean isId) {
 		name = attribute.getName();
 		title = name;
+		this.isId = isId;
 		for(var regex : titleRegexes) {
 			int pos = regex.indexOf(';');
 			if(pos >= 0) title = title.replaceAll(regex.substring(0,pos), regex.substring(pos+1));

@@ -149,16 +149,17 @@ public class CsvController {
 	public Configuration getConfiguration() {
 		var configuration = new Configuration();
 		jpaMapper.getEntities().forEach(e -> {
-			var attributes = jpaMapper.getAttributes(e);
+			var idFieldName = jpaMapper.getIdFieldName(e);
 			var entity = jpaMapper.getEntityClass(e);
+			var attributes = jpaMapper.getAttributes(e);
 			configuration.addEntity(
 				e, capitalizeWords(e),
 				"?tabSeparated=false&entity="+e,
 				"?tabSeparated=false&entity="+e,
 				"?entity="+e+"&",
+				attributes.get(idFieldName)!=null?idFieldName:null,
 				Props.isSortable(entity),
-				Props.isIdentifiable(entity),
-				jpaMapper.getAttributes(e)
+				attributes
 			);
 		});
 		return configuration;
@@ -190,13 +191,13 @@ public class CsvController {
 			String getUri;
 			String putUri;
 			String deleteUri;
+			String idField;
 			boolean sortable;
-			boolean identifiable;
 			List<Attribute> attributes;
 		}
 		void addEntity(String id, String name, String getUri, String putUri, String deleteUri,
-			   boolean sortable, boolean identifiable, LinkedHashMap<String, Attribute> attributeMap) {
-			entities.put(id, new Entity(id, name, getUri, putUri, deleteUri, sortable, identifiable, new ArrayList<>(attributeMap.values())));
+			   String idField, boolean sortable, LinkedHashMap<String, Attribute> attributeMap) {
+			entities.put(id, new Entity(id, name, getUri, putUri, deleteUri, idField, sortable, new ArrayList<>(attributeMap.values())));
 		}
 	}
 

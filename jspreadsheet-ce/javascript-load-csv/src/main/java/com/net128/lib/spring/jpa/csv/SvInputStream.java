@@ -6,7 +6,7 @@ import java.io.PushbackInputStream;
 
 class SvInputStream extends PushbackInputStream {
 	private Boolean isTsv;
-	private int peekSize;
+	private final int peekSize;
 
 	public SvInputStream(InputStream in, int peekSize) {
 		super(in, peekSize);

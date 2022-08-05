@@ -13,7 +13,6 @@ import javax.persistence.Entity;
 @Getter
 @Setter
 @Props.Sortable
-@Props.Identifiable
 public class CountryPopulation extends Identifiable {
 	@Column(nullable = false)
 	private String country;

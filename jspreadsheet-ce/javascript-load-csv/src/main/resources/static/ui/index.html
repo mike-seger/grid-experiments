@@ -92,22 +92,22 @@
 			return arr.reduce((a, b)=> a.length > b.length ? a : b);
 		}
 
-		const colConfig = js.getConfig().columns[colIndex];
+		const colConfig = getCurrentEntity().attributes[colIndex];
 		console.log(colConfig);
 
 		const longestString = findLongestString(js.getColumnData(colIndex));
-		const sortableMargin = getCurrentEntity().sortable === true?
-			dropdownMargin:0;
-		let w = Math.max(stringWidth(longestString), 
-			stringWidth(header)+sortableMargin);
-		if(colConfig.type === 'dropdown') w += dropdownMargin;
-		else if(colConfig.type === 'calendar') w += calendarMargin;
+		const sortableMargin = getCurrentEntity().sortable === true?dropdownMargin:0;
+		let w = Math.max(stringWidth(longestString), stringWidth(header)+sortableMargin);
+		if(colConfig.type === 'Enum') w += dropdownMargin;
+		else if(colConfig.type.indexOf('Date')>=0) w += calendarMargin;
 		js.setWidth(colIndex, w + 2*hMargin);
 	}
 
 	function autoResizeColumns(instance) {
 		const js = instance.jspreadsheet;
 		const headers = js.getHeaders().split(',');
+		const data = js.getData();
+		if(js.getData().length==0) return;
 		for(let col = 0; col<headers.length; col++) 
 			autoResizeColumn(js, col, headers[col])
 	}
@@ -141,17 +141,27 @@
 	}
 
 	function isRowModified(entity, row, idIndex) {
-		const hc = hashCode(row.join());
+		const s = row.join('');
+		if(s.length==0) return false;
+		const hc = hashCode(s);
 		const id = row[idIndex];
 		return hc !== originalValiueHashes[entity.name][id];
 	}
 
+	function isCurrentTableModified() {
+		const data = getCurrentData();
+		for(let i=1; i<data.length;i++) {
+			if(data[i].join('').length>0) return true;
+		}
+		return false;
+	}
+
 	function getIdIndex(entity) {
-		return entity.attributes.findIndex(e => { return e.name === 'id'; });
+		return entity.attributes.findIndex(e => { return e.name === entity.idField; });
 	}
 
 	function cacheOriginalValueHashes(entity) {
-		if(! entity.identifiable) return;
+		if(! entity.idField) return;
 		const idIndex = getIdIndex(entity);
 		if(idIndex<0) return;
 		const data = getCurrentData();
@@ -159,8 +169,39 @@
 		for(let i=1; i<data.length;i++) {
 			const row = data[i];
 			const id = row[idIndex];
-			originalValiueHashes[entity.name][id] = hashCode(row.join());
+			originalValiueHashes[entity.name][id] = hashCode(row.join(''));
 		}
+	}
+
+	function clearData(reset) {
+		const js = getCurrentJexcel();
+		if(reset) {
+			var newData = [];
+			newData.push(Array(getCurrentColumnsNames().length).fill(''));
+			js.setData(newData);
+		} else {
+			const n = js.getData().length;
+			js.insertRow(1,0,true);
+			if(n>0) js.deleteRow(1, n);
+		}
+	}
+
+	function beforeDeleteRow() {
+    	console.log("beforeDeleteRow");
+		const js = getCurrentJexcel();
+		const n = js.getSelectedRows(false).length;
+		if(js.getData().length <= n) {
+			clearData(false);
+			return false;
+		}
+		return true;
+	}
+	
+	function customDeleteRow(...args) {
+		if(!beforeDeleteRow()) {
+			return false;
+		}
+		return getCurrentJexcel().originalDeleteRow(...args);
 	}
 
 	function loaded(instance) {
@@ -168,10 +209,16 @@
 		const entity = getCurrentEntity();
 		const js = getCurrentJexcel();
 		if(js.getData().length==0) {
-			var newData = [];
-			newData.push(Array(entity.attributes.length).fill(''));
-			js.setData(newData);
+			clearData(!originalValiueHashes[entity.name]);
+			const data = js.getData();
+			console.log(data);
 		}
+
+		if(!js.originalDeleteRow) {
+			js.originalDeleteRow = js.deleteRow;
+			js.deleteRow = customDeleteRow;
+		}
+
 		autoResizeColumns(instance);
 		console.log(entity);
 		setAllColumnParams(instance, entity);
@@ -272,6 +319,7 @@
 			onchange: cellChanged,
 			onselection: selected,
 			onafterchanges: tableChanged,
+			//onbeforedeleterow: beforeDeleteRow,
 			allowInsertColumn: false,
 			allowDeleteColumn: false,
 			allowRenameColumn: false,
@@ -283,6 +331,8 @@
 			columnSorting: entity.sortable,
 			filters: true,
 			sorting: directionSort,
+			lazyLoading:true,
+		    loadingSpin:true,
 		}]);
 	}
 
@@ -339,12 +389,15 @@
 		return getJexcel(getCurrentWorkSheetIndex());
 	}
 
+	function getCurrentColumnsNames() {
+		return getCurrentEntity().attributes.map(a => a.name);
+	}
+
 	function getCurrentData() {
 		const js =  getCurrentJexcel();
 		if(!js) return [];
 		let data = js.getData();
-		const colConfig = js.getConfig().columns;
-		data.splice(0, 0, colConfig.map(c => c.name));
+		data.splice(0, 0, getCurrentColumnsNames());
 		return data;
 	}
 
@@ -388,7 +441,7 @@
 	}
 
 	function getModifiedData(entity, data) {
-		if(! entity.identifiable) return data;
+		if(! entity.idField) return data;
 		const idIndex = getIdIndex(entity);
 		if(idIndex<0) return data;
 		let modifiedData = []
@@ -403,7 +456,7 @@
 	}
 
 	function getDeletedIds(entity, data) {
-		if(! entity.identifiable) return [];
+		if(! entity.idField) return [];
 		const idIndex = getIdIndex(entity);
 		if(idIndex<0) return [];
 		const ids = Object.keys(originalValiueHashes[entity.name]);
@@ -421,7 +474,7 @@
 		const saveUri = remoteBaseUri + entity.putUri;
 		const deleteUri = remoteBaseUri + entity.deleteUri;
 		console.log("URI: "+saveUri);
-		if(entity.identifiable) {
+		if(entity.idField) {
 			const modifiedData = getModifiedData(entity, data);
 			const deletedIds = getDeletedIds(entity, data);
 			deleteIds(deleteUri, deletedIds)

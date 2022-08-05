@@ -1,6 +1,5 @@
 package com.net128.app.jpa.adminux.data;
 
-import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.net128.lib.spring.jpa.csv.util.Props;
 import lombok.*;
 
@@ -12,7 +11,6 @@ import javax.persistence.*;
 @NoArgsConstructor
 @Getter
 @Setter
-@Props.Identifiable
 public class Person {
 	@Props.Hidden
 	@Id

@@ -17,11 +17,6 @@ public class Props {
     @Target({ ANNOTATION_TYPE, TYPE_USE })
     @Retention(RetentionPolicy.RUNTIME)
     @Inherited
-    public @interface Identifiable{}
-
-    @Target({ ANNOTATION_TYPE, TYPE_USE })
-    @Retention(RetentionPolicy.RUNTIME)
-    @Inherited
     public @interface Sortable{}
 
     @Target({ METHOD, FIELD, ANNOTATION_TYPE, CONSTRUCTOR, PARAMETER, TYPE_USE })
@@ -48,10 +43,6 @@ public class Props {
         } catch (Exception e) {
             return false;
         }
-    }
-
-    public static boolean isIdentifiable(Class<?> clazz) {
-        return isAnnotatedClass(clazz, Identifiable.class);
     }
 
     public static boolean isSortable(Class<?> clazz) {

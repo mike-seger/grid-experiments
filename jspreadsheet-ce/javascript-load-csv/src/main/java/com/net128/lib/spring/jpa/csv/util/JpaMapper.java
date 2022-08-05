@@ -27,17 +27,19 @@ public class JpaMapper {
 		this.entityManager = entityManager;
 		this.titleRegexes = titleRegexes;
 		entityClassMap = getEntityClassMap();
-		entityRepoMap =	jpaRepositories.stream().collect(Collectors.toMap(JpaMapper::getEntity, j -> j));
+		entityRepoMap =	jpaRepositories.stream().collect(Collectors.toMap(this::getEntity, j -> j));
 	}
 
 	public LinkedHashMap<String, Attribute> getAttributes(String entity) {
-		var result = getMetaAttributes(entity).stream()
+		var idFieldName = getIdFieldName(entity);
+		var metaAttributes = getMetaAttributes(entity);
+		var result = metaAttributes.stream()
 				.sorted(Comparator.comparing(javax.persistence.metamodel.Attribute::getName)).collect(
 			Collectors.toMap(
 				javax.persistence.metamodel.Attribute::getName,
-				a -> new Attribute(a, titleRegexes), (v1,v2) -> v1, LinkedHashMap::new));
-		if(result.containsKey("id")) {
-			var id = result.remove("id");
+				a -> new Attribute(a, titleRegexes, a.getName().equals(idFieldName)), (v1,v2) -> v1, LinkedHashMap::new));
+		if(result.containsKey(idFieldName)) {
+			var id = result.remove(idFieldName);
 			var old = result;
 			result = new LinkedHashMap<>();
 			result.put(id.name, id);
@@ -59,6 +61,11 @@ public class JpaMapper {
 		if(entityClass == null)
 			throw new ValidationException("Unable to find entity class for: "+entityName);
 		return entityClass;
+	}
+
+	public String getIdFieldName(String entity) {
+		var entityModel = entityManager.getMetamodel().entity(getEntityClass(entity));
+		return entityModel.getId(Long.class).getName();
 	}
 
 	@SuppressWarnings("unchecked")
@@ -89,13 +96,13 @@ public class JpaMapper {
 	}
 
 	@SuppressWarnings("rawtypes")
-	private static Class<?> getEntity(JpaRepository repo) {
-		var clazzes = getGenericType(repo.getClass())[0];
-		var jpaClass = getGenericType(getClassFromType(clazzes));
+	private Class<?> getEntity(JpaRepository repo) {
+		var cz = getGenericType(repo.getClass())[0];
+		var jpaClass = getGenericType(getClassFromType(cz));
 		return getClassFromType( ((ParameterizedType)jpaClass[0]).getActualTypeArguments()[0]);
 	}
 
-	private static Type[] getGenericType(Class<?> target) {
+	private Type[] getGenericType(Class<?> target) {
 		if (target == null) return new Type[0];
 		var types = target.getGenericInterfaces();
 		if (types.length > 0) return types;
@@ -105,7 +112,7 @@ public class JpaMapper {
 	}
 
 	@SuppressWarnings("rawtypes")
-	private static Class<?> getClassFromType(Type type) {
+	private Class<?> getClassFromType(Type type) {
 		if (type instanceof Class) {
 			return (Class) type;
 		} else if (type instanceof ParameterizedType) {

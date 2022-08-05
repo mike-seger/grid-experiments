@@ -11,7 +11,6 @@ import java.util.Objects;
 
 @MappedSuperclass
 @Data
-@Props.Identifiable
 public abstract class Identifiable {
 	@Props.Hidden
 	@Id
