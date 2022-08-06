@@ -30,8 +30,8 @@ spring.liquibase:
 logging.level:
   root: info
   org.h2: trace
-  com.zaxxer: trace
-  liquibase: trace
+  com.zaxxer: info
+  liquibase: info
 
 com.net128.lib.spring.jpa.csv.util:
   title-format-regex: >
