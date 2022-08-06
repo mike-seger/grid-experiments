@@ -156,13 +156,13 @@
 		return false;
 	}
 
-	function getIdIndex(entity) {
+	function getIdFieldIndex(entity) {
 		return entity.attributes.findIndex(e => { return e.name === entity.idField; });
 	}
 
 	function cacheOriginalValueHashes(entity) {
 		if(! entity.idField) return;
-		const idIndex = getIdIndex(entity);
+		const idIndex = getIdFieldIndex(entity);
 		if(idIndex<0) return;
 		const data = getCurrentData();
 		originalValiueHashes[entity.name] = {};
@@ -218,6 +218,12 @@
 			js.originalDeleteRow = js.deleteRow;
 			js.deleteRow = customDeleteRow;
 		}
+
+		//TODO set meta information with hashCode on A1, A2, A3 ...
+		//serves for later comparison when determinig "dirty" instead of originalValiueHashes
+		//make it independant from identifiable
+		//meta information should only be set as a result from a server data refresh
+		//entity.idField and getIdFieldIndex
 
 		autoResizeColumns(instance);
 		console.log(entity);
@@ -442,7 +448,7 @@
 
 	function getModifiedData(entity, data) {
 		if(! entity.idField) return data;
-		const idIndex = getIdIndex(entity);
+		const idIndex = getIdFieldIndex(entity);
 		if(idIndex<0) return data;
 		let modifiedData = []
 		modifiedData.push(data[0]);
@@ -457,7 +463,7 @@
 
 	function getDeletedIds(entity, data) {
 		if(! entity.idField) return [];
-		const idIndex = getIdIndex(entity);
+		const idIndex = getIdFieldIndex(entity);
 		if(idIndex<0) return [];
 		const ids = Object.keys(originalValiueHashes[entity.name]);
 		const currIds = data.map(r => r[idIndex]);
