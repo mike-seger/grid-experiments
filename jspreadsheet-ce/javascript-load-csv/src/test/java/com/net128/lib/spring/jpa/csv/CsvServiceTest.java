@@ -1,6 +1,7 @@
 package com.net128.lib.spring.jpa.csv;
 
 import com.net128.app.jpa.adminux.TestApplication;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -92,12 +93,9 @@ public class CsvServiceTest {
     }, delimiter = '|')
     public void testInvalidCsv(final String entity, final boolean tabSeparated,
             final boolean deleteAll, final String exception, final String msgPattern, final String input) {
-        try {
-            submitCsv(entity, formatInput(input, tabSeparated), tabSeparated, deleteAll);
-        } catch(Exception e) {
-            assertEquals(exception, e.getClass().getSimpleName());
-            assertThat(e.getMessage()).contains(msgPattern);
-        }
+        var e = Assertions.assertThrows(Exception.class, () -> submitCsv(entity, formatInput(input, tabSeparated), tabSeparated, deleteAll));
+        assertEquals(exception, e.getClass().getSimpleName());
+        assertThat(e.getMessage()).contains(msgPattern);
     }
 
     private int submitCsv(String entity, String csvString,
