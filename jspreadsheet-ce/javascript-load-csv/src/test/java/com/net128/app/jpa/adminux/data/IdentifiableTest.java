@@ -1,18 +1,15 @@
 package com.net128.app.jpa.adminux.data;
 
+import com.net128.app.jpa.adminux.TestApplication;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.domain.Example;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
-@ExtendWith(SpringExtension.class)
-@DataJpaTest
+@SpringBootTest(classes= TestApplication.class)
 @ActiveProfiles("test")
 public class IdentifiableTest {
 
@@ -41,8 +38,7 @@ public class IdentifiableTest {
         car01.setBrand("other");
         Example<Car> carExample02 = Example.of(car01);
         var car02Found = identifiableRepository.findOne(carExample02);
-        assertTrue(car02Found.isPresent());
-        assertEquals(car01Saved.getId(), car02Found.get().getId());
+        assertFalse(car02Found.isPresent());
     }
 
     private Car createCar(String id) {

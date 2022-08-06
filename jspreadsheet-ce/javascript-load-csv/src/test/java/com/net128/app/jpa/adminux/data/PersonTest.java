@@ -1,18 +1,15 @@
 package com.net128.app.jpa.adminux.data;
 
+import com.net128.app.jpa.adminux.TestApplication;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.domain.Example;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
-@ExtendWith(SpringExtension.class)
-@DataJpaTest
+@SpringBootTest(classes= TestApplication.class)
 @ActiveProfiles("test")
 public class PersonTest {
     @Autowired
@@ -42,8 +39,7 @@ public class PersonTest {
         person01.setAddress("other");
         Example<Person> personExample02 = Example.of(person01);
         var person02Found = personRepository.findOne(personExample02);
-        assertTrue(person02Found.isPresent());
-        assertEquals(person01Saved.getMyId(), person02Found.get().getMyId());
+        assertFalse(person02Found.isPresent());
     }
 
     private Person createPerson(String id) {
