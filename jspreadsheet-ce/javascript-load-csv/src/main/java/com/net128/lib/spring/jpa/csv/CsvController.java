@@ -1,5 +1,6 @@
 package com.net128.lib.spring.jpa.csv;
 
+import com.fasterxml.jackson.databind.RuntimeJsonMappingException;
 import com.net128.lib.spring.jpa.csv.util.Attribute;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.extern.slf4j.Slf4j;
@@ -82,7 +83,9 @@ public class CsvController {
 			var count = csvService.readCsv(is, entity, tabSeparated, deleteAll);
 			message = uploadMsg+entity+" (count="+count+")";
 		} catch(Exception e) {
-			status = HttpStatus.BAD_REQUEST;
+			if(e instanceof ValidationException)
+				status = HttpStatus.BAD_REQUEST;
+			else status = HttpStatus.INTERNAL_SERVER_ERROR;
 			message = uploadFailedMsg+entity+"\n"+e.getMessage();
 		}
 		return ResponseEntity.status(status).body(message);
@@ -106,9 +109,11 @@ public class CsvController {
 			var entity = fileName.replaceAll("[.].*", "");
 			csvService.readCsv(is, entity, tabSeparated, true);
 			message = uploadMsg+fileName;
-		} catch(IOException e) {
+		} catch(Exception e) {
 			message = uploadFailedMsg+fileName+"\n"+e.getMessage();
-			status = HttpStatus.BAD_REQUEST;
+			if(e instanceof ValidationException || e instanceof RuntimeJsonMappingException)
+				status = HttpStatus.BAD_REQUEST;
+			else status = HttpStatus.INTERNAL_SERVER_ERROR;
 		}
 		return ResponseEntity.status(status).body(message);
 	}
@@ -126,7 +131,9 @@ public class CsvController {
 			message = deleteMsg+n;
 		} catch(Exception e) {
 			message = deleteFailedMsg+"\n"+e.getMessage();
-			status = HttpStatus.BAD_REQUEST;
+			if(e instanceof ValidationException || e instanceof RuntimeJsonMappingException)
+				status = HttpStatus.BAD_REQUEST;
+			else status = HttpStatus.INTERNAL_SERVER_ERROR;
 		}
 		return ResponseEntity.status(status).body(message);
 	}

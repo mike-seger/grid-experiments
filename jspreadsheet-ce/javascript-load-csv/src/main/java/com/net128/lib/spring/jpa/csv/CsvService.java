@@ -87,7 +87,7 @@ public class CsvService {
 					try {
 						writer.write(e);
 						count.getAndIncrement();
-					} catch (IOException ex) {
+					} catch (Exception ex) {
 						if (errors.size() > 0) {
 							log.error("Failed to write entity", ex);
 							errors.add(ex.getMessage());
@@ -132,10 +132,11 @@ public class CsvService {
 					try {
 						jpaRepository.save(item);
 						count++;
-					} catch(Exception e) {
+					} catch(javax.validation.ValidationException e) {
+						log.error("Error occurred. See log for details.", e);
 						throw new ValidationException(String.format(
-							"Line: %d.\nAttempted to save: %s.\nEncountered error: %s",
-							count+2, item, e.getMessage()), e);
+							"On input line %d:\nAttempted to save: %s.\nEncountered error: %s",
+							count+2, item, e.getMessage()));
 					}
 				}
 				log.info("Saved {} items of {}", count, entityClass.getSimpleName());

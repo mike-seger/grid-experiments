@@ -14,6 +14,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertLinesMatch;
 
@@ -45,7 +47,7 @@ public class CsvServiceTest {
             "Bobby  DOG      20.8",
         "PET |false |true  |"+
             "name   species  weight ;" +
-            "Mimi   CAT      20.8",
+            "Mimi   CAT      10.1",
         "PET |false |false |" +
             "name   species  weight ;" +
             "Emma   COW      220.8",
@@ -71,30 +73,32 @@ public class CsvServiceTest {
 
     @ParameterizedTest
     @CsvSource(value = {
-        "EMPLOYEE |true  |true  |" +
+        "EMPLOYEE |true  |true  |RuntimeJsonMappingException|String \"INVALID\": not a valid `double`|" +
             "department   name    salary ;" +
             "Sales        Henry   INVALID",
-        "EMPLOYEE |true  |true  |"+
+        "EMPLOYEE |true  |true  |ValidationException|must be greater than or equal to 1|"+
             "department   name    salary ;"+
             "Sales        Henry   1234.0 ;"+
-            "Engineering  Robert  5080.0 ;",
-        "EMPLOYEE |true  |false  |"+
-            "department   name    salary ;"+
+            "Engineering  Robert  0 ;",
+        "EMPLOYEE |true  |false  |RuntimeJsonMappingException|department is a very long name|"+
+            "department is a very long name  name    salary ;"+
             "Sales        Henry   1234.0 ;"+
             "Engineering  Robert  5080.0 ;",
-        "PET |true  |true  |"+
+        "PET |true  |true  |ValidationException|'must be less than or equal to 9999', propertyPath=weight|"+
             "name   species  weight ;"+
-            "Bobby  DOG      20.8",
-        "PET |false |true  |"+
-            "name   species  weight ;" +
-            "Mimi   CAT      20.8",
-        "PET |false |false |" +
-            "name   species  weight ;" +
-            "Emma   COW      220.8",
+            "Walter  DOG      10220.8",
+        "PET |true  |true  |RuntimeJsonMappingException|Species` from String \"LION\"|"+
+            "name   species  weight ;"+
+            "Clarence  LION      220.8",
     }, delimiter = '|')
-    public void testWriteBadCsv(final String entity, final boolean tabSeparated,
-            final boolean deleteAll, final String input) throws IOException {
-        submitCsv(entity, formatInput(input, tabSeparated), tabSeparated, deleteAll);
+    public void testInvalidCsv(final String entity, final boolean tabSeparated,
+            final boolean deleteAll, final String exception, final String msgPattern, final String input) {
+        try {
+            submitCsv(entity, formatInput(input, tabSeparated), tabSeparated, deleteAll);
+        } catch(Exception e) {
+            assertEquals(exception, e.getClass().getSimpleName());
+            assertThat(e.getMessage()).contains(msgPattern);
+        }
     }
 
     private int submitCsv(String entity, String csvString,
