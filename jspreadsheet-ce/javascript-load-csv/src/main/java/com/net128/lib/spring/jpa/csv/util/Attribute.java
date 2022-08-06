@@ -57,6 +57,6 @@ public class Attribute {
 		} else type = AttributeType.String;
 		hidden = Props.isHiddenField(attribute.getJavaMember().getDeclaringClass(), name);
 		readOnly = Props.isReadOnlyField(attribute.getJavaMember().getDeclaringClass(), name);
-		log.info(name + ": " + attribute.getJavaType() + " -> " + type);
+		log.debug(name + ": " + attribute.getJavaType() + " -> " + type);
 	}
 }

@@ -1,9 +1,1 @@
 spring.jpa.hibernate.ddl-auto: create-drop
-
-spring:
-  datasource:
-    url: jdbc:h2:mem:adminux-test
-    username: sa
-    password: sa
-    driverClassName: org.h2.Driver
-  jpa.properties.hibernate.dialect: org.hibernate.dialect.H2Dialect

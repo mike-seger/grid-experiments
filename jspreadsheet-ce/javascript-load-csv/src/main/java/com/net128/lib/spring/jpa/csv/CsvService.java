@@ -22,13 +22,13 @@ import java.util.zip.ZipOutputStream;
 
 @Service
 @Slf4j
-public class CsvDbService {
+public class CsvService {
 	private final CsvMapper readerMapper;
 	private final CsvSchema readerSchema ;
 	private final CsvSchema readerTsvSchema;
 	private final JpaMapper jpaMapper;
 
-	public CsvDbService(JpaMapper jpaMapper) {
+	public CsvService(JpaMapper jpaMapper) {
 		this.jpaMapper = jpaMapper;
 		readerMapper = csvMapper()
 			.enable(CsvParser.Feature.TRIM_SPACES)
@@ -119,15 +119,6 @@ public class CsvDbService {
 			(JpaRepository<T, Long>) jpaMapper.getEntityRepository(entityClass);
 		if(Boolean.TRUE.equals(deleteAll)) jpaRepository.deleteAll();
 		return saveEntities(inputStream, jpaRepository, entityClass, tabSeparated);
-	}
-
-	@SuppressWarnings("unchecked")
-	public <T> int deleteIds(String entityName, List<Long> ids) {
-		Class<T> entityClass = (Class<T>) jpaMapper.getEntityClass(entityName);
-		JpaRepository<T, Long> jpaRepository =
-			(JpaRepository<T, Long>) jpaMapper.getEntityRepository(entityClass);
-		jpaRepository.deleteAllById(ids);
-		return ids.size();
 	}
 
 	private <T> int saveEntities(InputStream inputStream, JpaRepository<T, Long> jpaRepository,

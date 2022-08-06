@@ -1,0 +1,109 @@
+package com.net128.lib.spring.jpa.csv;
+
+import com.net128.app.jpa.adminux.TestApplication;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
+
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertLinesMatch;
+
+@SpringBootTest(classes= TestApplication.class)
+@ActiveProfiles("test")
+public class CsvServiceTest {
+
+    @SuppressWarnings("unused")
+    @Autowired
+    private CsvService service;
+
+    private final static String lt = "\n";
+
+    @ParameterizedTest
+    @CsvSource(value = {
+        "EMPLOYEE |true  |true  |" +
+            "department   name    salary ;" +
+            "Sales        Henry   1234.0",
+        "EMPLOYEE |true  |true  |"+
+            "department   name    salary ;"+
+            "Sales        Henry   1234.0 ;"+
+            "Engineering  Robert  5080.0 ;",
+        "EMPLOYEE |true  |false  |"+
+            "department   name    salary ;"+
+            "Sales        Henry   1234.0 ;"+
+            "Engineering  Robert  5080.0 ;",
+        "PET |true  |true  |"+
+            "name   species  weight ;"+
+            "Bobby  DOG      20.8",
+        "PET |false |true  |"+
+            "name   species  weight ;" +
+            "Mimi   CAT      20.8",
+        "PET |false |false |" +
+            "name   species  weight ;" +
+            "Emma   COW      220.8",
+    }, delimiter = '|')
+    public void testReadWriteCsv(final String entity, final boolean tabSeparated,
+            final boolean deleteAll, final String input) throws IOException {
+        var formattedInput = formatInput(input, tabSeparated);
+        var inputLines = formattedInput.split(lt);
+        var expected = Arrays.stream(inputLines)
+            .map(l -> ".*"+l.trim()).collect(Collectors.toList());
+        var oldCount = List.of(service.writeCsv(entity, tabSeparated).split(lt)).size();
+        var nRead = submitCsv(entity, formattedInput, tabSeparated, deleteAll);
+        assertEquals(inputLines.length-1, nRead);
+        var result = List.of(service.writeCsv(entity, tabSeparated).split(lt));
+        assertEquals(deleteAll?inputLines.length:oldCount+inputLines.length-1, result.size());
+        if(!deleteAll) {
+            var header = result.get(0);
+            result = new ArrayList<>(result.subList(oldCount, result.size()));
+            result.add(0, header);
+        }
+        assertLinesMatch(expected, result);
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+        "EMPLOYEE |true  |true  |" +
+            "department   name    salary ;" +
+            "Sales        Henry   INVALID",
+        "EMPLOYEE |true  |true  |"+
+            "department   name    salary ;"+
+            "Sales        Henry   1234.0 ;"+
+            "Engineering  Robert  5080.0 ;",
+        "EMPLOYEE |true  |false  |"+
+            "department   name    salary ;"+
+            "Sales        Henry   1234.0 ;"+
+            "Engineering  Robert  5080.0 ;",
+        "PET |true  |true  |"+
+            "name   species  weight ;"+
+            "Bobby  DOG      20.8",
+        "PET |false |true  |"+
+            "name   species  weight ;" +
+            "Mimi   CAT      20.8",
+        "PET |false |false |" +
+            "name   species  weight ;" +
+            "Emma   COW      220.8",
+    }, delimiter = '|')
+    public void testWriteBadCsv(final String entity, final boolean tabSeparated,
+            final boolean deleteAll, final String input) throws IOException {
+        submitCsv(entity, formatInput(input, tabSeparated), tabSeparated, deleteAll);
+    }
+
+    private int submitCsv(String entity, String csvString,
+            boolean tabSeparated, boolean deleteAll) throws IOException {
+        return service.readCsv(new ByteArrayInputStream(csvString.getBytes()), entity, tabSeparated, deleteAll);
+    }
+
+    private String formatInput(String input, boolean tabSeparated) {
+        var separator = tabSeparated?"\t":",";
+        return input.replaceAll(" {2,}", separator).replaceAll(" *; *", lt);
+    }
+}

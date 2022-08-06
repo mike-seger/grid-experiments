@@ -75,8 +75,8 @@ public class JpaMapper {
 
 	private Map<String, Class<?>> getEntityClassMap() {
 		return entityManager.getMetamodel().getEntities()
-				.stream().collect(Collectors.toMap(
-						e -> camel2Snake(e.getName()), javax.persistence.metamodel.Type::getJavaType));
+			.stream().collect(Collectors.toMap(
+				e -> camel2Snake(e.getName()), javax.persistence.metamodel.Type::getJavaType));
 	}
 
 	public JpaRepository<?, Long> getEntityRepository(Class<?> entityClass) {

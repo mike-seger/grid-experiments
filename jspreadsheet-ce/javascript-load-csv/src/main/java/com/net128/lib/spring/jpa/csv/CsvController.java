@@ -1,11 +1,7 @@
 package com.net128.lib.spring.jpa.csv;
 
 import com.net128.lib.spring.jpa.csv.util.Attribute;
-import com.net128.lib.spring.jpa.csv.util.JpaMapper;
-import com.net128.lib.spring.jpa.csv.util.Props;
 import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.AllArgsConstructor;
-import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.ComponentScan;
@@ -19,8 +15,8 @@ import org.springframework.web.multipart.MultipartFile;
 import javax.servlet.http.HttpServletResponse;
 import java.io.*;
 import java.time.Instant;
-import java.util.*;
-import java.util.stream.Collectors;
+import java.util.List;
+import java.util.Map;
 
 @SuppressWarnings("unused")
 @Slf4j
@@ -28,8 +24,8 @@ import java.util.stream.Collectors;
 @RequestMapping("/api/v1/admin/csv")
 @ComponentScan(basePackageClasses = CsvController.class)
 public class CsvController {
-	private final CsvDbService csvDbService;
-	private final JpaMapper jpaMapper;
+	private final CsvService csvService;
+	private final JpaService jpaService;
 	private final String appName;
 
 	private final static String uploadMsg = "Successfully uploaded items: ";
@@ -37,10 +33,10 @@ public class CsvController {
 	private final static String deleteMsg = "Successfully deleted items: ";
 	private final static String deleteFailedMsg = "Failed deleting: ";
 
-	public CsvController(CsvDbService csvDbService, JpaMapper jpaMapper, @Value("${spring.application.name}") String appName) {
-		this.csvDbService = csvDbService;
+	public CsvController(CsvService csvService, JpaService jpaService, @Value("${spring.application.name}") String appName) {
+		this.csvService = csvService;
+		this.jpaService = jpaService;
 		this.appName = appName;
-		this.jpaMapper = jpaMapper;
 	}
 
 	@GetMapping(produces = { APPLICATION_ZIP, TEXT_TSV, TEXT_CSV, MediaType.TEXT_PLAIN_VALUE })
@@ -59,7 +55,7 @@ public class CsvController {
 				response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
 				response.setContentType(MediaType.TEXT_PLAIN_VALUE);
 				var osw = new OutputStreamWriter(os);
-				osw.write("No entity given. Expected at least one of:\n"+jpaMapper.getEntities());
+				osw.write("No entity given. Expected at least one of:\n"+jpaService.getEntities());
 			} else {
 				response.setStatus(HttpServletResponse.SC_OK);
 				writeCsv(os, entities, tabSeparated, zippedSingleTable, response);
@@ -83,7 +79,7 @@ public class CsvController {
 		String message;
 		var status = HttpStatus.OK;
 		try (InputStream is = new ByteArrayInputStream(csvData.getBytes())) {
-			var count = csvDbService.readCsv(is, entity, tabSeparated, deleteAll);
+			var count = csvService.readCsv(is, entity, tabSeparated, deleteAll);
 			message = uploadMsg+entity+" (count="+count+")";
 		} catch(Exception e) {
 			status = HttpStatus.BAD_REQUEST;
@@ -108,7 +104,7 @@ public class CsvController {
 				throw new IllegalArgumentException("file.originalFileName must not be empty");
 			fileName = file.getOriginalFilename();
 			var entity = fileName.replaceAll("[.].*", "");
-			csvDbService.readCsv(is, entity, tabSeparated, true);
+			csvService.readCsv(is, entity, tabSeparated, true);
 			message = uploadMsg+fileName;
 		} catch(IOException e) {
 			message = uploadFailedMsg+fileName+"\n"+e.getMessage();
@@ -126,7 +122,7 @@ public class CsvController {
 		var status = HttpStatus.OK;
 		String message;
 		try {
-			var n = csvDbService.deleteIds(entity, ids);
+			var n = jpaService.deleteIds(entity, ids);
 			message = deleteMsg+n;
 		} catch(Exception e) {
 			message = deleteFailedMsg+"\n"+e.getMessage();
@@ -137,32 +133,17 @@ public class CsvController {
 
 	@GetMapping(path = "/entities")
 	public List<String> getEntities() {
-		return jpaMapper.getEntities();
+		return jpaService.getEntities();
 	}
 
 	@GetMapping(path = "/attributes")
 	public Map<String, Attribute> getAttributes(@RequestParam("entity") String entity) {
-		return jpaMapper.getAttributes(entity);
+		return jpaService.getAttributes(entity);
 	}
 
 	@GetMapping(path = "/configuration")
-	public Configuration getConfiguration() {
-		var configuration = new Configuration();
-		jpaMapper.getEntities().forEach(e -> {
-			var idFieldName = jpaMapper.getIdFieldName(e);
-			var entity = jpaMapper.getEntityClass(e);
-			var attributes = jpaMapper.getAttributes(e);
-			configuration.addEntity(
-				e, capitalizeWords(e),
-				"?tabSeparated=false&entity="+e,
-				"?tabSeparated=false&entity="+e,
-				"?entity="+e+"&",
-				attributes.get(idFieldName)!=null?idFieldName:null,
-				Props.isSortable(entity),
-				attributes
-			);
-		});
-		return configuration;
+	public JpaService.Configuration getConfiguration() {
+		return jpaService.getConfiguration();
 	}
 
 	private void writeCsv(OutputStream os,
@@ -171,41 +152,13 @@ public class CsvController {
 		var realEntities = entities.contains("*")? getEntities():entities;
 		if(!zippedSingleTable && realEntities.size() == 1) {
 			response.setContentType(tabSeparated?TEXT_TSV:TEXT_CSV);
-			csvDbService.writeCsv(os, realEntities.get(0), tabSeparated);
+			csvService.writeCsv(os, realEntities.get(0), tabSeparated);
 		} else {
 			var fileName = appName + "-data-export-" + timestampNow() + ".zip";
 			response.setContentType(APPLICATION_ZIP);
 			response.addHeader("Content-Disposition", "attachment; filename=\""+fileName+"\"");
-			csvDbService.writeAllCsvZipped(os, realEntities, tabSeparated);
+			csvService.writeAllCsvZipped(os, realEntities, tabSeparated);
 		}
-	}
-
-	@Data
-	static class Configuration {
-		TreeMap<String, Entity> entities = new TreeMap<>();
-		@Data
-		@AllArgsConstructor
-		static class Entity{
-			String id;
-			String name;
-			String getUri;
-			String putUri;
-			String deleteUri;
-			String idField;
-			boolean sortable;
-			List<Attribute> attributes;
-		}
-		void addEntity(String id, String name, String getUri, String putUri, String deleteUri,
-			   String idField, boolean sortable, LinkedHashMap<String, Attribute> attributeMap) {
-			entities.put(id, new Entity(id, name, getUri, putUri, deleteUri, idField, sortable, new ArrayList<>(attributeMap.values())));
-		}
-	}
-
-	private String capitalizeWords(String s) {
-		return Arrays.stream(s.split("[_.-]")).map(w -> {
-			if(w.isEmpty()) return w;
-			else return w.substring(0,1).toUpperCase()+w.substring(1).trim().toLowerCase(); }
-		).collect(Collectors.joining(" "));
 	}
 
 	private String timestampNow() { return isoTimeStampNow()
