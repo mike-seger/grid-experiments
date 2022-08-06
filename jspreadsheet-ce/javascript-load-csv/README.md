@@ -10,9 +10,6 @@
 ### Access Swagger-UI
 http://localhost:8080/swagger-ui/index.html
 
-### Access db admin ui
-http://localhost:8080/ui/index.html
-
 ### Access H2 console
 http://localhost:8080/h2-console
 
