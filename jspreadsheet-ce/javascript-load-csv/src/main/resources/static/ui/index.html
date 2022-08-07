@@ -28,20 +28,62 @@
 			width: calc(100%-8px);
 			height: 100vh;
 			overflow: hidden;
+			/* overflow-x: scroll; */
 		}
 
 		.container {
 			height: 100%;
 			display: flex;
 			flex-direction: column;
+			padding: 0;
 		}
 
 		.content {
-			margin: 8px 0 0 0;
+			/* margin: 8px 0 0 0; */
 			flex: 1;
 			/* height:40%; */
-			overflow-x: auto;
 		}
+
+		/* .jtoolbar-container {
+			border-radius: 0;
+			margin-bottom: 0;
+			border: 1px solid #ccc;
+			border-collapse: separate;
+			background-color: #e8ecf0;
+			margin-left: 1px;
+			margin-right: -2px;
+			padding: 0;
+			box-shadow: rgb(221, 221, 221) 2px 2px 5px 0.1px 
+		}
+
+		.jtoolbar-item {
+			background-color: white;
+		}
+
+		.jtoolbar .jpicker {
+			background-color: white;
+		}
+
+		.jpicker-header {
+			background-image: none;
+			border-radius: 0;
+		}
+
+		.jexcel > thead > tr:first-child > td {
+			border-top: 0;
+		}
+
+		.jexcel_filter {
+			border-top: 0;
+			border-bottom: 1px solid #ccc;
+			margin: 0 0 0 1px;
+		}
+
+		.jexcel_filter > div {
+			padding: 5px 8px 6px 8px;
+			align-items: center;
+			border-top: 0;
+		} */
 	</style>
 </head>
 <body>
@@ -70,7 +112,7 @@
 	let hiddenA = null;
 
 	let downloadFormat = "TSV";
-	let remoteBaseUri = "../api/v1/admin/csv";
+	let remoteBaseUri = location.port==8000? "../data/" : "../api/v1/admin/csv";
 
 	function stringWidth(text) {
 		const font = "16px sans-serif"	
@@ -274,10 +316,10 @@
 				type: 'hidden', title: title, name: properties.name };
 			else if(properties.type === "Float") column = {
 				type: 'numeric', align: 'right', title: title, 
-					name: properties.name, sorting: directionSort };
+				name: properties.name, sorting: directionSort };
 			else if(properties.type === "Int") column = {
 				type: 'numeric', align: 'right', title: title, 
-					name: properties.name, sorting: directionSort};
+				name: properties.name, sorting: directionSort};
 			else if(properties.type === "Enum") column = {
 				type: 'dropdown', title: title, name: properties.name,
 				source: properties.enumConstants};
@@ -336,6 +378,7 @@
 			search: true,
 			columnSorting: entity.sortable,
 			filters: true,
+			//toolbar: true,
 			sorting: directionSort,
 			//lazyLoading:true,
 		    //loadingSpin:true,
@@ -582,7 +625,7 @@
 	}
 
 	async function loadConfiguration() {
-		const configUrl = location.port==8000? 'config.json' : remoteBaseUri+'/configuration'
+		const configUrl = location.port==8000? remoteBaseUri+'config.json' : remoteBaseUri+'/configuration'
 		const response = await fetch(configUrl);
 		const configuration = await response.json();
 		console.log(configuration);

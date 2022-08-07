@@ -1,0 +1,253 @@
+{
+  "entities": {
+    "com.net128.app.jpa.adminux.data.Car": {
+      "attributes": [
+        {
+          "enumConstants": null,
+          "hidden": true,
+          "id": true,
+          "name": "id",
+          "readOnly": false,
+          "title": "id",
+          "type": "Int"
+        },
+        {
+          "enumConstants": null,
+          "hidden": false,
+          "id": false,
+          "name": "brand",
+          "readOnly": false,
+          "title": "brand",
+          "type": "String"
+        },
+        {
+          "enumConstants": null,
+          "hidden": false,
+          "id": false,
+          "name": "price",
+          "readOnly": false,
+          "title": "price",
+          "type": "Float"
+        }
+      ],
+      "deleteUri": "cars.csv",
+      "getUri": "cars.csv",
+      "id": "com.net128.app.jpa.adminux.data.Car",
+      "idField": "id",
+      "name": "CAR",
+      "putUri": "cars.csv",
+      "sortable": false
+    },
+    "com.net128.app.jpa.adminux.data.City": {
+      "attributes": [
+        {
+          "enumConstants": null,
+          "hidden": true,
+          "id": true,
+          "name": "id",
+          "readOnly": false,
+          "title": "id",
+          "type": "Int"
+        },
+        {
+          "enumConstants": null,
+          "hidden": false,
+          "id": false,
+          "name": "countryCode",
+          "readOnly": false,
+          "title": "countryCode",
+          "type": "String"
+        },
+        {
+          "enumConstants": null,
+          "hidden": false,
+          "id": false,
+          "name": "countryNameEn",
+          "readOnly": false,
+          "title": "country (EN)",
+          "type": "String"
+        },
+        {
+          "enumConstants": null,
+          "hidden": false,
+          "id": false,
+          "name": "geonameId",
+          "readOnly": false,
+          "title": "geonameId",
+          "type": "Int"
+        },
+        {
+          "enumConstants": null,
+          "hidden": false,
+          "id": false,
+          "name": "latitude",
+          "readOnly": false,
+          "title": "latitude",
+          "type": "Float"
+        },
+        {
+          "enumConstants": null,
+          "hidden": false,
+          "id": false,
+          "name": "longitude",
+          "readOnly": false,
+          "title": "longitude",
+          "type": "Float"
+        },
+        {
+          "enumConstants": null,
+          "hidden": false,
+          "id": false,
+          "name": "modificationDate",
+          "readOnly": false,
+          "title": "mod.date",
+          "type": "Date"
+        },
+        {
+          "enumConstants": null,
+          "hidden": false,
+          "id": false,
+          "name": "name",
+          "readOnly": false,
+          "title": "name",
+          "type": "String"
+        },
+        {
+          "enumConstants": null,
+          "hidden": false,
+          "id": false,
+          "name": "population",
+          "readOnly": false,
+          "title": " population",
+          "type": "Int"
+        }
+      ],
+      "deleteUri": "cities.csv",
+      "getUri": "cities.csv",
+      "id": "com.net128.app.jpa.adminux.data.City",
+      "idField": "id",
+      "name": "CITY",
+      "putUri": "cities.csv",
+      "sortable": true
+    },
+    "com.net128.app.jpa.adminux.data.CountryPopulation": {
+      "attributes": [
+        {
+          "enumConstants": null,
+          "hidden": true,
+          "id": true,
+          "name": "id",
+          "readOnly": false,
+          "title": "id",
+          "type": "Int"
+        },
+        {
+          "enumConstants": null,
+          "hidden": false,
+          "id": false,
+          "name": "areaSqKm",
+          "readOnly": false,
+          "title": "area ㎢",
+          "type": "Int"
+        },
+        {
+          "enumConstants": null,
+          "hidden": false,
+          "id": false,
+          "name": "country",
+          "readOnly": false,
+          "title": "country",
+          "type": "String"
+        },
+        {
+          "enumConstants": null,
+          "hidden": false,
+          "id": false,
+          "name": "fertRate",
+          "readOnly": false,
+          "title": "fertRate",
+          "type": "Float"
+        },
+        {
+          "enumConstants": null,
+          "hidden": false,
+          "id": false,
+          "name": "medAge",
+          "readOnly": false,
+          "title": "age x̄",
+          "type": "Int"
+        },
+        {
+          "enumConstants": null,
+          "hidden": false,
+          "id": false,
+          "name": "migrants",
+          "readOnly": false,
+          "title": "migrants",
+          "type": "Int"
+        },
+        {
+          "enumConstants": null,
+          "hidden": false,
+          "id": false,
+          "name": "netChange",
+          "readOnly": false,
+          "title": "net Δ",
+          "type": "Int"
+        },
+        {
+          "enumConstants": null,
+          "hidden": false,
+          "id": false,
+          "name": "popPerSqKm",
+          "readOnly": false,
+          "title": "pop. / ㎢",
+          "type": "Int"
+        },
+        {
+          "enumConstants": null,
+          "hidden": false,
+          "id": false,
+          "name": "popUrbanPerc",
+          "readOnly": false,
+          "title": "pop.urban %",
+          "type": "Float"
+        },
+        {
+          "enumConstants": null,
+          "hidden": false,
+          "id": false,
+          "name": "population",
+          "readOnly": false,
+          "title": " population",
+          "type": "Int"
+        },
+        {
+          "enumConstants": null,
+          "hidden": false,
+          "id": false,
+          "name": "worldPerc",
+          "readOnly": false,
+          "title": "world %",
+          "type": "Float"
+        },
+        {
+          "enumConstants": null,
+          "hidden": false,
+          "id": false,
+          "name": "yearChangePerc",
+          "readOnly": false,
+          "title": "year Δ%",
+          "type": "Float"
+        }
+      ],
+      "deleteUri": "countries_population.csv",
+      "getUri": "countries_population.csv",
+      "id": "com.net128.app.jpa.adminux.data.CountryPopulation",
+      "idField": "id",
+      "name": "COUNTRY_POPULATION",
+      "putUri": "countries_population.csv",
+      "sortable": true
+    }
+  }
+}

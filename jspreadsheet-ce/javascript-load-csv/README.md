@@ -13,21 +13,21 @@ http://localhost:8080/swagger-ui/index.html
 ### Access H2 console
 http://localhost:8080/h2-console
 
-
 ## JS application (Client)
+
+http://localhost:8080/ui/index.html
+
+### Start alternative local http server
 
 The root is in:
 src/main/resources/static/
 
-http://localhost:8080/ui/index.html
-
-### Start local http server
 ```
 python3 -m http.server 8000
 ```
+Access application:
 
-### Access application
-http://localhost:8000/
+http://localhost:8000/ui/
 
 ### Links
 - https://bossanova.uk/jspreadsheet/v4/docs/quick-reference

@@ -22,12 +22,12 @@
 }
 
 .jexcel_content > table > thead > tr > td.arrow-down:after {
-    content: " ▼";
+    content: " ▲";
     font-size: 11px;
 }
 
 .jexcel_content > table > thead > tr > td.arrow-up:after {
-    content: " ▲";
+    content: " ▼";
     font-size: 11px;
 }
 
@@ -59,18 +59,19 @@
 
 .jexcel_filter > div:nth-child(1) {
     display: none;
-}
+} 
 
 /* TOOLBAR */
 
-/* .jexcel > thead > tr:nth-child(2) {
+.jexcel > thead > tr:nth-child(2) {
     display: none;
-} */
+}
 
 /* COLORS */
 
 .jexcel_tabs .jexcel_tab_link,
 .jexcel_toolbar,
+.jexcel_filter,
 .jexcel > tbody > tr > td:first-child,
 .jexcel > tfoot > tr > td,
 .jexcel > thead > tr > td {
@@ -81,4 +82,10 @@
 .jexcel > tbody > tr.selected > td:first-child,
 .jexcel > thead > tr > td.selected{
     background-color:#d6e0ef;
+}
+
+.jexcel_filter {
+    margin-bottom: -2px;
+    border: 1px solid #ccc;
+    border-bottom: 0;
 }
