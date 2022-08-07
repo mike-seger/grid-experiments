@@ -20,14 +20,14 @@ http://localhost:8080/ui/index.html
 ### Start alternative local http server
 
 The root is in:
-src/main/resources/static/
+src/main/resources/
 
 ```
 python3 -m http.server 8000
 ```
 Access application:
 
-http://localhost:8000/ui/
+http://localhost:8000/static/ui/
 
 ### Links
 - https://bossanova.uk/jspreadsheet/v4/docs/quick-reference
