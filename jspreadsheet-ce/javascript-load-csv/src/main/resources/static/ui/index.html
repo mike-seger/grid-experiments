@@ -76,10 +76,6 @@
 			box-shadow: rgb(221, 221, 221) 2px 2px 5px 0.1px 
 		}
 
-		.jtoolbar-item {
-			background-color: white;
-		}
-
 		.jtoolbar .jpicker {
 			background-color: white;
 		}
@@ -88,11 +84,10 @@
 			background-image: none;
 			border-radius: 0;
 		}
-
+/* 
 		.jexcel > thead > tr:first-child > td {
-			/* border-top: 0; */
 			margin-top: -1px;
-		}
+		} */
 
 		.jexcel_filter {
 			/* border-top: 0; */
@@ -107,6 +102,11 @@
 		}
 
 		.jexcel > thead > tr:first-child > td {
+			border-bottom: 1px solid #ccc;
+		}
+
+		.jexcel > thead > tr:nth-child(2) > td {
+			border-top: 0;
 			border-bottom: 1px solid #ccc;
 		}
 
@@ -134,6 +134,8 @@
 	const hMargin = 5;
 	const dropdownMargin = 11;
 	const calendarMargin = 30;
+	const columnFilterTool = 4;
+	const tableSearchTool = 5;
 
 	let entityIds = [];
 	let entities = {};
@@ -299,9 +301,8 @@
 		autoResizeColumns(instance);
 		console.log(entity);
 		setAllColumnParams(instance, entity);
-		const index = getCurrentWorkSheetIndex();
-		initAllFilterStates(index);
-		syncAllIconStates(index);
+		initAllFilterStates();
+		syncAllIconStates();
 		cacheOriginalValueHashes(entity);
 	}
 
@@ -421,7 +422,7 @@
 			result = d3.tsvFormatBody(data);
 			mimetype = "text/tab-separated-values";
 		} else result = d3.csvFormatBody(data);
-		if(hiddenA) document.remove(hiddenA);
+		if(hiddenA) hiddenA.remove(hiddenA);
 		hiddenA = document.createElement('a');
 		hiddenA.href = 'data:'+mimetype+';charset=utf-8,' + encodeURI(result);
 		hiddenA.target = '_blank';
@@ -450,7 +451,7 @@
 		const tabs = getWorkSheetTabs()
 		if(!tabs || tabs.length<num) return;
 		tabs[num].click();
-		syncAllIconStates(num);
+		syncAllIconStates();
 	}
 
 	function getJexcel(num) {
@@ -563,8 +564,8 @@
 		cacheOriginalValueHashes(entity);
 	}
 
-	function syncIconStates(index, selector, iconIndex) {
-		const filterRow = document.querySelectorAll(selector)[index];
+	function syncIconStates(selector, iconIndex) {
+		const filterRow = getCurrentJexcel().el.querySelector(selector);
 		if(filterRow) {
 			const filterState = !(filterRow.style.display === 'none');
 			const toolBarItems = toolBar.querySelectorAll(".jtoolbar-item");
@@ -576,32 +577,31 @@
 		}
 	}
 
-	function syncAllIconStates(index) {
-		syncIconStates(index, '.jexcel > thead > tr:nth-child(2)', 4);
-		syncIconStates(index, '.jexcel_filter', 5);
+	function syncAllIconStates() {
+		syncIconStates('.jexcel > thead > tr:nth-child(2)', columnFilterTool);
+		syncIconStates('.jexcel_filter', tableSearchTool);
 	}
 
-	function initFilterState(index, selector) {
-		const filterRow = document.querySelectorAll(selector)[index];
-		if(filterRow)
-			filterRow.style.display = 'none';
+	function initFilterState(selector) {
+		const filterRow = getCurrentJexcel().el.querySelector(selector);
+		if(filterRow) filterRow.style.display = 'none';
 	}
 
-	function initAllFilterStates(index) {
-		initFilterState(index, '.jexcel > thead > tr:nth-child(2)');
-		initFilterState(index, '.jexcel_filter');
+	function initAllFilterStates() {
+		initFilterState('.jexcel > thead tr:nth-child(2)');
+		initFilterState('.jexcel_filter');
 	}
 
 	function toggleFunc(icon, selector) {
 		let js = getCurrentJexcel();
 		if(!js) return true;
 		icon.classList.toggle("jtoolbar-active");
-		const index = getCurrentWorkSheetIndex();
-		const filterRow = document.querySelectorAll(selector)[index];
+		//const index = getCurrentWorkSheetIndex();
+		const filterRow = js.el.querySelector(selector);
 		if(filterRow) {
-			const active = filterRow.style.display === 'none';
-			if(active) filterRow.style.display = null;
-			else filterRow.style.display = "none";
+			const active = filterRow.style.display !== 'none';
+			if(active) filterRow.style.display = "none";
+			else filterRow.style.display=null;
 		}
 	}
 

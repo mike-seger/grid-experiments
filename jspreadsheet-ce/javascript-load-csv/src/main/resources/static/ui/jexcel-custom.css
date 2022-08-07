@@ -53,9 +53,9 @@
 
 /* SEARCH CONTAI£NER */
 
-.jexcel_filter {
+/* .jexcel_filter {
     display: block;
-}
+} */
 
 .jexcel_filter > div:nth-child(1) {
     display: none;
@@ -63,9 +63,9 @@
 
 /* TOOLBAR */
 
-.jexcel > thead > tr:nth-child(2) {
+/* .jexcel > thead > tr:nth-child(2) {
     display: none;
-}
+} */
 
 /* COLORS */
 
@@ -88,4 +88,12 @@
     /* margin-bottom: -2px; */
     border: 1px solid #ccc;
     border-bottom: 0;
+}
+
+.jtoolbar-item {
+    background-color: white;
+}
+
+.jtoolbar-active, .jtoolbar-active .jtoolbar-item {
+    background-color:#e8ecf0;
 }
