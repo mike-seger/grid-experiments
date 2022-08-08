@@ -20,7 +20,9 @@
 	<link rel="stylesheet" href="local/lib/jsuites.css" type="text/css" />
 	<link rel="stylesheet" href="local/lib/jexcel.css" type="text/css" />
 	<link rel="stylesheet" href="local/lib/Material-Icons.css" />
+
 	<link rel="stylesheet" href="jexcel-custom.css" type="text/css" charset="utf-8" />
+	<link rel="stylesheet" href="jtoolbar-custom.css" type="text/css" charset="utf-8" />
 	
 	<style>
 		body, html {
@@ -30,7 +32,6 @@
 
 		html {
 			font-family: sans-serif;
-
 		}
 
 		body {
@@ -41,77 +42,14 @@
 
 		.container {
 			height: 100%;
-			display: flex;
+			/* display: flex; */
 			flex-direction: column;
 			padding: 0;
 		}
 
 		.content {
-			/* margin: 8px 0 0 0; */
 			flex: 1;
-			/* height:40%; */
-			/* height: calc(100vh - 30px); */
-		}
-
-		.jexcel_container {
-			/* width: calc(100vw - 8em); */
-			/* margin-right: 20em; */
-			height: calc(100vh - 1.5em);
-		}
-
-		.jexcel_content {
-			margin-right: 1.5em;
-		} 
-
-		.jtoolbar-container {
-			border-radius: 0;
-			margin-bottom: 0;
-			border: 1px solid #ccc;
-			border-collapse: separate;
-			background-color: #e8ecf0;
-			margin-left: 1px;
-			margin-bottom: -1px;
-			/* margin-right: -2px; */
-			padding: 0;
-			box-shadow: rgb(221, 221, 221) 2px 2px 5px 0.1px 
-		}
-
-		.jtoolbar .jpicker {
-			background-color: white;
-		}
-
-		.jpicker-header {
-			background-image: none;
-			border-radius: 0;
-		}
-/* 
-		.jexcel > thead > tr:first-child > td {
-			margin-top: -1px;
-		} */
-
-		.jexcel_filter {
-			/* border-top: 0; */
-			border-bottom: 1px solid #ccc;
-			margin: 0 0 -1px 1px;
-		}
-
-		.jexcel_filter > div {
-			padding: 5px 8px 6px 8px;
-			align-items: center;
-			border-top: 0;
-		}
-
-		.jexcel > thead > tr:first-child > td {
-			border-bottom: 1px solid #ccc;
-		}
-
-		.jexcel > thead > tr:nth-child(2) > td {
-			border-top: 0;
-			border-bottom: 1px solid #ccc;
-		}
-
-		.jexcel_overflow > tbody > tr:first-child > td {
-			border-top: 0;
+			box-sizing: border-box;
 		}
 	</style>
 </head>
@@ -152,6 +90,10 @@
 		context.font = font;	
 		const { width } = context.measureText(text);	
 		return width;
+	}
+
+	function entityNames(entities) {
+		return Object.keys((Object.fromEntries(Object.entries(entities).map(([k, entity]) => [entity.name]))))
 	}
 
 	function maxStringWidth(texts) {
@@ -213,12 +155,15 @@
   		return s.split("").reduce(function(a,b){a=((a<<5)-a)+b.charCodeAt(0);return a&a},0);              
 	}
 
-	function isRowModified(entity, row, idIndex) {
+	function isRowModified(js, entity, row, rowIndex) {
 		const s = row.join('');
 		if(s.length==0) return false;
 		const hc = hashCode(s);
-		const id = row[idIndex];
-		return hc !== originalValiueHashes[entity.name][id];
+		const allHc = js.getMeta();
+		const originalHc = js.getMeta('A'+rowIndex).hc
+		//const id = row[idIndex];
+		return hc !== originalHc;
+		//return hc !== originalValiueHashes[entity.name][id];
 	}
 
 	function isCurrentTableModified() {
@@ -233,7 +178,7 @@
 		return entity.attributes.findIndex(e => { return e.name === entity.idField; });
 	}
 
-	function cacheOriginalValueHashes(entity) {
+	function cacheOriginalValueHashes(js, entity) {
 		if(! entity.idField) return;
 		const idIndex = getIdFieldIndex(entity);
 		if(idIndex<0) return;
@@ -242,7 +187,9 @@
 		for(let i=1; i<data.length;i++) {
 			const row = data[i];
 			const id = row[idIndex];
-			originalValiueHashes[entity.name][id] = hashCode(row.join(''));
+			const hc = hashCode(row.join(''));
+			originalValiueHashes[entity.name][id] = hc;
+			js.setMeta('A'+i, 'hc', hc);
 		}
 	}
 
@@ -303,7 +250,7 @@
 		setAllColumnParams(instance, entity);
 		initAllFilterStates();
 		syncAllIconStates();
-		cacheOriginalValueHashes(entity);
+		cacheOriginalValueHashes(js, entity);
 	}
 
 	function getCurrentSheetConfig() {
@@ -519,7 +466,7 @@
 		console.log(responseMessage);
 	}
 
-	function getModifiedData(entity, data) {
+	function getModifiedData(js, entity, data) {
 		if(! entity.idField) return data;
 		const idIndex = getIdFieldIndex(entity);
 		if(idIndex<0) return data;
@@ -527,7 +474,7 @@
 		modifiedData.push(data[0]);
 		for(let i=1; i<data.length;i++) {
 			const row = data[i];
-			if(isRowModified(entity, row, idIndex)) {
+			if(isRowModified(js, entity, row, i)) {
 				modifiedData.push(row);
 			}
 		}
@@ -546,6 +493,7 @@
 
 	function save(entities) {
 		const data = getCurrentData();
+		const js = getCurrentJexcel();
 		console.log(data);
 		if(data.length===0) return;
 		console.log("Save data...: "+getCurrentEntityId());
@@ -554,14 +502,14 @@
 		const deleteUri = remoteBaseUri + entity.deleteUri;
 		console.log("URI: "+saveUri);
 		if(entity.idField) {
-			const modifiedData = getModifiedData(entity, data);
+			const modifiedData = getModifiedData(js, entity, data);
 			const deletedIds = getDeletedIds(entity, data);
 			deleteIds(deleteUri, deletedIds)
 			saveData(saveUri, modifiedData, false);
 		} else {
 			saveData(saveUri, data, true);
 		}
-		cacheOriginalValueHashes(entity);
+		cacheOriginalValueHashes(js, entity);
 	}
 
 	function syncIconStates(selector, iconIndex) {
@@ -593,7 +541,7 @@
 	}
 
 	function toggleFunc(icon, selector) {
-		let js = getCurrentJexcel();
+		const js = getCurrentJexcel();
 		if(!js) return true;
 		icon.classList.toggle("jtoolbar-active");
 		//const index = getCurrentWorkSheetIndex();
@@ -613,7 +561,7 @@
 					type: 'select',
 					data: Object.keys(entities),
 					render: function(e) { return '<span>' + entities[e].name + '</span>'; },
-					width: maxStringWidth(Object.keys(entities))+15,
+					width: maxStringWidth(entityNames(entities)),
 					onchange: function(a,b,c,d) { switchToEntity(entities[d]); }
 				},
 				{
