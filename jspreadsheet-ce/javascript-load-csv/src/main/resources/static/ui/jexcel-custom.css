@@ -93,21 +93,22 @@
 }
 
 /* .jexcel_overflow > tbody > tr:first-child > td {
-    border-top: 0;
+    border-top: 5px transparent;
 } */
 
 .jexcel_overflow > tbody > tr:last-child > td {
-    border-bottom: 0;
+    border-bottom: 5px transparent;
 }
 
 .jexcel_overflow > tbody > tr:last-child > td {
     /* border-bottom: 1px transparent; */
     /* border-bottom: 1px solid #ccc; */
-    border-bottom: 0;
+    border-bottom: 5px transparent;
 }
 
 .jexcel .jexcel_overflow {
     border-bottom: 0;
+    border-bottom: 1px transparent;
 }
 
 .jexcel_container {
@@ -149,3 +150,12 @@
 .jexcel .highlight-top.highlight-left {
     box-shadow: none !important;   
 } */
+
+.jexcel_content {
+    max-height: calc(100vh - 60px);
+    overflow-y: auto;
+}
+
+.jexcel_content_with_search_filter {
+    max-height: calc(100vh - 91px);
+}

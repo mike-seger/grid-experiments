@@ -144,15 +144,15 @@
 	}
 
 	function cellChanged(instance, cell, col, row, value) {
-		try {
-			var cellName = jexcel.getColumnNameFromId([col,row]);
-			console.log(`Change on cell (${col}, ${row}) ${cellName} to: ${value}`);
-			const js = instance.jspreadsheet;
-			const headers = js.getHeaders().split(',');
-			autoResizeColumn(js, col, headers[col])
-		} catch(e) {
-			console.error(e);
-		}
+		// try {
+		// 	var cellName = jexcel.getColumnNameFromId([col,row]);
+		// 	console.log(`Change on cell (${col}, ${row}) ${cellName} to: ${value}`);
+		// 	const js = instance.jspreadsheet;
+		// 	const headers = js.getHeaders().split(',');
+		// 	autoResizeColumn(js, col, headers[col])
+		// } catch(e) {
+		// 	console.error(e);
+		// }
 		return true;
 	}
 
@@ -251,6 +251,16 @@
 		setElementOffsetWidth(js.el, w, 4.3-(w-200)/500, true);
 	}
 
+	function adjustMaxContentHeight(withSearch) {
+		const js = getCurrentJexcel();
+		const content = js.el.querySelector(".jexcel_content");
+		content.removeAttribute("style");
+		content.classList.remove("jexcel_content_with_search_filter");
+		if(withSearch) {
+			content.classList.add("jexcel_content_with_search_filter");
+		}
+	}
+
 	function loaded(instance) {
 		console.log('New data is loaded');
 		const entity = getCurrentEntity();
@@ -278,7 +288,8 @@
 		initAllFilterStates();
 		syncAllIconStates();
 		cacheOriginalValueHashes(js, entity);
-		resizeBars();	
+		resizeBars();
+		adjustMaxContentHeight(false);
 	}
 
 	function getCurrentSheetConfig() {
@@ -335,8 +346,15 @@
 		return columns;
 	}
 
-	function tableChanged() {
+	function tableChanged(instance) {
 		console.log("tableChanged");
+		autoResizeColumns(instance);
+		resizeBars();
+	}
+
+	function columnResized(instance) {
+		console.log("columnResized");
+		resizeBars();
 	}
 
 	function selected(target, col, row) {
@@ -367,11 +385,14 @@
 			csvHeaders:true,
 			defaultColAlign: 'left',
 			tableOverflow:true,
-			tableHeight:'89%',
+			//tableHeight:'calc(100vh - 80px)',
 			onload: loaded,
 			onchange: cellChanged,
 			onselection: selected,
 			onafterchanges: tableChanged,
+			oninsertcolumn: tableChanged,
+			ondeletecolumn: tableChanged,
+			onresizecolumn: columnResized,
 			//onbeforedeleterow: beforeDeleteRow,
 			allowInsertColumn: false,
 			allowDeleteColumn: false,
@@ -622,7 +643,7 @@
 					onclick: function(a,b,c) {
 						resizeBars();
 						const result = toggleFunc(c, '.jexcel_filter');
-						return result;
+						adjustMaxContentHeight(c.classList.contains("jtoolbar-active"));
 					},
 					state: true,
 					active: false,
