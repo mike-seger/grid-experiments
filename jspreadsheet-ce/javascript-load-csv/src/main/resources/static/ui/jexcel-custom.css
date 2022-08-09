@@ -113,7 +113,7 @@
 
 .jexcel_container {
     /* display: inline-flex; */
-    height: calc(100vh - 1.3em);
+    /* height: calc(100vh - 1.3em); */
 }
 
 .jexcel_content {
@@ -123,11 +123,12 @@
     border-right: 1px solid #ccc;
 }
 
-/* 
+/*
 .jexcel_content table {
     border-bottom: 1px solid #ccc;
     border-left: 1px solid #ccc;
-} */
+}
+*/
 
 .jexcel_container *  {
     box-shadow: none !important;
@@ -141,15 +142,36 @@
     border-bottom: 0;
     border-right: 1px solid #ccc;
 }
-/* .jexcel_filter {
+
+/* 
+.jexcel_filter {
     display: block;
-} */
+} 
+*/
+
 /* 
 .jexcel .highlight-top,
 .jexcel .highlight-left,
 .jexcel .highlight-top.highlight-left {
     box-shadow: none !important;   
-} */
+}
+*/
+
+/* Safari specific */
+@media not all and (min-resolution:.001dpcm) { 
+    @supports (-webkit-appearance:none) and (stroke-color:transparent) {
+        .jexcel_content { 
+            padding-right: 0.5em;
+        }
+    }
+}
+
+/* Firefox specific */
+@-moz-document url-prefix() {
+    .jexcel_content { 
+        padding-right: 0.6em;
+    }
+}
 
 .jexcel_content {
     max-height: calc(100vh - 60px);
