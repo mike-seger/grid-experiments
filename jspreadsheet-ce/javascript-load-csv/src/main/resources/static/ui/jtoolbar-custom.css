@@ -20,7 +20,7 @@
     margin-bottom: -1px;
     /* margin-right: -2px; */
     padding: 0;
-    padding-right: 10em;
+    margin-right: -3em;
     box-shadow: none;
     /* position:;
     left: 0;
@@ -33,8 +33,12 @@
     background-color: white;
 }
 
-.jpicker-header {
+.jpicker-header  {
+    font-size: 1.1em !important;
+}
+
+.jpicker-header,
+.jpicker-content {
     background-image: none;
     border-radius: 0;
-    font-size: 14px;
 }

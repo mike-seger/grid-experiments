@@ -79,7 +79,7 @@
     padding: 5px 8px 6px 8px;
     align-items: center;
     border-top: 0;
-    width: 100nw !important;
+    /* width: 100nw !important; */
 }
 
 .jexcel > thead > tr:first-child > td {
@@ -96,9 +96,24 @@
 }
 
 .jexcel_container {
+    /* display: inline-flex; */
     height: calc(100vh - 1.5em);
 }
 
 .jexcel_content {
     margin-right: 1.5em;
-} 
+}
+
+.jexcel_container *  {
+    box-shadow: none !important;
+}
+
+/* .jexcel_filter {
+    display: block;
+} */
+/* 
+.jexcel .highlight-top,
+.jexcel .highlight-left,
+.jexcel .highlight-top.highlight-left {
+    box-shadow: none !important;   
+} */

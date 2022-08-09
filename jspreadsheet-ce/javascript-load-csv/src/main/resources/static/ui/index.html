@@ -27,7 +27,6 @@
 	<style>
 		body, html {
 			overflow: hidden;
-			/* height: 100vh; */
 		}
 
 		html {
@@ -37,19 +36,23 @@
 		body {
 			overflow-x: auto;
 			width: 100%;
-			/* height: calc(100vh -1em);			 */
 		}
 
 		.container {
 			height: 100%;
-			/* display: flex; */
 			flex-direction: column;
 			padding: 0;
+			align-items: stretch;
+			align-content: stretch; 
 		}
 
 		.content {
 			flex: 1;
 			box-sizing: border-box;
+		}
+
+		#toolbar {
+			width: auto;
 		}
 	</style>
 </head>
@@ -92,6 +95,8 @@
 		return width;
 	}
 
+	const mWidth = stringWidth("M");
+
 	function entityNames(entities) {
 		return Object.keys((Object.fromEntries(Object.entries(entities).map(([k, entity]) => [entity.name]))))
 	}
@@ -112,7 +117,7 @@
 
 		const longestString = findLongestString(js.getColumnData(colIndex));
 		const sortableMargin = getCurrentEntity().sortable === true?dropdownMargin:0;
-		let w = Math.max(stringWidth(longestString), stringWidth(header)+sortableMargin);
+		let w = Math.max(stringWidth(longestString), stringWidth(header)+sortableMargin)+2*mWidth;
 		if(colConfig.type === 'Enum') w += dropdownMargin;
 		else if(colConfig.type.indexOf('Date')>=0) w += calendarMargin;
 		js.setWidth(colIndex, w + 2*hMargin);
@@ -224,6 +229,28 @@
 		return getCurrentJexcel().originalDeleteRow(...args);
 	}
 
+	function setElementOffsetWidth(el, w, offsetW, hackerMode) {
+		if(!el) {
+			console.log('No el');
+			return;
+		}
+		let newWidth = w+"px";
+		el.style.width = '450px'
+		const diff = el.offsetWidth - 450;
+		const newW = Math.max(w - diff, 450) + offsetW;
+		newWidth = newW+"px";
+		el.style.width = newWidth;
+		console.log("OW: "+el.classList+"\n"+w+" - "+newWidth+" - "+el.offsetWidth);
+	}
+
+	function resizeBars() {
+		const js = getCurrentJexcel();
+		const w = js.el.querySelector(".jexcel_content").offsetWidth;
+		setElementOffsetWidth(document.getElementById("toolbar"), w, -1, true);
+		//FIXME find a better solution than this hacky magic offset calculation
+		setElementOffsetWidth(js.el, w, 4-(w-200)/500, true);
+	}
+
 	function loaded(instance) {
 		console.log('New data is loaded');
 		const entity = getCurrentEntity();
@@ -251,6 +278,7 @@
 		initAllFilterStates();
 		syncAllIconStates();
 		cacheOriginalValueHashes(js, entity);
+		resizeBars();	
 	}
 
 	function getCurrentSheetConfig() {
@@ -369,7 +397,7 @@
 			result = d3.tsvFormatBody(data);
 			mimetype = "text/tab-separated-values";
 		} else result = d3.csvFormatBody(data);
-		if(hiddenA) hiddenA.remove(hiddenA);
+		if(hiddenA) hiddenA.remove();
 		hiddenA = document.createElement('a');
 		hiddenA.href = 'data:'+mimetype+';charset=utf-8,' + encodeURI(result);
 		hiddenA.target = '_blank';
@@ -399,6 +427,7 @@
 		if(!tabs || tabs.length<num) return;
 		tabs[num].click();
 		syncAllIconStates();
+		resizeBars();
 	}
 
 	function getJexcel(num) {
@@ -544,7 +573,6 @@
 		const js = getCurrentJexcel();
 		if(!js) return true;
 		icon.classList.toggle("jtoolbar-active");
-		//const index = getCurrentWorkSheetIndex();
 		const filterRow = js.el.querySelector(selector);
 		if(filterRow) {
 			const active = filterRow.style.display !== 'none';
@@ -561,7 +589,7 @@
 					type: 'select',
 					data: Object.keys(entities),
 					render: function(e) { return '<span>' + entities[e].name + '</span>'; },
-					width: maxStringWidth(entityNames(entities)),
+					width: maxStringWidth(entityNames(entities))+2*mWidth,
 					onchange: function(a,b,c,d) { switchToEntity(entities[d]); }
 				},
 				{
@@ -592,7 +620,9 @@
 					type: 'icon',
 					content: 'search',
 					onclick: function(a,b,c) {
-						return toggleFunc(c, '.jexcel_filter');
+						resizeBars();
+						const result = toggleFunc(c, '.jexcel_filter');
+						return result;
 					},
 					state: true,
 					active: false,
