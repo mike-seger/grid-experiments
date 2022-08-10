@@ -14,19 +14,12 @@
     border-radius: 0;
     margin-bottom: 0;
     border: 1px solid #ccc;
-    /* border-collapse: separate; */
     background-color: #e8ecf0;
     margin-left: 1px;
     margin-bottom: -1px;
-    /* margin-right: -2px; */
     padding: 0;
     margin-right: -3em;
     box-shadow: none;
-    /* position:;
-    left: 0;
-    right: 0;
-    height: 200px; */
-    /* box-shadow: rgb(221, 221, 221) 2px 2px 5px 0.1px  */
 }
 
 .jtoolbar .jpicker {

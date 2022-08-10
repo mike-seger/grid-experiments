@@ -61,7 +61,6 @@
 			height: calc(100vh - 30px);
 			flex-direction: column;
 			padding: 9px;
-			/* padding-right: 0; */
 		}
 
 		.content {
@@ -166,15 +165,6 @@
 	}
 
 	function cellChanged(instance, cell, col, row, value) {
-		// try {
-		// 	var cellName = jexcel.getColumnNameFromId([col,row]);
-		// 	console.log(`Change on cell (${col}, ${row}) ${cellName} to: ${value}`);
-		// 	const js = instance.jspreadsheet;
-		// 	const headers = js.getHeaders().split(',');
-		// 	autoResizeColumn(js, col, headers[col])
-		// } catch(e) {
-		// 	console.error(e);
-		// }
 		return true;
 	}
 
@@ -257,7 +247,7 @@
 		let newWidth = w+"px";
 		el.style.width = '450px'
 		const diff = el.offsetWidth - 450;
-		const newW = Math.max(w - diff, 450) + offsetW;
+		const newW = Math.max(w - diff, 600) + offsetW;
 		newWidth = newW+"px";
 		el.style.width = newWidth;
 		console.log("OW: "+el.classList+"\n"+w+" - "+newWidth+" - "+el.offsetWidth);
@@ -483,7 +473,6 @@
 				}
 				if(result.status==200) {
 					refreshData();
-					//getCurrentJexcel().getData(false);
 					successDialog(result.content);
 				} else {
 					errorDialog("Error occurred<br /><code>"+
@@ -501,7 +490,6 @@
 		let method = "PUT";
 		let tabSeparated = true;
 		console.log(file.name+" ("+file.type+"):");
-		//console.log(file);
 		if(file.type === "text/tab-separated-values") {
 			uri = remoteBaseUri + entity.putUri;
 		} else if(file.type === "text/csv") {
@@ -517,10 +505,6 @@
 	}
 	
 	function uploadSvFile() {
-		//let hiddenUploadInput = null;
-//		<input type="button" value="Browse..." onclick="document.getElementById('selectedFile').click();" />
-		//if(hiddenUploadInput)
-
 		const inputFile = document.getElementById('selectedFile');
 		const onSelectFile = () => uploadFile(inputFile.files[0]);
 		inputFile.addEventListener('change', onSelectFile, false);
@@ -773,6 +757,11 @@
 					},
 					state: true,
 					active: false,
+				},
+				{
+					type: 'icon',
+					content: 'refresh',
+					onclick: refreshData
 				}
 			]
 		});
