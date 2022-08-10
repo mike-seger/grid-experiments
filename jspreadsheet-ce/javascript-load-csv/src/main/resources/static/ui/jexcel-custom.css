@@ -166,10 +166,10 @@
 }
 
 .jexcel_content {
-    max-height: calc(100vh - 60px);
+    max-height: calc(100vh - 48px);
     overflow-y: auto;
 }
 
 .jexcel_content_with_search_filter {
-    max-height: calc(100vh - 91px);
+    max-height: calc(100vh - 81px);
 }
