@@ -374,8 +374,8 @@
 		return false;
 	}
 
-	function queryParams(tabSeparated, deleteAll) {
-		return "&tabSeparated="+(tabSeparated === true)
+	function remoteUrl(url, tabSeparated, deleteAll) {
+		return url+(url.includes('?')?"&":"?")+"tabSeparated="+(tabSeparated === true)
 			+ "&deleteAll="+(deleteAll === true)
 	}
 
@@ -395,7 +395,7 @@
 		}
 		jspreadsheet.tabs(spreadsheet1, [{
 			sheetName: entity.name,
-			csv: remoteBaseUri+entity.getUri+queryParams(false, false),
+			csv: remoteUrl(remoteBaseUri+entity.getUri, false, false),
 			columns: columns,
 			csvHeaders:true,
 			defaultColAlign: 'left',
@@ -438,7 +438,7 @@
 
 	async function getData() {
 		const entity = entities[getCurrentEntityId()];
-		const uri = remoteBaseUri+entity.getUri+queryParams(false, false);
+		const uri = remoteUrl(remoteBaseUri+entity.getUri, false, false);
 		try {
 			const response = await fetch(uri, { method: "GET" });
 			const data = await response.text();
@@ -500,7 +500,7 @@
 		}
 
 		if(uri!=null) {
-			submitData(uri+queryParams(tabSeparated, true), method, file);
+			submitData(remoteUrl(uri, tabSeparated, true), method, file);
 		}
 	}
 	
@@ -653,7 +653,7 @@
 		if(data.length===0) return;
 		console.log("Save data...: "+getCurrentEntityId());
 		const entity = entities[getCurrentEntityId()];
-		const saveUri = remoteBaseUri + entity.putUri+queryParams(false, false);
+		const saveUri = remoteUrl(remoteBaseUri + entity.putUri, false, false);
 		const deleteUri = remoteBaseUri + entity.deleteUri;
 		console.log("URI: "+saveUri);
 		if(entity.idField) {
