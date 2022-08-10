@@ -84,6 +84,8 @@
 		Server response: <div id="servertext"></div>
 	</jsuites-modal>
 
+	<input type="file" id="selectedFile" style="display: none;" />
+
 	<script>
 	const spreadsheet1 = document.getElementById('spreadsheet1')
 	const serverMessage = document.querySelector('jsuites-modal')
@@ -100,6 +102,8 @@
 	let entities = {};
 	let originalValiueHashes = {};
 	let hiddenA = null;
+	let hiddenUploadButton = null;
+	let hiddenUploadInput = null;
 
 	let downloadFormat = "TSV";
 	let remoteBaseUri = location.port==8000? "../../db/changelog/data/" : "../api/v1/admin/csv";
@@ -183,10 +187,8 @@
 		if(s.length==0) return false;
 		const hc = hashCode(s);
 		const allHc = js.getMeta();
-		const originalHc = js.getMeta('A'+rowIndex).hc
-		//const id = row[idIndex];
+		const originalHc = js.getMeta('A'+rowIndex)?js.getMeta('A'+rowIndex).hc:null
 		return hc !== originalHc;
-		//return hc !== originalValiueHashes[entity.name][id];
 	}
 
 	function isCurrentTableModified() {
@@ -382,6 +384,11 @@
 		return false;
 	}
 
+	function queryParams(tabSeparated, deleteAll) {
+		return "&tabSeparated="+(tabSeparated === true)
+			+ "&deleteAll="+(deleteAll === true)
+	}
+
 	function switchToEntity(entity) {
 		let pos = entityIds.indexOf(entity.id)
 		if(pos>=0) {
@@ -398,7 +405,7 @@
 		}
 		jspreadsheet.tabs(spreadsheet1, [{
 			sheetName: entity.name,
-			csv: remoteBaseUri+entity.getUri,
+			csv: remoteBaseUri+entity.getUri+queryParams(false, false),
 			columns: columns,
 			csvHeaders:true,
 			defaultColAlign: 'left',
@@ -427,6 +434,97 @@
 			//lazyLoading:true,
 		    //loadingSpin:true,
 		}]);
+	}
+
+	function successDialog(message) {
+		serverText.innerText = message;
+		serverMessage.modal.open();
+	}
+
+	function errorDialog(content) {
+		serverText.innerHtml = content;
+		serverMessage.modal.open();
+	}
+
+	async function getData() {
+		const entity = entities[getCurrentEntityId()];
+		const uri = remoteBaseUri+entity.getUri+queryParams(false, false);
+		try {
+			const response = await fetch(uri, { method: "GET" });
+			const data = await response.text();
+			return data;
+		} catch (e) {
+            console.log('error', e);
+            return null
+        }
+	}
+
+	async function refreshData() {
+		const data = await getData();
+		if(data!=null) {
+			const gridData = await d3.csvParse(data);
+			getCurrentJexcel().setData(gridData);
+		}
+	}
+
+	async function submitData(uri, method, body) {
+		serverText.innerText = "Uploading...";
+		serverMessage.modal.open();
+		fetch(uri, {
+			method: method,
+			body: body})
+		.then(response => {
+			response.type === "application/json"? response.json():response.text()
+			.then(function(data) {
+				const result = {
+					status: response.status,
+					type: response.type,
+					content: data,
+				}
+				if(result.status==200) {
+					refreshData();
+					//getCurrentJexcel().getData(false);
+					successDialog(result.content);
+				} else {
+					errorDialog("Error occurred<br /><code>"+
+						JSON.stringify(result, null, 2)+"</code>");
+					console.log(result);
+				}
+			})
+		})
+		.catch(error => console.log(error));
+	}
+
+	function uploadFile(file) {
+		const entity = entities[getCurrentEntityId()];
+		let uri = null;
+		let method = "PUT";
+		let tabSeparated = true;
+		console.log(file.name+" ("+file.type+"):");
+		//console.log(file);
+		if(file.type === "text/tab-separated-values") {
+			uri = remoteBaseUri + entity.putUri;
+		} else if(file.type === "text/csv") {
+			uri = remoteBaseUri + entity.putUri;
+			tabSeparated = false;
+		} else {
+			console.log("Unsupported file type: "+file.type)
+		}
+
+		if(uri!=null) {
+			submitData(uri+queryParams(tabSeparated, true), method, file);
+		}
+	}
+	
+	function uploadSvFile() {
+		//let hiddenUploadInput = null;
+//		<input type="button" value="Browse..." onclick="document.getElementById('selectedFile').click();" />
+		//if(hiddenUploadInput)
+
+		const inputFile = document.getElementById('selectedFile');
+		const onSelectFile = () => uploadFile(inputFile.files[0]);
+		inputFile.addEventListener('change', onSelectFile, false);
+		inputFile.click();
 	}
 
 	function downloadSvFile(fileName, data) {
@@ -502,20 +600,25 @@
 		downloadSvFile("data", data);
 	}
 
-	async function saveData(uriRoot, data, deleteAll) {
+	function upload() {
+		console.log("Upload");
+		uploadSvFile();
+	}
+
+	async function saveData(uri, data) {
 		if(data.length<=1) {
 			return;
 		}
-		let uri = uriRoot;
-		if(deleteAll) uri+="&deleteAll=true";
 		const response = await fetch(uri, {
 			method: 'PUT',
 			headers: { 'Content-type': 'text/csv' },
 			body: d3.csvFormatBody(data),
 		});
 		const responseMessage = await response.text();
-		serverText.innerText = responseMessage;
-		serverMessage.modal.open();
+		if(response.status==200) {
+			refreshData();
+			successDialog(responseMessage);
+		} else errorDialog(responseMessage);
 		console.log(responseMessage);
 	}
 
@@ -566,7 +669,7 @@
 		if(data.length===0) return;
 		console.log("Save data...: "+getCurrentEntityId());
 		const entity = entities[getCurrentEntityId()];
-		const saveUri = remoteBaseUri + entity.putUri;
+		const saveUri = remoteBaseUri + entity.putUri+queryParams(false, false);
 		const deleteUri = remoteBaseUri + entity.deleteUri;
 		console.log("URI: "+saveUri);
 		if(entity.idField) {
@@ -645,6 +748,11 @@
 					type: 'icon',
 					content: 'vertical_align_bottom',
 					onclick: download
+				},
+				{
+					type: 'icon',
+					content: 'vertical_align_top',
+					onclick: upload
 				},
 				{
 					type: 'icon',

@@ -43,8 +43,8 @@ public class JpaService {
             var attributes = jpaMapper.getAttributes(e);
             configuration.addEntity(
                 entity.getName(), e,
-                "?tabSeparated=false&entity="+e,
-                "?tabSeparated=false&entity="+e,
+                "?entity="+e,
+                "?entity="+e,
                 "?entity="+e+"&",
                 attributes.get(idFieldName)!=null?idFieldName:null,
                 Props.isSortable(entity),
