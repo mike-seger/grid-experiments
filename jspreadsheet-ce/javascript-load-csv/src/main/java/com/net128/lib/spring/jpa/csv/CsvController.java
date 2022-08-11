@@ -33,11 +33,13 @@ public class CsvController {
 	private final static String uploadFailedMsg = "Failed uploading: ";
 	private final static String deleteMsg = "Successfully deleted items: ";
 	private final static String deleteFailedMsg = "Failed deleting: ";
+	private final String invalidEntityMessage;
 
 	public CsvController(CsvService csvService, JpaService jpaService, @Value("${spring.application.name}") String appName) {
 		this.csvService = csvService;
 		this.jpaService = jpaService;
 		this.appName = appName;
+		this.invalidEntityMessage = "Invalid input parameters. Valid entities are:\n"+jpaService.getEntities();
 	}
 
 	@GetMapping(produces = { APPLICATION_ZIP, TEXT_TSV, TEXT_CSV, MediaType.TEXT_PLAIN_VALUE })
@@ -52,14 +54,20 @@ public class CsvController {
 		HttpServletResponse response
 	) throws IOException {
 		try (OutputStream os = response.getOutputStream()) {
-			if(CollectionUtils.isEmpty(entities)) {
-				response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-				response.setContentType(MediaType.TEXT_PLAIN_VALUE);
-				var osw = new OutputStreamWriter(os);
-				osw.write("No entity given. Expected at least one of:\n"+jpaService.getEntities());
-			} else {
-				response.setStatus(HttpServletResponse.SC_OK);
-				writeCsv(os, entities, tabSeparated, zippedSingleTable, response);
+			try {
+				if (CollectionUtils.isEmpty(entities)) {
+					errorResponse(response, os, HttpServletResponse.SC_BAD_REQUEST, invalidEntityMessage);
+				} else {
+					response.setStatus(HttpServletResponse.SC_OK);
+					writeCsv(os, entities, tabSeparated, zippedSingleTable, response);
+				}
+			}  catch(Exception e) {
+				if(e instanceof ValidationException)
+					errorResponse(response, os, HttpServletResponse.SC_BAD_REQUEST, invalidEntityMessage);
+				else {
+					errorResponse(response, os, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
+					log.error("Error getting entities: {}", entities, e);
+				}
 			}
 			os.flush();
 		}
@@ -166,6 +174,14 @@ public class CsvController {
 			response.addHeader("Content-Disposition", "attachment; filename=\""+fileName+"\"");
 			csvService.writeAllCsvZipped(os, realEntities, tabSeparated);
 		}
+	}
+
+	private void errorResponse(HttpServletResponse response, OutputStream os, int status, String message) throws IOException {
+		response.setStatus(status);
+		response.setContentType(MediaType.TEXT_PLAIN_VALUE);
+		var osw = new OutputStreamWriter(os);
+		osw.write(message);
+		osw.flush();
 	}
 
 	private String timestampNow() { return isoTimeStampNow()

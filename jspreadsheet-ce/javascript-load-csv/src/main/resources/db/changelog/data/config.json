@@ -241,13 +241,86 @@
           "type": "Float"
         }
       ],
-      "deleteUri": "countries_population.csv",
+      "deleteUri": "countries_population.csv ",
       "getUri": "countries_population.csv",
       "id": "com.net128.app.jpa.adminux.data.CountryPopulation",
       "idField": "id",
       "name": "COUNTRY_POPULATION",
       "putUri": "countries_population.csv",
       "sortable": true
+    },
+    "com.net128.app.jpa.adminux.data.Person": {
+      "attributes": [
+        {
+          "enumConstants": null,
+          "hidden": true,
+          "id": true,
+          "name": "myId",
+          "readOnly": false,
+          "title": "myId",
+          "type": "Int"
+        },
+        {
+          "enumConstants": null,
+          "hidden": false,
+          "id": false,
+          "name": "address",
+          "readOnly": false,
+          "title": "address",
+          "type": "String"
+        },
+        {
+          "enumConstants": null,
+          "hidden": false,
+          "id": false,
+          "name": "city",
+          "readOnly": false,
+          "title": "city",
+          "type": "String"
+        },
+        {
+          "enumConstants": [
+            "Austria",
+            "Belgium",
+            "Luxembourg",
+            "Liechtenstein",
+            "Switzerland",
+            "Germany",
+            "Other"
+          ],
+          "hidden": false,
+          "id": false,
+          "name": "country",
+          "readOnly": false,
+          "title": "country",
+          "type": "Enum"
+        },
+        {
+          "enumConstants": null,
+          "hidden": false,
+          "id": false,
+          "name": "firstName",
+          "readOnly": false,
+          "title": "firstName",
+          "type": "String"
+        },
+        {
+          "enumConstants": null,
+          "hidden": false,
+          "id": false,
+          "name": "lastName",
+          "readOnly": false,
+          "title": "lastName",
+          "type": "String"
+        }
+      ],
+      "deleteUri": "persons.csv",
+      "getUri": "persons.csv",
+      "id": "com.net128.app.jpa.adminux.data.Person",
+      "idField": "myId",
+      "name": "PERSON",
+      "putUri": "persons.csv",
+      "sortable": false
     }
   }
 }
