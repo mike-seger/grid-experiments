@@ -56,16 +56,16 @@ public class CsvController {
 		try (OutputStream os = response.getOutputStream()) {
 			try {
 				if (CollectionUtils.isEmpty(entities)) {
-					errorResponse(response, os, HttpServletResponse.SC_BAD_REQUEST, invalidEntityMessage);
+					writeError(response, os, HttpServletResponse.SC_BAD_REQUEST, invalidEntityMessage);
 				} else {
 					response.setStatus(HttpServletResponse.SC_OK);
 					writeCsv(os, entities, tabSeparated, zippedSingleTable, response);
 				}
 			}  catch(Exception e) {
 				if(e instanceof ValidationException)
-					errorResponse(response, os, HttpServletResponse.SC_BAD_REQUEST, invalidEntityMessage);
+					writeError(response, os, HttpServletResponse.SC_BAD_REQUEST, invalidEntityMessage);
 				else {
-					errorResponse(response, os, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
+					writeError(response, os, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
 					log.error("Error getting entities: {}", entities, e);
 				}
 			}
@@ -91,10 +91,7 @@ public class CsvController {
 			var count = csvService.readCsv(is, entity, tabSeparated, deleteAll);
 			message = uploadMsg+entity+" (count="+count+")";
 		} catch(Exception e) {
-			if(e instanceof ValidationException)
-				status = HttpStatus.BAD_REQUEST;
-			else status = HttpStatus.INTERNAL_SERVER_ERROR;
-			message = uploadFailedMsg+entity+"\n"+e.getMessage();
+			return failedResponseEntity(entity, e);
 		}
 		return ResponseEntity.status(status).body(message);
 	}
@@ -118,10 +115,7 @@ public class CsvController {
 			csvService.readCsv(is, entity, tabSeparated, true);
 			message = uploadMsg+fileName;
 		} catch(Exception e) {
-			message = uploadFailedMsg+fileName+"\n"+e.getMessage();
-			if(e instanceof ValidationException || e instanceof RuntimeJsonMappingException)
-				status = HttpStatus.BAD_REQUEST;
-			else status = HttpStatus.INTERNAL_SERVER_ERROR;
+			return failedResponseEntity(fileName, e);
 		}
 		return ResponseEntity.status(status).body(message);
 	}
@@ -176,7 +170,19 @@ public class CsvController {
 		}
 	}
 
-	private void errorResponse(HttpServletResponse response, OutputStream os, int status, String message) throws IOException {
+	private ResponseEntity<String> failedResponseEntity(String entity, Throwable t) {
+		var message = uploadFailedMsg+entity;
+		var status = HttpStatus.BAD_REQUEST;
+		if(t instanceof ValidationException || t instanceof RuntimeJsonMappingException) {
+			message += "\n" + t.getMessage();
+		} else {
+			status = HttpStatus.INTERNAL_SERVER_ERROR;
+			log.error(message, t);
+		}
+		return ResponseEntity.status(status).body(message);
+	}
+
+	private void writeError(HttpServletResponse response, OutputStream os, int status, String message) throws IOException {
 		response.setStatus(status);
 		response.setContentType(MediaType.TEXT_PLAIN_VALUE);
 		var osw = new OutputStreamWriter(os);
