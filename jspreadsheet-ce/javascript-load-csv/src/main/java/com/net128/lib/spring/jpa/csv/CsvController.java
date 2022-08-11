@@ -42,6 +42,11 @@ public class CsvController {
 		this.invalidEntityMessage = "Invalid input parameters. Valid entities are:\n"+jpaService.getEntities();
 	}
 
+	@RequestMapping(value="/{entity}.csv", produces = { TEXT_CSV })
+	public void getCsv(@PathVariable String entity, HttpServletResponse response) throws IOException {
+		getCsv(List.of(entity), false, false, response);
+	}
+
 	@GetMapping(produces = { APPLICATION_ZIP, TEXT_TSV, TEXT_CSV, MediaType.TEXT_PLAIN_VALUE })
 	public void getCsv(
 		@RequestParam(name="entity", required = false)
@@ -85,15 +90,14 @@ public class CsvController {
 		@RequestBody
 		String csvData
 	) {
-		String message;
-		var status = HttpStatus.OK;
+		ResponseEntity<String> response;
 		try (InputStream is = new ByteArrayInputStream(csvData.getBytes())) {
 			var count = csvService.readCsv(is, entity, tabSeparated, deleteAll);
-			message = uploadMsg+entity+" (count="+count+")";
+			response = ResponseEntity.status(HttpStatus.OK).body(uploadMsg+entity+" (count="+count+")");
 		} catch(Exception e) {
-			return failedResponseEntity(entity, e);
+			response = failedResponseEntity(entity, e);
 		}
-		return ResponseEntity.status(status).body(message);
+		return response;
 	}
 
 	@PostMapping(consumes = { TEXT_TSV, TEXT_CSV, MediaType.TEXT_PLAIN_VALUE })
@@ -104,20 +108,19 @@ public class CsvController {
 		@RequestParam("file")
 		MultipartFile file
 	) {
-		String message;
 		var fileName="";
-		var status = HttpStatus.OK;
+		ResponseEntity<String> response;
 		try (InputStream is = file.getInputStream()) {
 			if(file.getOriginalFilename() == null)
 				throw new IllegalArgumentException("file.originalFileName must not be empty");
 			fileName = file.getOriginalFilename();
 			var entity = fileName.replaceAll("[.].*", "");
 			csvService.readCsv(is, entity, tabSeparated, true);
-			message = uploadMsg+fileName;
+			response = ResponseEntity.status(HttpStatus.OK).body(uploadMsg+fileName);
 		} catch(Exception e) {
-			return failedResponseEntity(fileName, e);
+			response = failedResponseEntity(fileName, e);
 		}
-		return ResponseEntity.status(status).body(message);
+		return response;
 	}
 
 	@DeleteMapping

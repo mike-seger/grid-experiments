@@ -76,7 +76,7 @@ public class JpaMapper {
 	private Map<String, Class<?>> getEntityClassMap() {
 		return entityManager.getMetamodel().getEntities()
 			.stream().collect(Collectors.toMap(
-				e -> camel2Snake(e.getName()), javax.persistence.metamodel.Type::getJavaType));
+				e -> NameUtil.camel2Snake(e.getName()), javax.persistence.metamodel.Type::getJavaType));
 	}
 
 	public JpaRepository<?, Long> getEntityRepository(Class<?> entityClass) {
@@ -88,11 +88,6 @@ public class JpaMapper {
 			throw new ValidationException("Unable to get repository for entity class: " + entityClass.getSimpleName());
 		}
 		return repo;
-	}
-
-	private String camel2Snake(String str) {
-		return str.replaceAll("([A-Z][a-z])", "_$1")
-				.replaceAll("^_", "").toUpperCase();
 	}
 
 	@SuppressWarnings("rawtypes")

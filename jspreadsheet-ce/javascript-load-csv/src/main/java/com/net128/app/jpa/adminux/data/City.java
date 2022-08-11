@@ -16,22 +16,22 @@ import java.time.LocalDate;
 @Props.Sortable
 public class City extends Identifiable {
 	@Column(nullable = false)
-	private long geonameId;
+	private long geoId;
 
 	@Column(nullable = false)
 	private String name;
 
 	@Column(nullable = false)
-	private String countryCode;
+	private String isoCountry;
 
 	@Column(nullable = false)
-	private String countryNameEn;
+	private String country;
 
 	@Column(nullable = false)
 	private long population;
 
 	@Column(nullable = false)
-	private LocalDate modificationDate;
+	private LocalDate modified;
 
 	@Column(nullable = false)
 	private double latitude;

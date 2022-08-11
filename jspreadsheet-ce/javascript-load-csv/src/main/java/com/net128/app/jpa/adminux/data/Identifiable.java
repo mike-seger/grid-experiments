@@ -1,5 +1,7 @@
 package com.net128.app.jpa.adminux.data;
 
+import com.fasterxml.jackson.databind.PropertyNamingStrategies;
+import com.fasterxml.jackson.databind.annotation.JsonNaming;
 import com.net128.lib.spring.jpa.csv.util.Props;
 import lombok.Data;
 
@@ -11,6 +13,7 @@ import java.util.Objects;
 
 @MappedSuperclass
 @Data
+@JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
 public abstract class Identifiable {
 	@Props.Hidden
 	@Id

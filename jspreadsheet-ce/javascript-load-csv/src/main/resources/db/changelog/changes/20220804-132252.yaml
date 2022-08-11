@@ -42,17 +42,17 @@ databaseChangeLog:
         - column:
             constraints:
               nullable: false
-            name: country_code
+            name: iso_country
             type: VARCHAR(255)
         - column:
             constraints:
               nullable: false
-            name: country_name_en
+            name: country
             type: VARCHAR(255)
         - column:
             constraints:
               nullable: false
-            name: geoname_id
+            name: geo_id
             type: BIGINT
         - column:
             constraints:
@@ -67,7 +67,7 @@ databaseChangeLog:
         - column:
             constraints:
               nullable: false
-            name: modification_date
+            name: modified
             type: date
         - column:
             constraints:

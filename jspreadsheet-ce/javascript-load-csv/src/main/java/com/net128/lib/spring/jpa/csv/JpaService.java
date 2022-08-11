@@ -43,7 +43,7 @@ public class JpaService {
             var attributes = jpaMapper.getAttributes(e);
             configuration.addEntity(
                 entity.getName(), e,
-                "?entity="+e,
+                "/"+e+".csv",
                 "?entity="+e,
                 "?entity="+e+"&",
                 attributes.get(idFieldName)!=null?idFieldName:null,

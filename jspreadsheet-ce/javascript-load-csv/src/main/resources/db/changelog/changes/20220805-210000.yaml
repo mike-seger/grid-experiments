@@ -6,19 +6,19 @@ databaseChangeLog:
       changes:
         - loadData:
             relativeToChangelogFile: true
-            file: ../data/20220803-210000-cars.tsv
-            separator: '	'
+            file: ../data/CAR.csv
+            separator: ','
             quotchar: '"'
             tableName: CAR
         - loadData:
             relativeToChangelogFile: true
-            file: ../data/cities-1400.tsv
-            separator: '	'
+            file: ../data/CITY.csv
+            separator: ','
             quotchar: '"'
             tableName: CITY
         - loadData:
             relativeToChangelogFile: true
-            file: ../data/population_by_country_2020.csv
+            file: ../data/COUNTRY_POPULATION.csv
             separator: ','
             quotchar: '"'
             tableName: COUNTRY_POPULATION

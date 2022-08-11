@@ -30,12 +30,12 @@
           "type": "Float"
         }
       ],
-      "deleteUri": "cars.csv",
-      "getUri": "cars.csv",
+      "deleteUri": "?entity=CAR&",
+      "getUri": "/CAR.csv",
       "id": "com.net128.app.jpa.adminux.data.Car",
       "idField": "id",
       "name": "CAR",
-      "putUri": "cars.csv",
+      "putUri": "?entity=CAR",
       "sortable": false
     },
     "com.net128.app.jpa.adminux.data.City": {
@@ -53,28 +53,28 @@
           "enumConstants": null,
           "hidden": false,
           "id": false,
-          "name": "countryCode",
+          "name": "country",
           "readOnly": false,
-          "title": "countryCode",
+          "title": "country",
           "type": "String"
         },
         {
           "enumConstants": null,
           "hidden": false,
           "id": false,
-          "name": "countryNameEn",
+          "name": "geoId",
           "readOnly": false,
-          "title": "country (EN)",
-          "type": "String"
-        },
-        {
-          "enumConstants": null,
-          "hidden": false,
-          "id": false,
-          "name": "geonameId",
-          "readOnly": false,
-          "title": "geonameId",
+          "title": "geoId",
           "type": "Int"
+        },
+        {
+          "enumConstants": null,
+          "hidden": false,
+          "id": false,
+          "name": "isoCountry",
+          "readOnly": false,
+          "title": "isoCountry",
+          "type": "String"
         },
         {
           "enumConstants": null,
@@ -98,9 +98,9 @@
           "enumConstants": null,
           "hidden": false,
           "id": false,
-          "name": "modificationDate",
+          "name": "modified",
           "readOnly": false,
-          "title": "mod.date",
+          "title": "modified",
           "type": "Date"
         },
         {
@@ -122,12 +122,12 @@
           "type": "Int"
         }
       ],
-      "deleteUri": "cities.csv",
-      "getUri": "cities.csv",
+      "deleteUri": "?entity=CITY&",
+      "getUri": "/CITY.csv",
       "id": "com.net128.app.jpa.adminux.data.City",
       "idField": "id",
       "name": "CITY",
-      "putUri": "cities.csv",
+      "putUri": "?entity=CITY",
       "sortable": true
     },
     "com.net128.app.jpa.adminux.data.CountryPopulation": {
@@ -241,12 +241,12 @@
           "type": "Float"
         }
       ],
-      "deleteUri": "countries_population.csv ",
-      "getUri": "countries_population.csv",
+      "deleteUri": "?entity=COUNTRY_POPULATION&",
+      "getUri": "/COUNTRY_POPULATION.csv",
       "id": "com.net128.app.jpa.adminux.data.CountryPopulation",
       "idField": "id",
       "name": "COUNTRY_POPULATION",
-      "putUri": "countries_population.csv",
+      "putUri": "?entity=COUNTRY_POPULATION",
       "sortable": true
     },
     "com.net128.app.jpa.adminux.data.Person": {
@@ -314,12 +314,12 @@
           "type": "String"
         }
       ],
-      "deleteUri": "persons.csv",
-      "getUri": "persons.csv",
+      "deleteUri": "?entity=PERSON&",
+      "getUri": "/PERSON.csv",
       "id": "com.net128.app.jpa.adminux.data.Person",
       "idField": "myId",
       "name": "PERSON",
-      "putUri": "persons.csv",
+      "putUri": "?entity=PERSON",
       "sortable": false
     }
   }

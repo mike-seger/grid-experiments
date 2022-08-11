@@ -1,4 +1,4 @@
-id,areaSqKm,country,fertRate,medAge,migrants,netChange,popPerSqKm,popUrbanPerc,population,worldPerc,yearChangePerc
+id,area_sq_km,country,fert_rate,med_age,migrants,net_change,pop_per_sq_km,pop_urban_perc,population,world_perc,year_change_perc
 1,9388211,China,1.7,38,-348399,5540090,153,61.0,1440297825,18.47,0.39
 2,2973190,India,2.2,28,-532687,13586631,464,35.0,1382345085,17.7,0.99
 3,9147420,"United States",1.8,38,954806,1937734,36,83.0,331341050,4.25,0.59

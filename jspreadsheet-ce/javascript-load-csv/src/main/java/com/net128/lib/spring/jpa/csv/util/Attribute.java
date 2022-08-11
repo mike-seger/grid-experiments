@@ -19,6 +19,7 @@ import java.util.stream.Collectors;
 @NoArgsConstructor
 public class Attribute {
 	String name;
+	String columnName;
 	String title;
 	AttributeType type;
 	Set<String> enumConstants;
@@ -29,6 +30,7 @@ public class Attribute {
 
 	Attribute(javax.persistence.metamodel.Attribute<?, ?> attribute, List<String> titleRegexes, boolean isId) {
 		name = attribute.getName();
+		columnName = NameUtil.camel2Snake(name).toLowerCase();
 		title = name;
 		this.isId = isId;
 		for(var regex : titleRegexes) {

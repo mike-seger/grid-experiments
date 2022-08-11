@@ -128,37 +128,35 @@
 		return stringWidth(max);
 	}
 
-	function autoResizeColumn(js, colIndex, header) {
+	function autoResizeColumn(js, colIndex, header, entity) {
 		function findLongestString(arr) {
 			return arr.reduce((a, b)=> a.length > b.length ? a : b);
 		}
 
-		const colConfig = getCurrentEntity().attributes[colIndex];
+		const colConfig = entity.attributes[colIndex];
 		console.log(colConfig);
 
 		const longestString = findLongestString(js.getColumnData(colIndex));
-		const sortableMargin = getCurrentEntity().sortable === true?dropdownMargin:0;
+		const sortableMargin = entity.sortable === true?dropdownMargin:0;
 		let w = Math.max(stringWidth(longestString), stringWidth(header)+sortableMargin)+2*mWidth;
 		if(colConfig.type === 'Enum') w += dropdownMargin;
 		else if(colConfig.type.indexOf('Date')>=0) w += calendarMargin;
 		js.setWidth(colIndex, w + 2*hMargin);
 	}
 
-	function autoResizeColumns(instance) {
-		const js = instance.jspreadsheet;
+	function autoResizeColumns(js, entity) {
 		const headers = js.getHeaders().split(',');
 		const data = js.getData();
 		if(js.getData().length==0) return;
 		for(let col = 0; col<headers.length; col++) 
-			autoResizeColumn(js, col, headers[col])
+			autoResizeColumn(js, col, headers[col], entity)
 	}
 
 	function setColumnParams(js, col, header) {
 		console.log(`col: ${col} - ${header}`);
 	}
 
-	function setAllColumnParams(instance, entity) {
-		const js = instance.jspreadsheet;
+	function setAllColumnParams(js, entity) {
 		const headers = js.getHeaders().split(',');
 		for(let col = 0; col<headers.length; col++) 
 			setColumnParams(js, col, headers[col])
@@ -181,14 +179,6 @@
 		return hc !== originalHc;
 	}
 
-	function isCurrentTableModified() {
-		const data = getCurrentData();
-		for(let i=1; i<data.length;i++) {
-			if(data[i].join('').length>0) return true;
-		}
-		return false;
-	}
-
 	function getIdFieldIndex(entity) {
 		return entity.attributes.findIndex(e => { return e.name === entity.idField; });
 	}
@@ -197,7 +187,7 @@
 		if(! entity.idField) return;
 		const idIndex = getIdFieldIndex(entity);
 		if(idIndex<0) return;
-		const data = getCurrentData();
+		const data = getCurrentData(js, entity);
 		originalValiueHashes[entity.name] = {};
 		for(let i=1; i<data.length;i++) {
 			const row = data[i];
@@ -208,11 +198,10 @@
 		}
 	}
 
-	function clearData(reset) {
-		const js = getCurrentJexcel();
+	function clearData(js, entity, reset) {
 		if(reset) {
 			var newData = [];
-			newData.push(Array(getCurrentColumnsNames().length).fill(''));
+			newData.push(Array(entity.attributes.length).fill(''));
 			js.setData(newData);
 		} else {
 			const n = js.getData().length;
@@ -221,22 +210,22 @@
 		}
 	}
 
-	function beforeDeleteRow() {
+	function beforeDeleteRow(instance) {
     	console.log("beforeDeleteRow");
-		const js = getCurrentJexcel();
+		const js = instance.jexcel;
 		const n = js.getSelectedRows(false).length;
 		if(js.getData().length <= n) {
-			clearData(false);
+			clearData(js, null, false);
 			return false;
 		}
 		return true;
 	}
 	
-	function customDeleteRow(...args) {
+	function customDeleteRow(intance, ...args) {
 		if(!beforeDeleteRow()) {
 			return false;
 		}
-		return getCurrentJexcel().originalDeleteRow(...args);
+		return instance.jexcel.originalDeleteRow(instance, ...args);
 	}
 
 	function setElementOffsetWidth(el, w, offsetW, hackerMode) {
@@ -253,16 +242,14 @@
 		console.log("OW: "+el.classList+"\n"+w+" - "+newWidth+" - "+el.offsetWidth);
 	}
 
-	function resizeBars() {
-		const js = getCurrentJexcel();
+	function resizeBars(js) {
 		const w = js.el.querySelector(".jexcel_content").offsetWidth;
 		setElementOffsetWidth(document.getElementById("toolbar"), w, -1, true);
 		//FIXME find a better solution than this hacky magic offset calculation
 		setElementOffsetWidth(js.el, w, 4.3-(w-200)/500, true);
 	}
 
-	function adjustMaxContentHeight(withSearch) {
-		const js = getCurrentJexcel();
+	function adjustMaxContentHeight(js, withSearch) {
 		const content = js.el.querySelector(".jexcel_content");
 		content.removeAttribute("style");
 		content.classList.remove("jexcel_content_with_search_filter");
@@ -271,12 +258,11 @@
 		}
 	}
 
-	function loaded(instance) {
+	function loaded(instance, entity) {
 		console.log('New data is loaded');
-		const entity = getCurrentEntity();
-		const js = getCurrentJexcel();
+		const js = instance.jexcel;
 		if(js.getData().length==0) {
-			clearData(!originalValiueHashes[entity.name]);
+			clearData(js, entity, /*!originalValiueHashes[entity.name]*/true);
 			const data = js.getData();
 			console.log(data);
 		}
@@ -292,27 +278,20 @@
 		//meta information should only be set as a result from a server data refresh
 		//entity.idField and getIdFieldIndex
 
-		autoResizeColumns(instance);
+		autoResizeColumns(js, entity);
 		console.log(entity);
-		setAllColumnParams(instance, entity);
-		initAllFilterStates();
-		syncAllIconStates();
+		setAllColumnParams(js, entity);
+		initAllFilterStates(js);
+		syncAllIconStates(js);
 		cacheOriginalValueHashes(js, entity);
-		resizeBars();
-		adjustMaxContentHeight(false);
-	}
-
-	function getCurrentSheetConfig() {
-		return getCurrentJexcel().getConfig();
-	}
-
-	function getCurrentSheetColConfig(col) {
-		return getCurrentSheetConfig().columns[col];
+		resizeBars(js);
+		adjustMaxContentHeight(js, false);
 	}
 
 	function directionSort(direction) {
-		const col = getCurrentJexcel().selectedCoord.col;
-		const type = getCurrentSheetColConfig(col).type;
+		const js = getCurrentJexcel();
+		const col = js.selectedCoord.col;
+		const type = js.getConfig().columns[col].type;
 
 		return function(a, b) {
 
@@ -337,40 +316,42 @@
 		for (const properties of attributes) {
 			let column = {}
 			const title = properties.title;
+			const name = properties.columnName;
 			console.log(properties);
 			if(properties.hidden) column = {
-				type: 'hidden', title: title, name: properties.name };
+				type: 'hidden', title: title, name: name };
 			else if(properties.type === "Float") column = {
 				type: 'numeric', align: 'right', title: title, 
-				name: properties.name, sorting: directionSort };
+				name: name, sorting: directionSort};
 			else if(properties.type === "Int") column = {
 				type: 'numeric', align: 'right', title: title, 
-				name: properties.name, sorting: directionSort};
+				name: name, sorting: directionSort};
 			else if(properties.type === "Enum") column = {
-				type: 'dropdown', title: title, name: properties.name,
+				type: 'dropdown', title: title, name: name,
 				source: properties.enumConstants};
 			else column = {
-				type: 'text', title: title, name: properties.name };
+				type: 'text', title: title, name: name };
 			columns.push(column);
 		}
 		return columns;
 	}
 
-	function tableChanged(instance) {
+	function tableChanged(instance, entity) {
 		console.log("tableChanged");
-		autoResizeColumns(instance);
-		resizeBars();
+		const js = instance.jexcel;
+		autoResizeColumns(js, entity);
+		resizeBars(js);
 	}
 
 	function columnResized(instance) {
 		console.log("columnResized");
-		resizeBars();
+		resizeBars(instance.jexcel);
 	}
 
-	function selected(target, col, row) {
+	function selected(instance, col, row) {
 		if(row!=0) return false;
 		console.log(`selected: ${col} / ${row}`);
-		getCurrentJexcel().selectedCoord = { col: col, row: row };
+		instance.jexcel.selectedCoord = { col: col, row: row };
 		return false;
 	}
 
@@ -393,37 +374,41 @@
 			columns = createColumns(entity.attributes);
 			console.log(columns);
 		}
-		jspreadsheet.tabs(spreadsheet1, [{
-			sheetName: entity.name,
-			csv: remoteUrl(remoteBaseUri+entity.getUri, false, false),
-			columns: columns,
-			csvHeaders:true,
-			defaultColAlign: 'left',
-			tableOverflow:true,
-			//tableHeight:'calc(100vh - 80px)',
-			onload: loaded,
-			onchange: cellChanged,
-			onselection: selected,
-			onafterchanges: tableChanged,
-			oninsertcolumn: tableChanged,
-			ondeletecolumn: tableChanged,
-			onresizecolumn: columnResized,
-			//onbeforedeleterow: beforeDeleteRow,
-			allowInsertColumn: false,
-			allowDeleteColumn: false,
-			allowRenameColumn: false,
-			allowManualInsertColumn: false,
-			allowExport: false,
-			rowResize: false,
-			fillscreen: false,
-			search: true,
-			columnSorting: entity.sortable,
-			filters: true,
-			//toolbar: true,
-			sorting: directionSort,
-			//lazyLoading:true,
-		    //loadingSpin:true,
-		}]);
+		getData(entity).then((csv) => {
+			data = d3.csvParse(csv);
+			jspreadsheet.tabs(spreadsheet1, [{
+				sheetName: entity.name,
+				data: data,
+				//csv: remoteBaseUri+entity.getUri,
+				columns: columns,
+				//csvHeaders:true,
+				defaultColAlign: 'left',
+				tableOverflow:true,
+				//tableHeight:'calc(100vh - 80px)',
+				onload: function(instance) { loaded(instance, entity); },
+				onchange: cellChanged,
+				onselection: selected,
+				onafterchanges: function(instance) { tableChanged(instance, entity); },
+				oninsertcolumn: function(instance) { tableChanged(instance, entity); },
+				ondeletecolumn: function(instance) { tableChanged(instance, entity); },
+				onresizecolumn: columnResized,
+				//onbeforedeleterow: beforeDeleteRow,
+				allowInsertColumn: false,
+				allowDeleteColumn: false,
+				allowRenameColumn: false,
+				allowManualInsertColumn: false,
+				allowExport: false,
+				rowResize: false,
+				fillscreen: false,
+				search: true,
+				columnSorting: entity.sortable,
+				filters: true,
+				//toolbar: true,
+				sorting: directionSort,
+				//lazyLoading:true,
+				//loadingSpin:true,
+			}])});
+		//refreshData();
 	}
 
 	function successDialog(message) {
@@ -436,9 +421,9 @@
 		serverMessage.modal.open();
 	}
 
-	async function getData() {
-		const entity = entities[getCurrentEntityId()];
-		const uri = remoteUrl(remoteBaseUri+entity.getUri, false, false);
+	async function getData(theEntity) {
+		const entity = theEntity?theEntity:entities[getCurrentEntityId()];
+		const uri = remoteBaseUri+entity.getUri;
 		try {
 			const response = await fetch(uri, { method: "GET" });
 			const data = await response.text();
@@ -539,16 +524,17 @@
 		return entityIds[getCurrentWorkSheetIndex()];
 	}
 
-	function getCurrentEntity() {
-		return entities[getCurrentEntityId()];
+	function getCurrentEntity(index) {
+		return index?entities[index]:entities[getCurrentEntityId()];
 	}
 
 	function selectWorkSheet(num) {
 		const tabs = getWorkSheetTabs()
 		if(!tabs || tabs.length<num) return;
 		tabs[num].click();
-		syncAllIconStates();
-		resizeBars();
+		const js = getJexcel(num);
+		syncAllIconStates(js);
+		resizeBars(js);
 	}
 
 	function getJexcel(num) {
@@ -565,20 +551,21 @@
 		return getJexcel(getCurrentWorkSheetIndex());
 	}
 
-	function getCurrentColumnsNames() {
-		return getCurrentEntity().attributes.map(a => a.name);
+	function getCurrentColumnsNames(entity) {
+		return entity.attributes.map(a => a.name);
 	}
 
-	function getCurrentData() {
-		const js =  getCurrentJexcel();
+	function getCurrentData(js, theEntity) {
+		if(!js) js = getCurrentJexcel();
 		if(!js) return [];
+		const entity = theEntity?theEntity:getCurrentEntity();
 		let data = js.getData();
-		data.splice(0, 0, getCurrentColumnsNames());
+		data.splice(0, 0, getCurrentColumnsNames(entity));
 		return data;
 	}
 
 	function download() {
-		const data = getCurrentData();
+		const data = getCurrentData(getCurrentJexcel());
 		console.log(data);
 		if(data.length==0) return;
 		downloadSvFile("data", data);
@@ -647,8 +634,8 @@
 	}
 
 	function save(entities) {
-		const data = getCurrentData();
 		const js = getCurrentJexcel();
+		const data = getCurrentData(js);
 		console.log(data);
 		if(data.length===0) return;
 		console.log("Save data...: "+getCurrentEntityId());
@@ -667,8 +654,8 @@
 		cacheOriginalValueHashes(js, entity);
 	}
 
-	function syncIconStates(selector, iconIndex) {
-		const filterRow = getCurrentJexcel().el.querySelector(selector);
+	function syncIconStates(js, selector, iconIndex) {
+		const filterRow = js.el.querySelector(selector);
 		if(filterRow) {
 			const filterState = !(filterRow.style.display === 'none');
 			const toolBarItems = toolBar.querySelectorAll(".jtoolbar-item");
@@ -680,19 +667,19 @@
 		}
 	}
 
-	function syncAllIconStates() {
-		syncIconStates('.jexcel > thead > tr:nth-child(2)', columnFilterTool);
-		syncIconStates('.jexcel_filter', tableSearchTool);
+	function syncAllIconStates(js) {
+		syncIconStates(js, '.jexcel > thead > tr:nth-child(2)', columnFilterTool);
+		syncIconStates(js, '.jexcel_filter', tableSearchTool);
 	}
 
-	function initFilterState(selector) {
-		const filterRow = getCurrentJexcel().el.querySelector(selector);
+	function initFilterState(js, selector) {
+		const filterRow = js.el.querySelector(selector);
 		if(filterRow) filterRow.style.display = 'none';
 	}
 
-	function initAllFilterStates() {
-		initFilterState('.jexcel > thead tr:nth-child(2)');
-		initFilterState('.jexcel_filter');
+	function initAllFilterStates(js) {
+		initFilterState(js, '.jexcel > thead tr:nth-child(2)');
+		initFilterState(js, '.jexcel_filter');
 	}
 
 	function toggleFunc(icon, selector) {
@@ -751,9 +738,9 @@
 					type: 'icon',
 					content: 'search',
 					onclick: function(a,b,c) {
-						resizeBars();
+						resizeBars(a);
 						const result = toggleFunc(c, '.jexcel_filter');
-						adjustMaxContentHeight(c.classList.contains("jtoolbar-active"));
+						adjustMaxContentHeight(a, c.classList.contains("jtoolbar-active"));
 					},
 					state: true,
 					active: false,
