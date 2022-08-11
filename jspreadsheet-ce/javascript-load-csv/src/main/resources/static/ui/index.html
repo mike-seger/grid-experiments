@@ -99,6 +99,7 @@
 
 	let entityIds = [];
 	let entities = {};
+	let currentEntity = null;
 	let originalValiueHashes = {};
 	let hiddenA = null;
 	let hiddenUploadButton = null;
@@ -210,22 +211,22 @@
 		}
 	}
 
-	function beforeDeleteRow(instance) {
+	function beforeDeleteRow(instance, entity) {
     	console.log("beforeDeleteRow");
 		const js = instance.jexcel;
 		const n = js.getSelectedRows(false).length;
 		if(js.getData().length <= n) {
-			clearData(js, null, false);
+			clearData(js, entity, false);
 			return false;
 		}
 		return true;
 	}
 	
-	function customDeleteRow(intance, ...args) {
-		if(!beforeDeleteRow()) {
+	function customDeleteRow(instance, entity, ...all) {
+		if(!beforeDeleteRow(instance, entity)) {
 			return false;
 		}
-		return instance.jexcel.originalDeleteRow(instance, ...args);
+		return instance.jexcel.originalDeleteRow(...all);
 	}
 
 	function setElementOffsetWidth(el, w, offsetW, hackerMode) {
@@ -269,7 +270,7 @@
 
 		if(!js.originalDeleteRow) {
 			js.originalDeleteRow = js.deleteRow;
-			js.deleteRow = customDeleteRow;
+			js.deleteRow = function (...all) { customDeleteRow(instance, entity, ...all) };
 		}
 
 		//TODO set meta information with hashCode on A1, A2, A3 ...
@@ -361,6 +362,7 @@
 	}
 
 	function switchToEntity(entity) {
+		currentEntity = entity;
 		let pos = entityIds.indexOf(entity.id)
 		if(pos>=0) {
 			selectWorkSheet(pos);
@@ -392,7 +394,7 @@
 				oninsertcolumn: function(instance) { tableChanged(instance, entity); },
 				ondeletecolumn: function(instance) { tableChanged(instance, entity); },
 				onresizecolumn: columnResized,
-				//onbeforedeleterow: beforeDeleteRow,
+				//onbeforedeleterow: customDeleteRow,
 				allowInsertColumn: false,
 				allowDeleteColumn: false,
 				allowRenameColumn: false,
@@ -422,7 +424,7 @@
 	}
 
 	async function getData(theEntity) {
-		const entity = theEntity?theEntity:entities[getCurrentEntityId()];
+		const entity = theEntity?theEntity:currentEntity;
 		const uri = remoteBaseUri+entity.getUri;
 		try {
 			const response = await fetch(uri, { method: "GET" });
@@ -470,7 +472,7 @@
 	}
 
 	function uploadFile(file) {
-		const entity = entities[getCurrentEntityId()];
+		const entity = currentEntity;
 		let uri = null;
 		let method = "PUT";
 		let tabSeparated = true;
@@ -499,6 +501,7 @@
 	function downloadSvFile(fileName, data) {
 		let result;
 		let mimetype = "text/csv";
+		const timeStamp =new Date().toISOString().substring(0,19).replaceAll(/[:.-]/g, '_').replace('T', '-');
 		if(downloadFormat == "TSV") {
 			result = d3.tsvFormatBody(data);
 			mimetype = "text/tab-separated-values";
@@ -507,7 +510,7 @@
 		hiddenA = document.createElement('a');
 		hiddenA.href = 'data:'+mimetype+';charset=utf-8,' + encodeURI(result);
 		hiddenA.target = '_blank';
-		hiddenA.download = fileName+'.'+downloadFormat.toLowerCase();
+		hiddenA.download = fileName+'-'+ timeStamp +'.'+downloadFormat.toLowerCase();
 		hiddenA.click();
 	}
 
@@ -518,14 +521,6 @@
 	function getCurrentWorkSheetIndex() {
 		return spreadsheet1.children[0].querySelector('.selected')
 			.getAttribute('data-spreadsheet');
-	}
-
-	function getCurrentEntityId() {
-		return entityIds[getCurrentWorkSheetIndex()];
-	}
-
-	function getCurrentEntity(index) {
-		return index?entities[index]:entities[getCurrentEntityId()];
 	}
 
 	function selectWorkSheet(num) {
@@ -558,7 +553,7 @@
 	function getCurrentData(js, theEntity) {
 		if(!js) js = getCurrentJexcel();
 		if(!js) return [];
-		const entity = theEntity?theEntity:getCurrentEntity();
+		const entity = theEntity?theEntity:currentEntity;
 		let data = js.getData();
 		data.splice(0, 0, getCurrentColumnsNames(entity));
 		return data;
@@ -568,7 +563,7 @@
 		const data = getCurrentData(getCurrentJexcel());
 		console.log(data);
 		if(data.length==0) return;
-		downloadSvFile("data", data);
+		downloadSvFile(currentEntity.name, data);
 	}
 
 	function upload() {
@@ -635,11 +630,12 @@
 
 	function save(entities) {
 		const js = getCurrentJexcel();
+		if(!js) return;
 		const data = getCurrentData(js);
 		console.log(data);
 		if(data.length===0) return;
-		console.log("Save data...: "+getCurrentEntityId());
-		const entity = entities[getCurrentEntityId()];
+		console.log("Save data...: "+currentEntity.name);
+		const entity = currentEntity;
 		const saveUri = remoteUrl(remoteBaseUri + entity.putUri, false, false);
 		const deleteUri = remoteBaseUri + entity.deleteUri;
 		console.log("URI: "+saveUri);
