@@ -135,7 +135,7 @@
 		}
 
 		const colConfig = entity.attributes[colIndex];
-		console.log(colConfig);
+		//console.log(colConfig);
 
 		const longestString = findLongestString(js.getColumnData(colIndex));
 		const sortableMargin = entity.sortable === true?dropdownMargin:0;
@@ -240,10 +240,11 @@
 		const newW = Math.max(w - diff, 600) + offsetW;
 		newWidth = newW+"px";
 		el.style.width = newWidth;
-		console.log("OW: "+el.classList+"\n"+w+" - "+newWidth+" - "+el.offsetWidth);
+		//console.log("OW: "+el.classList+"\n"+w+" - "+newWidth+" - "+el.offsetWidth);
 	}
 
 	function resizeBars(js) {
+		if(!js) js = getCurrentJexcel();
 		const w = js.el.querySelector(".jexcel_content").offsetWidth;
 		setElementOffsetWidth(document.getElementById("toolbar"), w, -1, true);
 		//FIXME find a better solution than this hacky magic offset calculation
@@ -251,6 +252,7 @@
 	}
 
 	function adjustMaxContentHeight(js, withSearch) {
+		if(!js) js = getCurrentJexcel();
 		const content = js.el.querySelector(".jexcel_content");
 		content.removeAttribute("style");
 		content.classList.remove("jexcel_content_with_search_filter");
@@ -264,8 +266,8 @@
 		const js = instance.jexcel;
 		if(js.getData().length==0) {
 			clearData(js, entity, /*!originalValiueHashes[entity.name]*/true);
-			const data = js.getData();
-			console.log(data);
+			//const data = js.getData();
+			//console.log(data);
 		}
 
 		if(!js.originalDeleteRow) {
@@ -280,7 +282,7 @@
 		//entity.idField and getIdFieldIndex
 
 		autoResizeColumns(js, entity);
-		console.log(entity);
+		//console.log(entity);
 		setAllColumnParams(js, entity);
 		initAllFilterStates(js);
 		syncAllIconStates(js);
@@ -351,7 +353,7 @@
 
 	function selected(instance, col, row) {
 		if(row!=0) return false;
-		console.log(`selected: ${col} / ${row}`);
+		//console.log(`selected: ${col} / ${row}`);
 		instance.jexcel.selectedCoord = { col: col, row: row };
 		return false;
 	}
@@ -363,7 +365,7 @@
 
 	function switchToEntity(entity) {
 		currentEntity = entity;
-		let pos = entityIds.indexOf(entity.id)
+		let pos = entityIds.indexOf(entity.id);
 		if(pos>=0) {
 			selectWorkSheet(pos);
 			return;
@@ -410,7 +412,6 @@
 				//lazyLoading:true,
 				//loadingSpin:true,
 			}])});
-		//refreshData();
 	}
 
 	function successDialog(message) {
@@ -547,7 +548,7 @@
 	}
 
 	function getCurrentColumnsNames(entity) {
-		return entity.attributes.map(a => a.name);
+		return entity.attributes.map(a => a.columnName);
 	}
 
 	function getCurrentData(js, theEntity) {
@@ -561,7 +562,7 @@
 
 	function download() {
 		const data = getCurrentData(getCurrentJexcel());
-		console.log(data);
+		//console.log(data);
 		if(data.length==0) return;
 		downloadSvFile(currentEntity.name, data);
 	}
@@ -632,7 +633,7 @@
 		const js = getCurrentJexcel();
 		if(!js) return;
 		const data = getCurrentData(js);
-		console.log(data);
+		//console.log(data);
 		if(data.length===0) return;
 		console.log("Save data...: "+currentEntity.name);
 		const entity = currentEntity;
@@ -734,9 +735,9 @@
 					type: 'icon',
 					content: 'search',
 					onclick: function(a,b,c) {
-						resizeBars(a);
+						resizeBars();
 						const result = toggleFunc(c, '.jexcel_filter');
-						adjustMaxContentHeight(a, c.classList.contains("jtoolbar-active"));
+						adjustMaxContentHeight(null, c.classList.contains("jtoolbar-active"));
 					},
 					state: true,
 					active: false,
