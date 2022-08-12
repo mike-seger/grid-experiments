@@ -22,7 +22,7 @@ databaseChangeLog:
         - column:
             constraints:
               nullable: false
-            name: price
+            name: total_price
             type: DOUBLE
         tableName: car
 - changeSet:

@@ -23,13 +23,13 @@
           "type": "String"
         },
         {
-          "columnName": "price",
+          "columnName": "total_price",
           "enumConstants": null,
           "hidden": false,
           "id": false,
-          "name": "price",
+          "name": "totalPrice",
           "readOnly": false,
-          "title": "price",
+          "title": "totalPrice",
           "type": "Float"
         }
       ],

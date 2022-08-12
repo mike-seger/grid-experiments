@@ -80,7 +80,7 @@
 	</div>
 
 	<jsuites-modal title="Saving Data" closed="true" width="600" height="400">
-		Server response: <div id="servertext"></div>
+		<div id="servertext"></div>
 	</jsuites-modal>
 
 	<input type="file" id="selectedFile" style="display: none;" />
@@ -420,7 +420,19 @@
 	}
 
 	function errorDialog(content) {
-		serverText.innerHtml = content;
+		if(content.trim().startsWith('<'))  {
+			content = content.replace(/<[^>]+>/g, '')
+				.replace(/^\s*$(?:\r\n?|\n)/gm,'');
+
+			const newLineExpression = /\r\n|\n\r|\n|\r/g;
+			const removeDuplicatedLines = (text) => {
+				return text.split(newLineExpression)
+					.filter((item, index, array) => array.indexOf(item) === index)
+					.join('\n');
+			};
+			content = removeDuplicatedLines(content);
+		}
+		serverText.innerText = content;
 		serverMessage.modal.open();
 	}
 
@@ -574,34 +586,46 @@
 
 	async function saveData(uri, data) {
 		if(data.length<=1) {
-			return;
+			return true;
 		}
-		const response = await fetch(uri, {
-			method: 'PUT',
-			headers: { 'Content-type': 'text/csv' },
-			body: d3.csvFormatBody(data),
-		});
-		const responseMessage = await response.text();
-		if(response.status==200) {
-			refreshData();
-			successDialog(responseMessage);
-		} else errorDialog(responseMessage);
-		console.log(responseMessage);
+		try {
+			const response = await fetch(uri, {
+				method: 'PUT',
+				headers: { 'Content-type': 'text/csv' },
+				body: d3.csvFormatBody(data),
+			});
+			const responseMessage = await response.text();
+			if(response.status==200) {
+				successDialog(responseMessage);
+				return true;
+			} else errorDialog(responseMessage);
+			console.log(responseMessage);
+		} catch(e) {
+			errorDialog(e.message);
+		}
+		return false;
 	}
 
 	async function deleteIds(uri, deletedIds) {
 		if(deletedIds.length<=0) {
-			return;
+			return true;
 		}
 		const params = new URLSearchParams(deletedIds.map(id=>['id',id]));
 		const searchString = params.toString();
-		const response = await fetch(uri+params.toString(), {
-			method: 'DELETE'
-		});
-		const responseMessage = await response.text();
-		serverText.innerText = responseMessage;
-		serverMessage.modal.open();
-		console.log(responseMessage);
+		try {
+			const response = await fetch(uri+params.toString(), {
+				method: 'DELETE'
+			});
+			const responseMessage = await response.text();
+			if(response.status==200) {
+				successDialog(responseMessage);
+				return true;
+			} else errorDialog(responseMessage);
+			console.log(responseMessage);
+		} catch(e) {
+			errorDialog(e.message);
+		}
+		return false;
 	}
 
 	function getModifiedData(js, entity, data) {
@@ -629,7 +653,7 @@
 		return deletedIds;
 	}
 
-	function save(entities) {
+	async function save(entities) {
 		const js = getCurrentJexcel();
 		if(!js) return;
 		const data = getCurrentData(js);
@@ -640,15 +664,19 @@
 		const saveUri = remoteUrl(remoteBaseUri + entity.putUri, false, false);
 		const deleteUri = remoteBaseUri + entity.deleteUri;
 		console.log("URI: "+saveUri);
+		let success = false;
 		if(entity.idField) {
 			const modifiedData = getModifiedData(js, entity, data);
 			const deletedIds = getDeletedIds(entity, data);
-			deleteIds(deleteUri, deletedIds)
-			saveData(saveUri, modifiedData, false);
+			success = await deleteIds(deleteUri, deletedIds)
+				&& await saveData(saveUri, modifiedData, false);
 		} else {
-			saveData(saveUri, data, true);
+			success = await saveData(saveUri, data, true);
 		}
-		cacheOriginalValueHashes(js, entity);
+		if(success) {
+			refreshData();
+			cacheOriginalValueHashes(js, entity);
+		}
 	}
 
 	function syncIconStates(js, selector, iconIndex) {
@@ -760,6 +788,62 @@
 		console.log(Object.keys(entities));
 		createToolbar(entities);
 	}
+
+	//********* Always return true from window.confirm 
+	const overrideConfirmBox=()=>{
+		let myScript=document.createElement("script");
+		myScript.innerHTML=`window.confirm=(...args)=>{ return true; }`;
+		document.body.appendChild(myScript);
+	}
+	overrideConfirmBox();
+	//*********
+
+    keytListener = function(e) {
+		const js = getCurrentJexcel();
+		if(js) {
+			if (e.which == 13 || e.which == 9) {
+				if(!js.selectedCell) {
+					if(e.which == 13) return;
+					const cell = js.getCell("A2");
+					cell.focus();
+					js.updateSelectionFromCoords(1, 0, 1, 0);
+				}
+				const currentX = js.selectedCell[0];
+				const currentY = js.selectedCell[1];
+				const XMax = js.options.data[currentY].length - 1;
+				const YMax = js.options.data.length - 1;
+				if (e.which == 9 && currentX == XMax && currentY == YMax) {
+					console.log("Inserted row")
+					js.insertRow();
+					e.preventDefault();	
+				}
+
+				if (currentX == XMax) {
+					const newX=e.which == 9?0:1;
+					const newY=e.which == 9?currentY+1:currentY;
+					console.log("Moved selection: "+(currentY+1))
+					js.updateSelectionFromCoords(newX, currentY+1, newX, currentY+1);
+					e.preventDefault();	
+				}
+
+				//first = function(shiftKey, ctrlKey)
+				//js.insertRow();
+				//if ((e.ctrlKey || e.metaKey) && ! e.shiftKey) {
+				//jexcel.current.right();
+				//js.left();
+
+			} else if (e.which == 46 && e.ctrlKey) {
+				const currentX = js.selectedCell[0];
+				const currentY = js.selectedCell[1];
+				js.deleteRow(currentY, 1);
+				js.updateSelectionFromCoords(currentX, currentY, currentX, currentY);
+				e.preventDefault();	
+			}
+			//console.log(`${e.wich} ${e.shiftKey}`);
+			return false;
+		}
+	}
+	document.addEventListener("keydown", keytListener);
 
 	loadConfiguration();
 	</script>

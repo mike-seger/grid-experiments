@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
@@ -132,11 +133,14 @@ public class CsvService {
 					try {
 						jpaRepository.save(item);
 						count++;
-					} catch(javax.validation.ValidationException e) {
-						log.error("Error occurred. See log for details.", e);
-						throw new ValidationException(String.format(
-							"On input line %d:\nAttempted to save: %s.\nEncountered error: %s",
-							count+2, item, e.getMessage()));
+					} catch(Exception e) {
+						if(e instanceof javax.validation.ValidationException || (e.getMessage()!=null && e.getMessage().toLowerCase(Locale.ROOT).contains("constraint"))) {
+							throw new ValidationException(String.format(
+									"On input line %d:\nAttempted to save: %s.\nEncountered error: %s",
+									count+2, item, e.getMessage()));
+						} else {
+							throw e;
+						}
 					}
 				}
 				log.info("Saved {} items of {}", count, entityClass.getSimpleName());

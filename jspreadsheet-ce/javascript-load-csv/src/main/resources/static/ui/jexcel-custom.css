@@ -31,9 +31,15 @@
     padding: 0;
 }
 
-.jexcel_corner {
-    margin: 0 -3px -3px 0;
+.jexcel > tbody > tr:last-child .jexcel_corner,
+.jexcel > tbody > tr > td:last-child .jexcel_corner {
     display: none;
+}
+
+.jexcel_corner {
+    border: 0;
+    padding: 4px 0 0 4px;
+    margin: -2px 0 0 -2px;
 }
 
 /* TEXT FORMAT */

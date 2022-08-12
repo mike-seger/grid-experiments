@@ -16,5 +16,5 @@ public class Car extends Identifiable {
 	private String brand;
 
 	@Column(nullable = false)
-	private double price;
+	private double totalPrice;
 }
