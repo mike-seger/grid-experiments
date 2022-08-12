@@ -42,7 +42,7 @@ public class CsvController {
 		this.invalidEntityMessage = "Invalid input parameters. Valid entities are:\n"+jpaService.getEntities();
 	}
 
-	@RequestMapping(value="/{entity}.csv", produces = { TEXT_CSV })
+	@GetMapping(value="/{entity}.csv", produces = { TEXT_CSV })
 	public void getCsv(@PathVariable String entity, HttpServletResponse response) throws IOException {
 		getCsv(List.of(entity), false, false, response);
 	}
