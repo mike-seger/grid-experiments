@@ -106,7 +106,7 @@
 	let hiddenUploadInput = null;
 
 	let downloadFormat = "TSV";
-	let remoteBaseUri = location.port==8000? "../../db/changelog/data/" : "../api/v1/admin/csv";
+	let remoteBaseUri = isStatic()? "../../db/changelog/data/" : "../api/v1/admin/csv";
 
 	function stringWidth(text) {
 		const font = "16px sans-serif"	
@@ -293,7 +293,7 @@
 
 	function directionSort(direction) {
 		const js = getCurrentJexcel();
-		const col = js.selectedCoord.col;
+		const col = js.selectedCoord?js.selectedCoord.col:0;
 		const type = js.getConfig().columns[col].type;
 
 		return function(a, b) {
@@ -414,12 +414,17 @@
 			}])});
 	}
 
+	function resetMessage() {
+		serverText.innerText = "";
+	}
+
 	function successDialog(message) {
-		serverText.innerText = message;
+		serverText.innerText += message+"\n";
 		serverMessage.modal.open();
 	}
 
 	function errorDialog(content) {
+		resetMessage();
 		if(content.trim().startsWith('<'))  {
 			content = content.replace(/<[^>]+>/g, '')
 				.replace(/^\s*$(?:\r\n?|\n)/gm,'');
@@ -453,35 +458,25 @@
 		const data = await getData();
 		if(data!=null) {
 			const gridData = await d3.csvParse(data);
-			getCurrentJexcel().setData(gridData);
+			const js = getCurrentJexcel();
+			js.setData(gridData);
+			js.orderBy(0, 0);
 		}
 	}
 
 	async function submitData(uri, method, body) {
 		serverText.innerText = "Uploading...";
 		serverMessage.modal.open();
-		fetch(uri, {
-			method: method,
-			body: body})
-		.then(response => {
-			response.type === "application/json"? response.json():response.text()
-			.then(function(data) {
-				const result = {
-					status: response.status,
-					type: response.type,
-					content: data,
-				}
-				if(result.status==200) {
-					refreshData();
-					successDialog(result.content);
-				} else {
-					errorDialog("Error occurred<br /><code>"+
-						JSON.stringify(result, null, 2)+"</code>");
-					console.log(result);
-				}
-			})
-		})
-		.catch(error => console.log(error));
+		try {
+			const response = await fetch(uri, {
+				method: method,
+				body: body});
+			resetMessage();
+			const success = await handleFetchTextResponse(response);
+			if(success) await refreshData();
+		} catch(e) {
+			errorDialog(e.message);
+		}
 	}
 
 	function uploadFile(file) {
@@ -504,12 +499,13 @@
 		}
 	}
 	
-	function uploadSvFile() {
-		const inputFile = document.getElementById('selectedFile');
-		const onSelectFile = () => uploadFile(inputFile.files[0]);
-		inputFile.addEventListener('change', onSelectFile, false);
-		inputFile.click();
-	}
+	// function upload() {
+	// 	console.log("Upload");
+	// 	const inputFile = document.getElementById('selectedFile');
+	// 	const onSelectFile = () => uploadFile(inputFile.files[0]);
+	// 	inputFile.addEventListener('change', onSelectFile, false);
+	// 	inputFile.click();
+	// }
 
 	function downloadSvFile(fileName, data) {
 		let result;
@@ -543,6 +539,53 @@
 		const js = getJexcel(num);
 		syncAllIconStates(js);
 		resizeBars(js);
+	}
+
+	function getJexcelDisplayInfo(js) {
+		const content = js.el.querySelector('.jexcel_content');
+		const thead = js.el.querySelector('thead.resizable');
+		const tbody = js.el.querySelector('tbody.draggable');
+		let tr = tbody.querySelector("tr:nth-child(2)");
+		let trFirst = tbody.querySelector("tr:first-child");
+		if(! tr) tr = trFirst;
+		const tBodyH = tbody.offsetHeight;
+		const trH = tr.offsetHeight;
+		let x = 1;
+		let y = 0;
+		if(js.highlighted && js.highlighted.length>0) {
+			x = Number(js.highlighted[0].getAttribute('data-x'));
+			y = Number(js.highlighted[0].getAttribute('data-y'));
+		} else {
+			x = 1;
+			y = Math.round(content.scrollTop*1.0/trH+0.5);
+		}
+		return { content: content, selectedX: x, selectedY: y, bodyH: tbody.offsetHeight, bodyTop: tbody.offsetTop, 
+			headH: thead.offsetHeight, trH: trH, scrollH: content.offsetHeight, 
+			scroll: content.scrollTop };
+	}
+
+	function pageUpDown(js, up) {
+		const displayInfo = getJexcelDisplayInfo(js);
+		with(displayInfo) {
+			const scrollMax = bodyH + headH +trH - scrollH;
+			const rowDelta = Math.trunc(scrollH/trH)-1;
+			const pageDelta = rowDelta*trH;
+			let newScroll = 0;
+			let newSelectedRow = 0;
+			if(up && scroll > pageDelta) {
+				newScroll = scroll - pageDelta;
+				newSelectedRow = selectedY - rowDelta;
+			} else if(!up) {
+				if(scroll < scrollMax) {
+					newScroll = scroll + pageDelta;
+					newSelectedRow = selectedY + rowDelta;
+				}
+				else newScroll = scrollMax;
+			}
+			content.scrollTop = newScroll;
+			js.updateSelectionFromCoords(selectedX, newSelectedRow, selectedX, newSelectedRow);
+			console.log("newScroll: "+newScroll + " x/y=" + selectedX +"/"+newSelectedRow);
+		}
 	}
 
 	function getJexcel(num) {
@@ -579,11 +622,6 @@
 		downloadSvFile(currentEntity.name, data);
 	}
 
-	function upload() {
-		console.log("Upload");
-		uploadSvFile();
-	}
-
 	async function saveData(uri, data) {
 		if(data.length<=1) {
 			return true;
@@ -594,14 +632,21 @@
 				headers: { 'Content-type': 'text/csv' },
 				body: d3.csvFormatBody(data),
 			});
-			const responseMessage = await response.text();
-			if(response.status==200) {
-				successDialog(responseMessage);
-				return true;
-			} else errorDialog(responseMessage);
-			console.log(responseMessage);
+			return await handleFetchTextResponse(response);
 		} catch(e) {
 			errorDialog(e.message);
+		}
+		return false;
+	}
+
+	async function handleFetchTextResponse(response) {
+		const responseMessage = await response.text();
+		if(response.status==200) {
+			successDialog(responseMessage);
+			return true;
+		} else {
+			errorDialog(responseMessage);
+			console.log(responseMessage);
 		}
 		return false;
 	}
@@ -616,12 +661,7 @@
 			const response = await fetch(uri+params.toString(), {
 				method: 'DELETE'
 			});
-			const responseMessage = await response.text();
-			if(response.status==200) {
-				successDialog(responseMessage);
-				return true;
-			} else errorDialog(responseMessage);
-			console.log(responseMessage);
+			return await handleFetchTextResponse(response);
 		} catch(e) {
 			errorDialog(e.message);
 		}
@@ -668,6 +708,7 @@
 		if(entity.idField) {
 			const modifiedData = getModifiedData(js, entity, data);
 			const deletedIds = getDeletedIds(entity, data);
+			resetMessage();
 			success = await deleteIds(deleteUri, deletedIds)
 				&& await saveData(saveUri, modifiedData, false);
 		} else {
@@ -705,6 +746,17 @@
 	function initAllFilterStates(js) {
 		initFilterState(js, '.jexcel > thead tr:nth-child(2)');
 		initFilterState(js, '.jexcel_filter');
+	}
+
+	function importFile() {
+		let input = document.createElement('input');
+		input.type = 'file';
+		input.onchange = _this => {
+			let files = Array.from(input.files);
+			console.log(files);
+			uploadFile(input.files[0]);
+		};
+		input.click();
 	}
 
 	function toggleFunc(icon, selector) {
@@ -748,7 +800,11 @@
 				{
 					type: 'icon',
 					content: 'vertical_align_top',
-					onclick: upload
+					onclick: importFile,
+					// render: function(e) {
+					// 	return '<button onclick="download();"><i class="material-icons">vertical_align_top</i></button>';
+					// }
+
 				},
 				{
 					type: 'icon',
@@ -779,8 +835,12 @@
 		});
 	}
 
+	function isStatic() {
+		return location.port==8000 || location.host.includes(".github.io");
+	}
+
 	async function loadConfiguration() {
-		const configUrl = location.port==8000? remoteBaseUri+'config.json' : remoteBaseUri+'/configuration'
+		const configUrl = isStatic()? remoteBaseUri+'config.json' : remoteBaseUri+'/configuration'
 		const response = await fetch(configUrl);
 		const configuration = await response.json();
 		console.log(configuration);
@@ -801,38 +861,44 @@
     keytListener = function(e) {
 		const js = getCurrentJexcel();
 		if(js) {
-			if (e.which == 13 || e.which == 9) {
+			if ((e.key == 'i' && e.ctrlKey) || e.which == 13 || e.which == 9) {
 				if(!js.selectedCell) {
 					if(e.which == 13) return;
 					const cell = js.getCell("A2");
 					cell.focus();
 					js.updateSelectionFromCoords(1, 0, 1, 0);
 				}
+
 				const currentX = js.selectedCell[0];
 				const currentY = js.selectedCell[1];
 				const XMax = js.options.data[currentY].length - 1;
 				const YMax = js.options.data.length - 1;
-				if (e.which == 9 && currentX == XMax && currentY == YMax) {
+
+				if (e.key == 'i' && currentY == YMax) {
 					console.log("Inserted row")
 					js.insertRow();
-					e.preventDefault();	
+					pageUpDown(js, false);
+					e.preventDefault();
 				}
 
-				if (currentX == XMax) {
+				if (currentX == XMax && !(currentY == YMax && e.which == 9 && !e.ctrlKey)) {
 					const newX=e.which == 9?0:1;
 					const newY=e.which == 9?currentY+1:currentY;
 					console.log("Moved selection: "+(currentY+1))
 					js.updateSelectionFromCoords(newX, currentY+1, newX, currentY+1);
 					e.preventDefault();	
 				}
-			} else if (e.which == 46 && e.ctrlKey) {
+			} else if (e.key == 'd' && e.ctrlKey) {
 				const currentX = js.selectedCell[0];
 				const currentY = js.selectedCell[1];
 				js.deleteRow(currentY, 1);
 				js.updateSelectionFromCoords(currentX, currentY, currentX, currentY);
 				e.preventDefault();	
+			} else if(e.key == 'PageDown' || e.key == 'PageUp') {
+				pageUpDown(js, e.key == 'PageUp');
 			}
-			//console.log(`${e.wich} ${e.shiftKey}`);
+			
+			console.log(e.wich +" - "+e.key);
 			return false;
 		}
 	}
