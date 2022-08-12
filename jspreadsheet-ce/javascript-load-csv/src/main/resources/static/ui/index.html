@@ -791,9 +791,9 @@
 
 	//********* Always return true from window.confirm 
 	const overrideConfirmBox=()=>{
-		let myScript=document.createElement("script");
-		myScript.innerHTML=`window.confirm=(...args)=>{ return true; }`;
-		document.body.appendChild(myScript);
+		let alwaysConfirmScript=document.createElement("script");
+		alwaysConfirmScript.innerHTML=`window.confirm=(...args)=>{ return true; }`;
+		document.body.appendChild(alwaysConfirmScript);
 	}
 	overrideConfirmBox();
 	//*********
@@ -825,13 +825,6 @@
 					js.updateSelectionFromCoords(newX, currentY+1, newX, currentY+1);
 					e.preventDefault();	
 				}
-
-				//first = function(shiftKey, ctrlKey)
-				//js.insertRow();
-				//if ((e.ctrlKey || e.metaKey) && ! e.shiftKey) {
-				//jexcel.current.right();
-				//js.left();
-
 			} else if (e.which == 46 && e.ctrlKey) {
 				const currentX = js.selectedCell[0];
 				const currentY = js.selectedCell[1];
