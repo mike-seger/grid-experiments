@@ -26,6 +26,17 @@
     background-color: white;
 }
 
+.jtoolbar .jtoolbar-divisor {
+    background-color: black;
+    border: 2px solid white;
+    height: calc(100% - 4px);
+    padding: 0 1px 0 0;
+    margin: 0;
+    /* margin: 2px; */
+    /* margin: 1px 0 1px 0; */
+    width: 0px;
+}
+
 .jpicker-header  {
     font-size: 1.1em !important;
 }

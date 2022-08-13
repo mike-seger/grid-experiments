@@ -83,8 +83,6 @@
 		<div id="servertext"></div>
 	</jsuites-modal>
 
-	<input type="file" id="selectedFile" style="display: none;" />
-
 	<script>
 	const spreadsheet1 = document.getElementById('spreadsheet1')
 	const serverMessage = document.querySelector('jsuites-modal')
@@ -101,9 +99,6 @@
 	let entities = {};
 	let currentEntity = null;
 	let originalValiueHashes = {};
-	let hiddenA = null;
-	let hiddenUploadButton = null;
-	let hiddenUploadInput = null;
 
 	let downloadFormat = "TSV";
 	let remoteBaseUri = isStatic()? "../../db/changelog/data/" : "../api/v1/admin/csv";
@@ -245,6 +240,7 @@
 
 	function resizeBars(js) {
 		if(!js) js = getCurrentJexcel();
+		if(!js) return;
 		const w = js.el.querySelector(".jexcel_content").offsetWidth;
 		setElementOffsetWidth(document.getElementById("toolbar"), w, -1, true);
 		//FIXME find a better solution than this hacky magic offset calculation
@@ -253,6 +249,7 @@
 
 	function adjustMaxContentHeight(js, withSearch) {
 		if(!js) js = getCurrentJexcel();
+		if(!js) return;
 		const content = js.el.querySelector(".jexcel_content");
 		content.removeAttribute("style");
 		content.classList.remove("jexcel_content_with_search_filter");
@@ -265,9 +262,7 @@
 		console.log('New data is loaded');
 		const js = instance.jexcel;
 		if(js.getData().length==0) {
-			clearData(js, entity, /*!originalValiueHashes[entity.name]*/true);
-			//const data = js.getData();
-			//console.log(data);
+			clearData(js, entity, true);
 		}
 
 		if(!js.originalDeleteRow) {
@@ -282,36 +277,12 @@
 		//entity.idField and getIdFieldIndex
 
 		autoResizeColumns(js, entity);
-		//console.log(entity);
 		setAllColumnParams(js, entity);
 		initAllFilterStates(js);
 		syncAllIconStates(js);
 		cacheOriginalValueHashes(js, entity);
 		resizeBars(js);
 		adjustMaxContentHeight(js, false);
-	}
-
-	function directionSort(direction) {
-		const js = getCurrentJexcel();
-		const col = js.selectedCoord?js.selectedCoord.col:0;
-		const type = js.getConfig().columns[col].type;
-
-		return function(a, b) {
-
-			let valueA = a[1];
-			let valueB = b[1];
-
-			if(type === 'numeric') {
-				valueA = new Number(a[1]);
-				valueB = new Number(b[1]);
-			}
-
-			if (! direction) {
-				return (valueA === '' && valueB !== '') ? 1 : (valueA !== '' && valueB === '') ? -1 : (valueA > valueB) ? 1 : (valueA < valueB) ? -1 :  0;
-			} else {
-				return (valueA === '' && valueB !== '') ? 1 : (valueA !== '' && valueB === '') ? -1 : (valueA > valueB) ? -1 : (valueA < valueB) ? 1 :  0;
-			}
-		}
 	}
 
 	function createColumns(attributes) {
@@ -324,11 +295,11 @@
 			if(properties.hidden) column = {
 				type: 'hidden', title: title, name: name };
 			else if(properties.type === "Float") column = {
-				type: 'numeric', align: 'right', title: title, 
-				name: name, sorting: directionSort};
+				type: 'number', align: 'right', title: title, 
+				name: name};
 			else if(properties.type === "Int") column = {
-				type: 'numeric', align: 'right', title: title, 
-				name: name, sorting: directionSort};
+				type: 'number', align: 'right', title: title, 
+				name: name};
 			else if(properties.type === "Enum") column = {
 				type: 'dropdown', title: title, name: name,
 				source: properties.enumConstants};
@@ -349,13 +320,6 @@
 	function columnResized(instance) {
 		console.log("columnResized");
 		resizeBars(instance.jexcel);
-	}
-
-	function selected(instance, col, row) {
-		if(row!=0) return false;
-		//console.log(`selected: ${col} / ${row}`);
-		instance.jexcel.selectedCoord = { col: col, row: row };
-		return false;
 	}
 
 	function remoteUrl(url, tabSeparated, deleteAll) {
@@ -383,20 +347,15 @@
 			jspreadsheet.tabs(spreadsheet1, [{
 				sheetName: entity.name,
 				data: data,
-				//csv: remoteBaseUri+entity.getUri,
 				columns: columns,
-				//csvHeaders:true,
 				defaultColAlign: 'left',
 				tableOverflow:true,
-				//tableHeight:'calc(100vh - 80px)',
 				onload: function(instance) { loaded(instance, entity); },
 				onchange: cellChanged,
-				onselection: selected,
 				onafterchanges: function(instance) { tableChanged(instance, entity); },
 				oninsertcolumn: function(instance) { tableChanged(instance, entity); },
 				ondeletecolumn: function(instance) { tableChanged(instance, entity); },
 				onresizecolumn: columnResized,
-				//onbeforedeleterow: customDeleteRow,
 				allowInsertColumn: false,
 				allowDeleteColumn: false,
 				allowRenameColumn: false,
@@ -408,7 +367,6 @@
 				columnSorting: entity.sortable,
 				filters: true,
 				//toolbar: true,
-				sorting: directionSort,
 				//lazyLoading:true,
 				//loadingSpin:true,
 			}])});
@@ -454,13 +412,21 @@
         }
 	}
 
+	function defaultOrder(js) {
+		const hasHiddenCol0=js.options.columns[0].type === 'hidden';
+		if(hasHiddenCol0) js.options.columns[0].type = 'number';
+		js.orderBy(0, 0);
+		if(hasHiddenCol0) js.options.columns[0].type = 'hidden';
+	}
+
 	async function refreshData() {
+		if(currentEntity == null) return;
 		const data = await getData();
 		if(data!=null) {
 			const gridData = await d3.csvParse(data);
 			const js = getCurrentJexcel();
 			js.setData(gridData);
-			js.orderBy(0, 0);
+			defaultOrder(js);
 		}
 	}
 
@@ -480,32 +446,24 @@
 	}
 
 	function uploadFile(file) {
+		if(currentEntity==null) return;
 		const entity = currentEntity;
 		let uri = null;
 		let method = "PUT";
 		let tabSeparated = true;
-		console.log(file.name+" ("+file.type+"):");
 		if(file.type === "text/tab-separated-values") {
 			uri = remoteBaseUri + entity.putUri;
 		} else if(file.type === "text/csv") {
 			uri = remoteBaseUri + entity.putUri;
 			tabSeparated = false;
 		} else {
-			console.log("Unsupported file type: "+file.type)
+			errorDialog("Unsupported file type: "+file.type);
 		}
 
 		if(uri!=null) {
 			submitData(remoteUrl(uri, tabSeparated, true), method, file);
 		}
 	}
-	
-	// function upload() {
-	// 	console.log("Upload");
-	// 	const inputFile = document.getElementById('selectedFile');
-	// 	const onSelectFile = () => uploadFile(inputFile.files[0]);
-	// 	inputFile.addEventListener('change', onSelectFile, false);
-	// 	inputFile.click();
-	// }
 
 	function downloadSvFile(fileName, data) {
 		let result;
@@ -515,12 +473,12 @@
 			result = d3.tsvFormatBody(data);
 			mimetype = "text/tab-separated-values";
 		} else result = d3.csvFormatBody(data);
-		if(hiddenA) hiddenA.remove();
-		hiddenA = document.createElement('a');
-		hiddenA.href = 'data:'+mimetype+';charset=utf-8,' + encodeURI(result);
-		hiddenA.target = '_blank';
-		hiddenA.download = fileName+'-'+ timeStamp +'.'+downloadFormat.toLowerCase();
-		hiddenA.click();
+		const dlLink = document.createElement('a');
+		dlLink.href = 'data:'+mimetype+';charset=utf-8,' + encodeURI(result);
+		dlLink.target = '_blank';
+		dlLink.download = fileName+'-'+ timeStamp +'.'+downloadFormat.toLowerCase();
+		dlLink.click();
+		dlLink.remove();
 	}
 
 	function getWorkSheetTabs() {
@@ -616,8 +574,9 @@
 	}
 
 	function download() {
-		const data = getCurrentData(getCurrentJexcel());
-		//console.log(data);
+		const js = getCurrentJexcel();
+		if(js==null) return;
+		const data = getCurrentData();
 		if(data.length==0) return;
 		downloadSvFile(currentEntity.name, data);
 	}
@@ -697,13 +656,11 @@
 		const js = getCurrentJexcel();
 		if(!js) return;
 		const data = getCurrentData(js);
-		//console.log(data);
 		if(data.length===0) return;
-		console.log("Save data...: "+currentEntity.name);
 		const entity = currentEntity;
 		const saveUri = remoteUrl(remoteBaseUri + entity.putUri, false, false);
 		const deleteUri = remoteBaseUri + entity.deleteUri;
-		console.log("URI: "+saveUri);
+		console.log("URI: "+saveUri+" entity:"+currentEntity.name);
 		let success = false;
 		if(entity.idField) {
 			const modifiedData = getModifiedData(js, entity, data);
@@ -720,22 +677,22 @@
 		}
 	}
 
-	function syncIconStates(js, selector, iconIndex) {
+	function syncIconStates(js, selector, toolName) {
+		const toolIndex = getToolIndex(toolName);
 		const filterRow = js.el.querySelector(selector);
 		if(filterRow) {
 			const filterState = !(filterRow.style.display === 'none');
 			const toolBarItems = toolBar.querySelectorAll(".jtoolbar-item");
-			console.log("filterState - "+ selector +":"+filterState);
-			if(toolBarItems && toolBarItems.length>iconIndex) {
-				if(filterState) toolBarItems[iconIndex].classList.add("jtoolbar-active");
-				else toolBarItems[iconIndex].classList.remove("jtoolbar-active");
+			if(toolBarItems && toolBarItems.length>toolIndex) {
+				if(filterState) toolBarItems[toolIndex].classList.add("jtoolbar-active");
+				else toolBarItems[toolIndex].classList.remove("jtoolbar-active");
 			}
 		}
 	}
 
 	function syncAllIconStates(js) {
-		syncIconStates(js, '.jexcel > thead > tr:nth-child(2)', columnFilterTool);
-		syncIconStates(js, '.jexcel_filter', tableSearchTool);
+		syncIconStates(js, '.jexcel > thead > tr:nth-child(2)', 'filter');
+		syncIconStates(js, '.jexcel_filter', 'search');
 	}
 
 	function initFilterState(js, selector) {
@@ -749,13 +706,10 @@
 	}
 
 	function importFile() {
+		if(currentEntity==null) return;
 		let input = document.createElement('input');
 		input.type = 'file';
-		input.onchange = _this => {
-			let files = Array.from(input.files);
-			console.log(files);
-			uploadFile(input.files[0]);
-		};
+		input.onchange = _this => {	uploadFile(input.files[0]);	};
 		input.click();
 	}
 
@@ -772,67 +726,90 @@
 	}
 
 	function createToolbar(entities) {
+		const items = [
+			{
+				id: 'entitySelect',
+				type: 'select',
+				data: Object.keys(entities),
+				render: function(e) { return '<span>' + entities[e].name + '</span>'; },
+				width: maxStringWidth(entityNames(entities))+2*mWidth,
+				onchange: function(a,b,c,d) { switchToEntity(entities[d]); }
+			},
+			{
+				type: 'divisor',
+			},
+			{
+				id: 'entitySave',
+				type: 'icon',
+				content: 'save',
+				onclick: function() { save(entities); }
+			},
+			{
+				id: 'format',
+				type: 'select',
+				data: ["TSV", "CSV"],
+				onchange: function(a,b,c,value) { downloadFormat = value; }
+			},
+			{
+				id: 'download',
+				type: 'icon',
+				content: 'vertical_align_bottom',
+				onclick: download
+			},
+			{
+				id: 'upload',
+				type: 'icon',
+				content: 'vertical_align_top',
+				onclick: importFile
+			},
+			{
+				type: 'divisor',
+			},
+			{
+				id: 'filter',
+				type: 'icon',
+				content: 'filter_list',
+				onclick: function(a,b,c) {
+					return toggleFunc(c,'.jexcel > thead > tr:nth-child(2)');
+				},
+				state: true,
+				active: false,
+			},
+			{
+				id: 'search',
+				type: 'icon',
+				content: 'search',
+				onclick: function(a,b,c) {
+					resizeBars();
+					const result = toggleFunc(c, '.jexcel_filter');
+					adjustMaxContentHeight(null, c.classList.contains("jtoolbar-active"));
+				},
+				state: true,
+				active: false,
+			},
+			{
+				type: 'divisor',
+			},
+			{
+				id: 'refresh',
+				type: 'icon',
+				content: 'refresh',
+				onclick: refreshData
+			}
+		]
+
 		jSuites.toolbar(toolBar, {
 			container: true,
-			items:[
-				{
-					type: 'select',
-					data: Object.keys(entities),
-					render: function(e) { return '<span>' + entities[e].name + '</span>'; },
-					width: maxStringWidth(entityNames(entities))+2*mWidth,
-					onchange: function(a,b,c,d) { switchToEntity(entities[d]); }
-				},
-				{
-					type: 'icon',
-					content: 'save',
-					onclick: function() { save(entities); }
-				},
-				{
-					type: 'select',
-					data: ["TSV", "CSV"],
-					onchange: function(a,b,c,value) { downloadFormat = value; }
-				},
-				{
-					type: 'icon',
-					content: 'vertical_align_bottom',
-					onclick: download
-				},
-				{
-					type: 'icon',
-					content: 'vertical_align_top',
-					onclick: importFile,
-					// render: function(e) {
-					// 	return '<button onclick="download();"><i class="material-icons">vertical_align_top</i></button>';
-					// }
-
-				},
-				{
-					type: 'icon',
-					content: 'filter_list',
-					onclick: function(a,b,c) {
-						return toggleFunc(c,'.jexcel > thead > tr:nth-child(2)');
-					},
-					state: true,
-					active: false,
-				},
-				{
-					type: 'icon',
-					content: 'search',
-					onclick: function(a,b,c) {
-						resizeBars();
-						const result = toggleFunc(c, '.jexcel_filter');
-						adjustMaxContentHeight(null, c.classList.contains("jtoolbar-active"));
-					},
-					state: true,
-					active: false,
-				},
-				{
-					type: 'icon',
-					content: 'refresh',
-					onclick: refreshData
-				}
-			]
+			items: items
 		});
+
+		const itemIds = items.map(i => i.id);
+		toolBar.itemIds = itemIds;
+		console.log(itemIds);
+	}
+
+	function getToolIndex(toolName) {
+		return toolBar.itemIds.indexOf(toolName);
 	}
 
 	function isStatic() {
