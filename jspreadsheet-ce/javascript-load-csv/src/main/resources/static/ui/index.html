@@ -130,7 +130,7 @@
 		}
 
 		const colConfig = entity.attributes[colIndex];
-		//console.log(colConfig);
+		if(colConfig.id) return;
 
 		const longestString = findLongestString(js.getColumnData(colIndex));
 		const sortableMargin = entity.sortable === true?dropdownMargin:0;
@@ -499,50 +499,84 @@
 		resizeBars(js);
 	}
 
-	function getJexcelDisplayInfo(js) {
+	function isVisible(ele, container, partial) {
+		const eleTop = ele.offsetTop;
+		const eleBottom = eleTop + ele.clientHeight;
+
+		const containerTop = container.scrollTop;
+		const containerBottom = containerTop + container.clientHeight;
+
+		// The element is fully visible in the container
+		return (
+			(eleTop >= containerTop && eleBottom <= containerBottom) ||
+			// Some part of the element is visible in the container
+			(partial && 
+				(
+					(eleTop < containerTop && containerTop < eleBottom) ||
+					(eleTop < containerBottom && containerBottom < eleBottom)
+				)
+			)
+		);
+	}
+
+	function findFirstVisibleRowIndex(rows, container, partially) {
+		for (var i = 0; i < rows.length; i++)
+			if(isVisible(rows[i], container, partially)) return i;
+		return 0;
+	}
+
+	function findLastVisibleRowIndex(rows, container, partially) {
+		for (var i = rows.length-1; i >=0; i--)
+			if(isVisible(rows[i], container, partially)) return i;
+		return rows.length-1;
+	}
+
+	// an ugly approximation far from perfect
+	function pageUpDown(js, up) {
 		const content = js.el.querySelector('.jexcel_content');
-		const thead = js.el.querySelector('thead.resizable');
 		const tbody = js.el.querySelector('tbody.draggable');
-		let tr = tbody.querySelector("tr:nth-child(2)");
-		let trFirst = tbody.querySelector("tr:first-child");
-		if(! tr) tr = trFirst;
-		const tBodyH = tbody.offsetHeight;
-		const trH = tr.offsetHeight;
+		const allTrs = tbody.querySelectorAll("tr");
 		let x = 1;
 		let y = 0;
 		if(js.highlighted && js.highlighted.length>0) {
 			x = Number(js.highlighted[0].getAttribute('data-x'));
 			y = Number(js.highlighted[0].getAttribute('data-y'));
 		} else {
-			x = 1;
-			y = Math.round(content.scrollTop*1.0/trH+0.5);
+			y = findFirstVisibleRowIndex(allTrs, content, false);
 		}
-		return { content: content, selectedX: x, selectedY: y, bodyH: tbody.offsetHeight, bodyTop: tbody.offsetTop, 
-			headH: thead.offsetHeight, trH: trH, scrollH: content.offsetHeight, 
-			scroll: content.scrollTop };
-	}
 
-	function pageUpDown(js, up) {
-		const displayInfo = getJexcelDisplayInfo(js);
-		with(displayInfo) {
-			const scrollMax = bodyH + headH +trH - scrollH;
-			const rowDelta = Math.trunc(scrollH/trH)-1;
-			const pageDelta = rowDelta*trH;
-			let newScroll = 0;
-			let newSelectedRow = 0;
-			if(up && scroll > pageDelta) {
-				newScroll = scroll - pageDelta;
-				newSelectedRow = selectedY - rowDelta;
-			} else if(!up) {
-				if(scroll < scrollMax) {
-					newScroll = scroll + pageDelta;
-					newSelectedRow = selectedY + rowDelta;
-				}
-				else newScroll = scrollMax;
+		let firstRowIndex = findFirstVisibleRowIndex(allTrs, content, false);
+		if(!isVisible(allTrs[y], content, false)) {
+			y = firstRowIndex;
+		}
+
+		let yOff = y-firstRowIndex;
+
+		if(up) {
+			firstRowIndex = findFirstVisibleRowIndex(allTrs, content, false)-1;
+			if(firstRowIndex<0) firstRowIndex=0;
+			console.log("firstRowIndex: "+firstRowIndex);
+			allTrs[firstRowIndex].scrollIntoView(false);
+			firstRowIndex = findFirstVisibleRowIndex(allTrs, content, false);
+			if(firstRowIndex>0) {
+				allTrs[firstRowIndex].scrollIntoView(true);
 			}
-			content.scrollTop = newScroll;
-			js.updateSelectionFromCoords(selectedX, newSelectedRow, selectedX, newSelectedRow);
-			console.log("newScroll: "+newScroll + " x/y=" + selectedX +"/"+newSelectedRow);
+			firstRowIndex = findFirstVisibleRowIndex(allTrs, content, false);
+			js.updateSelectionFromCoords(x, firstRowIndex+yOff, x, firstRowIndex+yOff);
+		} else {
+			const lastRowIndex = findLastVisibleRowIndex(allTrs, content, true)-1;
+			console.log("lastRowIndex: "+lastRowIndex);
+			allTrs[lastRowIndex].scrollIntoView(true);
+			if(lastRowIndex>=allTrs.length-5) {
+				firstRowIndex = findFirstVisibleRowIndex(allTrs, content, false);
+				allTrs[firstRowIndex].scrollIntoView(true);
+			}
+
+			firstRowIndex = findFirstVisibleRowIndex(allTrs, content, false);
+			if(yOff == 0) {
+				yOff++;
+			}
+			js.updateSelectionFromCoords(x, firstRowIndex+yOff, x, firstRowIndex+yOff);
 		}
 	}
 
@@ -873,6 +907,16 @@
 				e.preventDefault();	
 			} else if(e.key == 'PageDown' || e.key == 'PageUp') {
 				pageUpDown(js, e.key == 'PageUp');
+			} else if(e.key == 'ArrowDown' || e.key == 'ArrowUp' || e.key == 'ArrowLeft' || e.key == 'ArrowRight') {
+				if(!js.highlighted || js.highlighted.length<=0) {
+					js.updateSelectionFromCoords(1, 0, 1, 0);
+				}
+				if(e.key == 'ArrowDown') js.down();
+				else if(e.key == 'ArrowUp') js.up();
+				else if(e.key == 'ArrowLeft') js.left();
+				else if(e.key == 'ArrowRight') js.right();
+				// js.updateSelectionFromCoords(1, 100, 1, 100);
+				// js.updateScroll(2);
 			}
 			
 			console.log(e.wich +" - "+e.key);
