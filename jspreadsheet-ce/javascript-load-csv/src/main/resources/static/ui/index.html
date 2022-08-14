@@ -164,12 +164,26 @@
 		return true;
 	}
 
-	function selectionChanged(instance, fromX, fromY, toX, toY) {
-		// const content = instance.querySelector('.jexcel_content');
-		// const tbody = instance.querySelector('tbody.draggable');
-		// const allTrs = tbody.querySelectorAll("tr");
-		// const tr = allTrs[fromY];
-		// console.log(`selected (${fromX}/${fromY}): `+tr.offsetTop + " - "+content.scrollTop + " / "+ content.scrollHeight);
+	function selectionChanged(js, fromX, fromY, toX, toY) {
+		const col = fromX;
+		const row = fromY;
+		const content = js.querySelector('.jexcel_content');
+		const tbody = js.querySelector('tbody.draggable');
+		const allTrs = tbody.querySelectorAll("tr");
+		const tr = allTrs[row];
+		const allTds = tr.querySelectorAll("td");
+		const td = allTds[col+1];
+		console.log(td);
+		const element = td;
+		const xOffset = 0;
+		const x = element.offsetLeft; //getBoundingClientRect().left + window.pageXOffset + xOffset;
+		const body = document.querySelector("body");
+		console.log("x: "+x+"  scrollLeft: 	"+body.scrollLeft+"  scrollWidth: 	"+body.scrollWidth+" offsetWidth: 	"+body.offsetWidth);
+		const bodyLeft = body.scrollLeft?body.scrollLeft:0;
+		if(x<bodyLeft || x+td.offsetWidth >bodyLeft+body.offsetWidth) {
+			if(x<bodyLeft && col==1) body.scrollLeft = 0;
+			else body.scrollLeft = x;
+		}
 		return true;
 	}
 
@@ -950,6 +964,28 @@
 					else if(e.key == 'ArrowUp') js.up();
 					else if(e.key == 'ArrowLeft') js.left();
 					else if(e.key == 'ArrowRight') js.right();
+				}
+
+				if(e.key == 'ArrowLeft' || e.key == 'ArrowRight') {
+					// const col = js.selectedCell[0];
+					// const row = js.selectedCell[1];
+					// const content = js.el.querySelector('.jexcel_content');
+					// const tbody = js.el.querySelector('tbody.draggable');
+					// const allTrs = tbody.querySelectorAll("tr");
+					// const tr = allTrs[row];
+					// const allTds = tr.querySelectorAll("td");
+					// const td = allTds[col+1];
+					// console.log(td);
+					// const element = td;
+					// const xOffset = 0;
+					// const x = element.offsetLeft; //getBoundingClientRect().left + window.pageXOffset + xOffset;
+					// const body = document.querySelector("body");
+					// console.log("x: "+x+"  scrollLeft: 	"+body.scrollLeft+"  scrollWidth: 	"+body.scrollWidth+" offsetWidth: 	"+body.offsetWidth);
+					// const bodyLeft = body.scrollLeft?body.scrollLeft:0;
+					// if(x<bodyLeft || x+td.offsetWidth >bodyLeft+body.offsetWidth) {
+					// 	if(x<bodyLeft && col==1) body.scrollLeft = 0;
+					// 	else body.scrollLeft = x;
+					// }
 				}
 
 				// if(e.key == 'ArrowDown' || e.key == 'ArrowUp') {
