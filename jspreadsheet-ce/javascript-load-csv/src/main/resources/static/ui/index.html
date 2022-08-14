@@ -84,6 +84,7 @@
 	</jsuites-modal>
 
 	<script>
+	const noDbMessage = "This instance is running without a DB backend.\nData cannot be updated.";
 	const spreadsheet1 = document.getElementById('spreadsheet1')
 	const serverMessage = document.querySelector('jsuites-modal')
 	const toolBar = document.getElementById('toolbar');
@@ -159,6 +160,16 @@
 	}
 
 	function cellChanged(instance, cell, col, row, value) {
+		//const allTrs = tbody.querySelectorAll("tr");
+		return true;
+	}
+
+	function selectionChanged(instance, fromX, fromY, toX, toY) {
+		// const content = instance.querySelector('.jexcel_content');
+		// const tbody = instance.querySelector('tbody.draggable');
+		// const allTrs = tbody.querySelectorAll("tr");
+		// const tr = allTrs[fromY];
+		// console.log(`selected (${fromX}/${fromY}): `+tr.offsetTop + " - "+content.scrollTop + " / "+ content.scrollHeight);
 		return true;
 	}
 
@@ -270,12 +281,6 @@
 			js.deleteRow = function (...all) { customDeleteRow(instance, entity, ...all) };
 		}
 
-		//TODO set meta information with hashCode on A1, A2, A3 ...
-		//serves for later comparison when determinig "dirty" instead of originalValiueHashes
-		//make it independant from identifiable
-		//meta information should only be set as a result from a server data refresh
-		//entity.idField and getIdFieldIndex
-
 		autoResizeColumns(js, entity);
 		setAllColumnParams(js, entity);
 		initAllFilterStates(js);
@@ -356,6 +361,7 @@
 				oninsertcolumn: function(instance) { tableChanged(instance, entity); },
 				ondeletecolumn: function(instance) { tableChanged(instance, entity); },
 				onresizecolumn: columnResized,
+				onselection: selectionChanged,
 				allowInsertColumn: false,
 				allowDeleteColumn: false,
 				allowRenameColumn: false,
@@ -458,10 +464,14 @@
 			tabSeparated = false;
 		} else {
 			errorDialog("Unsupported file type: "+file.type);
+			return;
 		}
 
-		if(uri!=null) {
+		if(!isStatic()) {
 			submitData(remoteUrl(uri, tabSeparated, true), method, file);
+		} else {
+			serverMessage.modal.open();
+			serverText.innerText = noDbMessage;
 		}
 	}
 
@@ -499,12 +509,12 @@
 		resizeBars(js);
 	}
 
-	function isVisible(ele, container, partial) {
+	function isVisible(ele, container, partial, dTop, dBottom) {
 		const eleTop = ele.offsetTop;
 		const eleBottom = eleTop + ele.clientHeight;
 
-		const containerTop = container.scrollTop;
-		const containerBottom = containerTop + container.clientHeight;
+		const containerTop = container.scrollTop + dTop;
+		const containerBottom = containerTop + container.clientHeight + dBottom - dTop;
 
 		// The element is fully visible in the container
 		return (
@@ -519,16 +529,42 @@
 		);
 	}
 
-	function findFirstVisibleRowIndex(rows, container, partially) {
+	function debugVisibleRowIndex(js, index) {
+		// js.getValueFromCoords
+		return `${index+1} ${js.getValueFromCoords(1, index)} -  ${js.getValueFromCoords(2, index)}`;
+	}
+
+	function findFirstVisibleRowIndex(rows, container, partially, dTop, dBottom) {
 		for (var i = 0; i < rows.length; i++)
-			if(isVisible(rows[i], container, partially)) return i;
+			if(isVisible(rows[i], container, partially, dTop, dBottom)) return i;
 		return 0;
 	}
 
-	function findLastVisibleRowIndex(rows, container, partially) {
+	function findLastVisibleRowIndex(rows, container, partially, dTop, dBottom) {
 		for (var i = rows.length-1; i >=0; i--)
-			if(isVisible(rows[i], container, partially)) return i;
+			if(isVisible(rows[i], container, partially, dTop, dBottom)) return i;
 		return rows.length-1;
+	}
+
+	function debugFirstVisibleRowIndex(js, rows, container, debugPrefix, dTop, dBottom) {
+		const index = findFirstVisibleRowIndex(rows, container, false, dTop, dBottom);
+		let msg = 'FirstVisibleRowIndex: ' + debugPrefix + "\n";
+		msg += "partial:   " + debugVisibleRowIndex(js, findFirstVisibleRowIndex(rows, container, true, dTop, dBottom)) + "\n";
+		msg += "full:      " + debugVisibleRowIndex(js, index) + "\n";
+		msg += "scrollTop: " + container.scrollTop + "\n";
+		msg += "tr-offset: " + rows[index].offsetTop + "\n";
+		console.log(msg);
+	}
+
+	function debugLastVisibleRowIndex(js, rows, container, debugPrefix, dTop, dBottom) {
+		let msg = 'LastVisibleRowIndex: ' + debugPrefix + "\n";
+		const index = findLastVisibleRowIndex(rows, container, false, dTop, dBottom);
+		msg += "full:      " + debugVisibleRowIndex(js, index) + "\n";
+		msg += "partial:   " + debugVisibleRowIndex(js, findLastVisibleRowIndex(rows, container, true, dTop, dBottom)) + "\n";
+		msg += "scrollTop: " + container.scrollTop + "\n";
+		msg += "tr-offset: " + rows[index].offsetTop + "\n";
+		msg += "first  :   " + debugVisibleRowIndex(js, findFirstVisibleRowIndex(rows, container, false, dTop, dBottom)) + "\n";
+		console.log(msg);
 	}
 
 	// an ugly approximation far from perfect
@@ -536,47 +572,42 @@
 		const content = js.el.querySelector('.jexcel_content');
 		const tbody = js.el.querySelector('tbody.draggable');
 		const allTrs = tbody.querySelectorAll("tr");
+		const dTop = allTrs.length<=0?0:allTrs[0].offsetTop;
+		const dBottom = 1;
+
 		let x = 1;
 		let y = 0;
 		if(js.highlighted && js.highlighted.length>0) {
 			x = Number(js.highlighted[0].getAttribute('data-x'));
 			y = Number(js.highlighted[0].getAttribute('data-y'));
 		} else {
-			y = findFirstVisibleRowIndex(allTrs, content, false);
+			y = findFirstVisibleRowIndex(allTrs, content, false, dTop, dBottom);
 		}
 
-		let firstRowIndex = findFirstVisibleRowIndex(allTrs, content, false);
-		if(!isVisible(allTrs[y], content, false)) {
-			y = firstRowIndex;
+		const firstPartialRowIndex = findFirstVisibleRowIndex(allTrs, content, true, dTop, dBottom);
+		if(y<firstPartialRowIndex) {
+			y = firstPartialRowIndex;
 		}
 
-		let yOff = y-firstRowIndex;
+		const firstFullRowIndex = findFirstVisibleRowIndex(allTrs, content, false, dTop, dBottom);
+		const lastFullRowIndex = findLastVisibleRowIndex(allTrs, content, false, dTop, dBottom);
+		const dCorrect = content.offsetHeight - allTrs[lastFullRowIndex].offsetTop - allTrs[lastFullRowIndex].offsetHeight + allTrs[firstFullRowIndex].offsetTop - dTop;
+		//console.log("dCorrect "+dCorrect);
 
 		if(up) {
-			firstRowIndex = findFirstVisibleRowIndex(allTrs, content, false)-1;
-			if(firstRowIndex<0) firstRowIndex=0;
-			console.log("firstRowIndex: "+firstRowIndex);
-			allTrs[firstRowIndex].scrollIntoView(false);
-			firstRowIndex = findFirstVisibleRowIndex(allTrs, content, false);
-			if(firstRowIndex>0) {
-				allTrs[firstRowIndex].scrollIntoView(true);
-			}
-			firstRowIndex = findFirstVisibleRowIndex(allTrs, content, false);
-			js.updateSelectionFromCoords(x, firstRowIndex+yOff, x, firstRowIndex+yOff);
+			//debugFirstVisibleRowIndex(js, allTrs, content, 'before', dTop, dBottom);
+			let firstRowIndex = findFirstVisibleRowIndex(allTrs, content, false, dTop, dBottom);
+			content.scrollTop = allTrs[firstRowIndex].offsetTop - content.offsetHeight + dCorrect;
+			firstRowIndex = findFirstVisibleRowIndex(allTrs, content, false, dTop, dBottom);
+			js.updateSelectionFromCoords(x, firstRowIndex, x, firstRowIndex);
+			//debugFirstVisibleRowIndex(js, allTrs, content, 'after', dTop, dBottom);
 		} else {
-			const lastRowIndex = findLastVisibleRowIndex(allTrs, content, true)-1;
-			console.log("lastRowIndex: "+lastRowIndex);
-			allTrs[lastRowIndex].scrollIntoView(true);
-			if(lastRowIndex>=allTrs.length-5) {
-				firstRowIndex = findFirstVisibleRowIndex(allTrs, content, false);
-				allTrs[firstRowIndex].scrollIntoView(true);
-			}
-
-			firstRowIndex = findFirstVisibleRowIndex(allTrs, content, false);
-			if(yOff == 0) {
-				yOff++;
-			}
-			js.updateSelectionFromCoords(x, firstRowIndex+yOff, x, firstRowIndex+yOff);
+			//debugLastVisibleRowIndex(js, allTrs, content, 'before', dTop, dBottom);
+			let lastRowIndex = findLastVisibleRowIndex(allTrs, content, true, dTop, dBottom);
+			content.scrollTop = allTrs[lastRowIndex].offsetTop - dTop;
+			firstRowIndex = findFirstVisibleRowIndex(allTrs, content, false, dTop, dBottom);
+			js.updateSelectionFromCoords(x, firstRowIndex, x, firstRowIndex);
+			//debugLastVisibleRowIndex(js, allTrs, content, 'after', dTop, dBottom);
 		}
 	}
 
@@ -705,7 +736,7 @@
 				success = await deleteIds(deleteUri, deletedIds)
 					&& await saveData(saveUri, modifiedData, false);
 			} else {
-				serverText.innerText += "\n\nThis instance is running without a DB backend.\nData cannot be updated.";
+				serverText.innerText += "\n\n"+noDbMessage;
 			}
 		} else {
 			success = await saveData(saveUri, data, true);
@@ -915,22 +946,28 @@
 			} else if(e.key == 'ArrowDown' || e.key == 'ArrowUp' || e.key == 'ArrowLeft' || e.key == 'ArrowRight') {
 				if(!js.highlighted || js.highlighted.length<=0) {
 					js.updateSelectionFromCoords(1, 0, 1, 0);
+					if(e.key == 'ArrowDown') js.down();
+					else if(e.key == 'ArrowUp') js.up();
+					else if(e.key == 'ArrowLeft') js.left();
+					else if(e.key == 'ArrowRight') js.right();
 				}
-				if(e.key == 'ArrowDown') js.down();
-				else if(e.key == 'ArrowUp') js.up();
-				else if(e.key == 'ArrowLeft') js.left();
-				else if(e.key == 'ArrowRight') js.right();
+
+				// if(e.key == 'ArrowDown' || e.key == 'ArrowUp') {
+				// 	const content = js.el.querySelector('.jexcel_content');
+				// 	console.log("Scroll Top/Height: "+content.scrollTop + " / "+ (content.scrollHeight));
+				// }
+
 				// js.updateSelectionFromCoords(1, 100, 1, 100);
 				// js.updateScroll(2);
 			}
 			
-			console.log(e.wich +" - "+e.key);
+			//console.log(e.wich +" - "+e.key);
 			return false;
 		}
 	}
 	document.addEventListener("keydown", keytListener);
 
 	loadConfiguration();
-	</script>
+	</script>	
 </body>
 </html>
