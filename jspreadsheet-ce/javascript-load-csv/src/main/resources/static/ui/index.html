@@ -699,7 +699,7 @@
 		if(entity.idField) {
 			const modifiedData = getModifiedData(js, entity, data);
 			const deletedIds = getDeletedIds(entity, data);
-			serverText.innerText = `Actions:\nDeletions ${deletedIds.length}\nUpdates: ${modifiedData.length} `;
+			serverText.innerText = `Actions:\nDeletions ${deletedIds.length}\nUpdates: ${modifiedData.length-1} `;
 			serverMessage.modal.open();
 			if(!isStatic()) {
 				success = await deleteIds(deleteUri, deletedIds)
