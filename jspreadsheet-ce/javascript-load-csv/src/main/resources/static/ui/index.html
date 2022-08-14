@@ -699,9 +699,14 @@
 		if(entity.idField) {
 			const modifiedData = getModifiedData(js, entity, data);
 			const deletedIds = getDeletedIds(entity, data);
-			resetMessage();
-			success = await deleteIds(deleteUri, deletedIds)
-				&& await saveData(saveUri, modifiedData, false);
+			serverText.innerText = `Actions:\nDeletions ${deletedIds.length}\nUpdates: ${modifiedData.length} `;
+			serverMessage.modal.open();
+			if(!isStatic()) {
+				success = await deleteIds(deleteUri, deletedIds)
+					&& await saveData(saveUri, modifiedData, false);
+			} else {
+				serverText.innerText += "\n\nThis instance is running without a DB backend.\nData cannot be updated.";
+			}
 		} else {
 			success = await saveData(saveUri, data, true);
 		}
