@@ -9,7 +9,7 @@
     <script src="https://cdn.jsdelivr.net/npm/d3-dsv@3"></script>
 	<link rel="stylesheet" href="https://unpkg.com/ag-grid-community/styles/ag-grid.css"/>
 	<link rel="stylesheet" href="https://unpkg.com/ag-grid-community/styles/ag-theme-alpine.css"/>
-	<link rel="stylesheet" href="http://localhost:8001/ag-grid-custom.css"/>
+	<link rel="stylesheet" href="ag-grid-custom.css"/>
 
     <style>
         body, html {
@@ -96,7 +96,7 @@
             var gridDiv = document.querySelector('#myGrid');
             new agGrid.Grid(gridDiv, gridOptions);
 
-            fetch('./CITY.csv')
+            fetch('../data/CITY.csv')
                 .then((response) => response.text())
                 .then((csv) => gridOptions.api.setRowData( d3.csvParse(csv)));
         });
