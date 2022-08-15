@@ -1,4 +1,4 @@
-id,iso_country,country,geo_id,latitude,longitude,modified,name,population
+id,iso_country,country,geo_id,latitude,longitude,modified,city,population
 1,CN,China,1796236,121.45806,31.22222,2021-09-20,Shanghai,22315474
 2,CN,China,1816670,116.39723,39.9075,2022-03-07,Beijing,18960744
 3,CN,China,1795565,114.0683,22.54554,2022-03-09,Shenzhen,17494398
