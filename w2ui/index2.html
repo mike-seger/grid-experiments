@@ -9,11 +9,11 @@
 
     <style>
         body, html {
-			overflow: hidden;
-			padding: 0;
-			margin: 0;
-			border: 0;
-		}
+            overflow: hidden;
+            padding: 0;
+            margin: 0;
+            border: 0;
+        }
 
         body {
             padding: 9px;
@@ -22,6 +22,10 @@
 
         #grid_grid_searches {
             display: none
+        }
+
+        .grid_grid_toolbar {
+            height: 40px;
         }
     </style>
 
@@ -50,20 +54,19 @@ var config = {
 query(() => {
     new w2grid(config.grid)
     w2ui.grid.columns = [
-        { field: 'id', text: 'id', resizable: true, sortable: true, editable: { type: 'text' } },
-        { field: 'city_ascii', text: 'city', size: '12.5%', resizable: true, sortable: true, editable: { type: 'text' } },
-        { field: 'population', text: 'population', size: '12.5%', resizable: true, sortable: true, editable: { type: 'text' } },
-        { field: 'country', text: 'country', size: '12.5%', resizable: true, sortable: true, editable: { type: 'text' } },
-        { field: 'iso2', text: 'iso2', size: '12.5%', resizable: true, sortable: true, editable: { type: 'text' } },
-        { field: 'iso3', text: 'iso3', size: '12.5%', resizable: true, sortable: true, editable: { type: 'text' } },
-        { field: 'lat', text: 'lat', size: '12.5%', resizable: true, sortable: true, editable: { type: 'text' } },
-        { field: 'lng', text: 'lng', size: '12.5%', resizable: true, sortable: true, editable: { type: 'text' } },
-        { field: 'capital', text: 'capital', size: '12.5%', resizable: true, sortable: true, editable: { type: 'text' } }
+        { field: 'GeonameID', text: 'GeonameID', resizable: true, sortable: true, editable: { type: 'text' } },
+        { field: 'Rank', text: 'Rank', size: '12.5%', resizable: true, sortable: true, editable: { type: 'text' } },
+        { field: 'City', text: 'City', size: '12.5%', resizable: true, sortable: true, editable: { type: 'text' } },
+        { field: 'Population', text: 'Population', size: '12.5%', resizable: true, sortable: true, editable: { type: 'text' } },
+        { field: 'isoCode', text: 'isoCode', size: '12.5%', resizable: true, sortable: true, editable: { type: 'text' } },
+        { field: 'Country', text: 'Country', size: '12.5%', resizable: true, sortable: true, editable: { type: 'text' } },
+        { field: 'Modified', text: 'Modified', size: '12.5%', resizable: true, sortable: true, editable: { type: 'text' } },
+        { field: 'Coordinates', text: 'Coordinates', size: '12.5%', resizable: true, sortable: true, editable: { type: 'text' } }
     ]
     w2ui.grid.lineNumberWidth = 50
     w2ui.grid.multiSearch = true
 
-    fetch('../data/worldcities.csv')
+    fetch('../data/geonames-all-cities-with-a-population-1000.csv')
         .then((response) => response.text())
         .then((csv) => {
             const data = d3.csvParse(csv);
@@ -72,7 +75,7 @@ query(() => {
             w2ui.grid.records = data;
             w2ui.grid.total = w2ui.grid.records.length
             w2ui.grid.buffered = w2ui.grid.total
-            w2ui.grid.hideColumn('id')
+            w2ui.grid.hideColumn('GeonameID')
             w2ui.grid.searches.forEach(search => { search.operator = 'contains' })
             w2ui.grid.render(query('#main')[0])
             w2ui.grid.focus()
