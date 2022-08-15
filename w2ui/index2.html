@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>W2UI</title>
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/d3-dsv@3"></script>
+    <script type="text/javascript" src="local/w2ui.instant-scroll.js"></script>
+    <link rel="stylesheet" type="text/css" href="https://rawgit.com/vitmalina/w2ui/master/dist/w2ui.min.css" />
+
+    <style>
+        body, html {
+			overflow: hidden;
+			padding: 0;
+			margin: 0;
+			border: 0;
+		}
+
+        body {
+            padding: 9px;
+            height: 100vh;
+        }
+
+        #grid_grid_searches {
+            display: none
+        }
+    </style>
+
+</head>
+
+<body>
+
+<div id="main" style="width: 100%; height: calc(100% - 30px);"></div>
+
+<script type="text/javascript">
+var config = {
+    grid: {
+        name: 'grid',
+        selectType: 'cell',
+        recordHeight: 23,
+        liveSearch: true,
+        multiSearch: true,
+        show: {
+            toolbar: true,
+            footer: true,
+            lineNumbers: true
+        },
+    }
+}
+
+query(() => {
+    new w2grid(config.grid)
+    w2ui.grid.columns = [
+        { field: 'id', text: 'id', resizable: true, sortable: true, editable: { type: 'text' } },
+        { field: 'city_ascii', text: 'city', size: '12.5%', resizable: true, sortable: true, editable: { type: 'text' } },
+        { field: 'population', text: 'population', size: '12.5%', resizable: true, sortable: true, editable: { type: 'text' } },
+        { field: 'country', text: 'country', size: '12.5%', resizable: true, sortable: true, editable: { type: 'text' } },
+        { field: 'iso2', text: 'iso2', size: '12.5%', resizable: true, sortable: true, editable: { type: 'text' } },
+        { field: 'iso3', text: 'iso3', size: '12.5%', resizable: true, sortable: true, editable: { type: 'text' } },
+        { field: 'lat', text: 'lat', size: '12.5%', resizable: true, sortable: true, editable: { type: 'text' } },
+        { field: 'lng', text: 'lng', size: '12.5%', resizable: true, sortable: true, editable: { type: 'text' } },
+        { field: 'capital', text: 'capital', size: '12.5%', resizable: true, sortable: true, editable: { type: 'text' } }
+    ]
+    w2ui.grid.lineNumberWidth = 50
+    w2ui.grid.multiSearch = true
+
+    fetch('../data/worldcities.csv')
+        .then((response) => response.text())
+        .then((csv) => {
+            const data = d3.csvParse(csv);
+            //console.log(data);
+            for (var i = 0; i < data.length; i++) data[i].recid = i;
+            w2ui.grid.records = data;
+            w2ui.grid.total = w2ui.grid.records.length
+            w2ui.grid.buffered = w2ui.grid.total
+            w2ui.grid.hideColumn('id')
+            w2ui.grid.searches.forEach(search => { search.operator = 'contains' })
+            w2ui.grid.render(query('#main')[0])
+            w2ui.grid.focus()
+        }
+    )
+})
+</script>
+
+</body>
+</html>
