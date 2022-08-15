@@ -6,3 +6,4 @@
 
 ## CSV tools
 - https://github.com/BurntSushi/xsv
+- https://github.com/wireservice/csvkit`(`brew install csvkit`)
