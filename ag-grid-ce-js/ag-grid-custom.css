@@ -1,0 +1,7 @@
+.ag-theme-alpine {
+    --ag-header-height: 28px;
+    --ag-row-height: 28px;
+    --ag-header-foreground-color: black;
+    --ag-header-background-color: rgb(226,231,236);
+    --ag-header-user-select: none;
+}

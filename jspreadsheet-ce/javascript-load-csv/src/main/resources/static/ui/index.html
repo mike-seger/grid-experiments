@@ -173,12 +173,12 @@
 		const tr = allTrs[row];
 		const allTds = tr.querySelectorAll("td");
 		const td = allTds[col+1];
-		console.log(td);
+		//console.log(td);
 		const element = td;
 		const xOffset = 0;
 		const x = element.offsetLeft; //getBoundingClientRect().left + window.pageXOffset + xOffset;
 		const body = document.querySelector("body");
-		console.log("x: "+x+"  scrollLeft: 	"+body.scrollLeft+"  scrollWidth: 	"+body.scrollWidth+" offsetWidth: 	"+body.offsetWidth);
+		//console.log("x: "+x+"  scrollLeft: 	"+body.scrollLeft+"  scrollWidth: 	"+body.scrollWidth+" offsetWidth: 	"+body.offsetWidth);
 		const bodyLeft = body.scrollLeft?body.scrollLeft:0;
 		if(x<bodyLeft || x+td.offsetWidth >bodyLeft+body.offsetWidth) {
 			if(x<bodyLeft && col==1) body.scrollLeft = 0;

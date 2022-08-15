@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+ <head>
+	<meta charset="UTF-8" />
+	<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+	<title>Ag Grid App</title>
+	<script src="https://unpkg.com/ag-grid-community/dist/ag-grid-community.min.noStyle.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/d3-dsv@3"></script>
+	<link rel="stylesheet" href="https://unpkg.com/ag-grid-community/styles/ag-grid.css"/>
+	<link rel="stylesheet" href="https://unpkg.com/ag-grid-community/styles/ag-theme-alpine.css"/>
+	<link rel="stylesheet" href="http://localhost:8001/ag-grid-custom.css"/>
+
+    <style>
+        body, html {
+			overflow: hidden;
+			padding: 0;
+			margin: 0;
+			border: 0;
+		}
+
+        .container {
+			height: calc(100vh - 18px);
+			flex-direction: column;
+			padding: 9px;
+		}
+    </style>
+ </head>
+ <body>
+    <div class="container">
+        <div id="myGrid" class="ag-theme-alpine" style="height: 100%; width: 100%"></div>
+    </div>
+	
+	<script type="text/javascript">
+		// Function to demonstrate calling grid's API
+		function deselect(){
+			gridOptions.api.deselectAll()
+		}
+
+        const gridOptions = {
+            headerHeight: 30,
+            rowHeight: 28,
+			// each entry here represents one column
+			columnDefs: [
+                {   
+                    headerName: "",
+                    valueGetter: "node.rowIndex + 1",
+                    editable: false,
+                    minWidth: 75,
+                    maxWidth: 75,
+                    pinned: 'left',
+                    cellStyle: {color: 'black', backgroundColor: 'rgb(226,231,236)' },
+                    sortable: false,
+                    filter: false,
+                    suppressNavigable: true,
+                    suppressMovable: true,
+                    lockPosition: true,
+                    //type: 'numericColumn',
+                },
+                { field: "id", hide: true },
+                { field: "name" },
+                { field: "population" },
+                { field: "country" },
+                { field: "iso_country" },
+                { field: "geo_id", type:'numericColumn' },
+                { field: "latitude", type: 'numericColumn' },
+                { field: "longitude", type: 'numericColumn' },
+                { field: "modified" },
+			],
+
+            defaultColDef: {
+                flex: 1,
+                minWidth: 100,
+                editable: true,
+                sortable: true, 
+                filter: true,
+            },
+            //suppressKeyboardEvent: true,
+            enableCellTextSelection : false,
+            //enableRangeSelection: true,
+            suppressMultiRangeSelection: true,
+            suppressRowHoverHighlight: true,
+            suppressColumnVirtualisation: true,
+            suppressRowVirtualisation: true,
+            suppressMaxRenderedRowRestriction: true,
+            //rowBuffer: 0,
+            //editType: 'fullRow',
+            //singleClickEdit: true,
+			//rowSelection: 'single', // allow rows to be selected
+
+			onCellClicked: params => { console.log('cell was clicked', params) },
+            onSortChanged: e => { e.api.refreshCells(); }
+		};
+
+        document.addEventListener('DOMContentLoaded', function () {
+            var gridDiv = document.querySelector('#myGrid');
+            new agGrid.Grid(gridDiv, gridOptions);
+
+            fetch('http://localhost:8001/CITY.csv')
+                .then((response) => response.text())
+                .then((csv) => gridOptions.api.setRowData( d3.csvParse(csv)));
+        });
+	</script>
+ </body>
+</html>
