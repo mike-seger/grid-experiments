@@ -96,7 +96,7 @@
             var gridDiv = document.querySelector('#myGrid');
             new agGrid.Grid(gridDiv, gridOptions);
 
-            fetch('http://localhost:8001/CITY.csv')
+            fetch('./CITY.csv')
                 .then((response) => response.text())
                 .then((csv) => gridOptions.api.setRowData( d3.csvParse(csv)));
         });
