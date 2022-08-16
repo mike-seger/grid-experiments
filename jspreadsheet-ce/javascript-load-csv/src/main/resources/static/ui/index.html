@@ -303,7 +303,7 @@
 		adjustMaxContentHeight(js, false);
 	}
 
-	function createColumns(attributes) {
+	function createColumns(attributes) {	
 		let columns = []
 		for (const properties of attributes) {
 			let column = {}
@@ -313,16 +313,16 @@
 			if(properties.hidden) column = {
 				type: 'hidden', title: title, name: name };
 			else if(properties.type === "Float") column = {
-				type: 'number', align: 'right', title: title, 
+				type: 'number', align: properties.align?properties.align:'right', title: title, 
 				name: name};
 			else if(properties.type === "Int") column = {
-				type: 'number', align: 'right', title: title, 
+				type: 'number', align: properties.align?properties.align: 'right', mask: "#'##0", title: title, 
 				name: name};
 			else if(properties.type === "Enum") column = {
-				type: 'dropdown', title: title, name: name,
+				type: 'dropdown', align: properties.align, title: title, name: name,
 				source: properties.enumConstants};
 			else column = {
-				type: 'text', title: title, name: name };
+				type: 'text', title: title, align: properties.align, name: name };
 			columns.push(column);
 		}
 		return columns;

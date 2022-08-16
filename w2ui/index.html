@@ -15,25 +15,128 @@
             border: 0;
         }
 
+        html * {
+            font-family: sans-serif !important;
+        }
+
         body {
             padding: 9px;
             height: 100vh;
         }
 
-        #grid_grid_searches {
-            display: none
-        }
-
         .w2ui-grid .w2ui-grid-toolbar,
         .grid_grid_toolbar {
-            height: 48px !important;
+            height: 46px !important;
+            padding-top: 4px;
+            padding-left: 0;
+        }
+
+        .w2ui-head, .w2ui-col-header {
+            color: black !important;
+            background: rgb(226,231,236) !important;
+        }
+
+        .w2ui-col-selected *,
+        .w2ui-row-selected {
+            background: #e8e0f8 !important;
+        }
+
+        .w2ui-search-drop,
+        #grid_grid_searches,
+        #tb_grid_toolbar_item_w2ui-reload {
+            display: none;
+        }
+
+        .w2ui-head  {
+            padding: 0 !important;
+        }
+
+        .w2ui-col-number,
+        .w2ui-grid-header,
+        .w2ui-col-header {
+            font-size: 16px !important;
+            margin: 3px 3px 2px 3px !important;
+        }
+
+        .w2ui-col-header {
+            margin: 0 !important;
+        }
+
+            /* .w2ui-col-number,
+            .w2ui-head {
+                margin: 0 !important;
+            } */
+
+        .w2ui-grid-fcolumns,
+        .w2ui-head .w2ui-col-number,
+        #grid_grid_fcolumns {
+            /* margin: 0px 6px 4px 0; */
+            /* height: 40px; */
+            padding: 0 6px 6px 4px; 
+        }
+
+        td.w2ui-head.w2ui-col-number * div {
+            height: 39px !important;
+            border: 0;
+        }
+        div#grid_grid_fcolumns.w2ui-grid-fcolumns {
+            /* margin: 0px 6px 4px 0; */
+            /* height: 40px; */
+            padding: 0 !important;
+            margin: 0 !important;
+            height: 30px !important;
+        }
+
+        .w2ui-head {
+            border: 0;
+        }
+
+        .w2ui-col-header .w2ui-col-selected {
+            border: 0;
+            padding:0;
+        }
+
+        .w2ui-grid .w2ui-grid-body table .w2ui-col-number div {
+            /* padding: 7px 6px 6px 4  px; */
+            margin: 8px 6px 4px 0 !important;
+        }
+
+        .w2ui-grid-data *, #grid_grid_search_all {
+            font-size: 16px !important;
+        }
+
+        .w2ui-grid-data * {
+            margin: 3px 2px 2px 4px !important;
+        }
+
+        .w2ui-tb-line {
+            padding-left: 0;
+        }
+
+        #grid_grid_fcolumns > table * {
+            display: none;
+        }
+
+        div#grid_grid_fcolumns {
+            background-color: #e2e7ec;
+            /* padding: 5px; */
+            border-bottom: 1px solid #dcdcdc;
+            margin: 5px !important;
+            height: 10px !important;
+        }
+
+        #grid_grid_fcolumns > table:after {
+            margin: 7px 0 0 20px;
+            content: '#';
+            position: absolute;
+            color: rgba(75, 75, 75, 0.667);
         }
     </style>
 </head>
 
 <body>
 
-<div id="main" style="width: 100%; height: calc(100% - 30px);"></div>
+<div id="main" style="width: 100%; height: calc(100% - 16px);"></div>
 
 <script type="text/javascript">
 var config = {
@@ -48,6 +151,7 @@ var config = {
             footer: true,
             lineNumbers: true
         },
+        style: 'font-size:16px; font-family: sans-serif; color:black;',
     }
 }
 
@@ -61,14 +165,15 @@ function getCsvUrl() {
 query(() => {
     new w2grid(config.grid)
     w2ui.grid.columns = [
-        { field: 'GeonameID', text: 'GeonameID', resizable: true, sortable: true, editable: { type: 'text' } },
-        { field: 'Rank', text: 'Rank', size: '14%', resizable: true, sortable: true, editable: { type: 'text' } },
-        { field: 'City', text: 'City', size: '14%', resizable: true, sortable: true, editable: { type: 'text' } },
-        { field: 'Population', text: 'Population', size: '14%', resizable: true, sortable: true, editable: { type: 'text' } },
-        { field: 'isoCode', text: 'isoCode', size: '14%', resizable: true, sortable: true, editable: { type: 'text' } },
-        { field: 'Country', text: 'Country', size: '14%', resizable: true, sortable: true, editable: { type: 'text' } },
-        { field: 'Modified', text: 'Modified', size: '14%', resizable: true, sortable: true, editable: { type: 'text' } },
-        { field: 'Coordinates', text: 'Coordinates', size: '14%', resizable: true, sortable: true, editable: { type: 'text' } }
+        { field: 'GeonameID', text: 'GeonameID', size: '85px', resizable: false, sortable: true, editable: { type: 'text' } },
+        { field: 'Rank', text: 'Rank', size: '53px', resizable: false, sortable: true, editable: { type: 'text' } },
+        { field: 'City', text: 'City', size: '50%', resizable: true, sortable: true, editable: { type: 'text' } },
+        { field: 'Population', text: 'Population', size: '80px', resizable: false, sortable: true, editable: { type: 'text' },
+            render: function (record, extra) { return record.Population.toString().replace(/\B(?=(\d{3})+(?!\d))/g, "'") } },
+        { field: 'isoCode', text: 'iso', size: '35px', resizable: false, sortable: true, editable: { type: 'text' } },
+        { field: 'Country', text: 'Country', size: '50%', resizable: true, sortable: true, editable: { type: 'text' } },
+        { field: 'Modified', text: 'Modified', size: '80px', resizable: false, sortable: true, editable: { type: 'text' } },
+        { field: 'Coordinates', text: 'Coordinates', size: '140px', resizable: false, sortable: true, editable: { type: 'text' } }
     ]
     w2ui.grid.lineNumberWidth = 50
     w2ui.grid.multiSearch = true
@@ -77,7 +182,6 @@ query(() => {
         .then((response) => response.text())
         .then((csv) => {
             const data = d3.csvParse(csv);
-            //console.log(data);
             for (var i = 0; i < data.length; i++) data[i].recid = i;
             w2ui.grid.records = data;
             w2ui.grid.total = w2ui.grid.records.length
