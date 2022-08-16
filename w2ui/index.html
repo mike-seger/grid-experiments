@@ -167,7 +167,7 @@ query(() => {
     new w2grid(config.grid)
     w2ui.grid.columns = [
         { field: 'GeonameID', text: 'GeonameID', size: '85px', resizable: false, sortable: true, editable: { type: 'text' } },
-        { field: 'Rank', text: 'Rank', size: '58px', resizable: false, sortable: true, editable: { type: 'text' } },
+        { field: 'Rank', text: 'Rank', size: '70px', resizable: false, sortable: true, editable: { type: 'text' } },
         { field: 'City', text: 'City', size: '50%', resizable: true, sortable: true, editable: { type: 'text' } },
         { field: 'Population', text: 'Population', size: '116px', resizable: false, sortable: true, editable: { type: 'text' },
             render: function (record, extra) { return record.Population.toString().replace(/\B(?=(\d{3})+(?!\d))/g, "'") } },
@@ -176,7 +176,7 @@ query(() => {
         { field: 'Modified', text: 'Modified', size: '106px', resizable: false, sortable: true, editable: { type: 'text' } },
         { field: 'Coordinates', text: 'Coordinates', size: '176px', resizable: false, sortable: true, editable: { type: 'text' } }
     ]
-    w2ui.grid.lineNumberWidth = 50
+    w2ui.grid.lineNumberWidth = 58
     w2ui.grid.multiSearch = true
 
     fetch(getCsvUrl())
