@@ -30,12 +30,18 @@
     <div class="container">
         <div id="myGrid" class="ag-theme-alpine" style="height: 100%; width: 100%"></div>
     </div>
-	
-	<script type="text/javascript">
-		// Function to demonstrate calling grid's API
-		function deselect(){
-			gridOptions.api.deselectAll()
-		}
+        <script type="text/javascript">
+        // Function to demonstrate calling grid's API
+        function deselect(){
+            gridOptions.api.deselectAll()
+        }
+
+        function getCsvUrl() {
+            const urlParams = new URLSearchParams(window.location.search);
+            let csv = urlParams.get('csv');
+            if(!csv) csv = "cities-1400.csv";
+            return "../data/"+csv;
+        }
 
         const gridOptions = {
             headerHeight: 30,
@@ -86,17 +92,17 @@
             //rowBuffer: 0,
             //editType: 'fullRow',
             //singleClickEdit: true,
-			//rowSelection: 'single', // allow rows to be selected
+            //rowSelection: 'single', // allow rows to be selected
 
-			onCellClicked: params => { console.log('cell was clicked', params) },
+            onCellClicked: params => { console.log('cell was clicked', params) },
             onSortChanged: e => { e.api.refreshCells(); }
-		};
+        };
 
         document.addEventListener('DOMContentLoaded', function () {
             var gridDiv = document.querySelector('#myGrid');
             new agGrid.Grid(gridDiv, gridOptions);
 
-            fetch('../data/CITY.csv')
+            fetch(getCsvUrl())
                 .then((response) => response.text())
                 .then((csv) => gridOptions.api.setRowData( d3.csvParse(csv)));
         });
