@@ -26,108 +26,88 @@
 
         .w2ui-grid .w2ui-grid-toolbar,
         .grid_grid_toolbar {
-            height: 46px !important;
+            height: 43px !important;
             padding-top: 4px;
             padding-left: 0;
         }
 
         .w2ui-head, .w2ui-col-header {
-            color: black !important;
-            background: rgb(226,231,236) !important;
+            color: black;
+            background: rgb(226,231,236);
         }
 
         .w2ui-col-selected *,
         .w2ui-row-selected {
-            background: #e8e0f8 !important;
+            background: #e8e0f8;
         }
 
         .w2ui-search-drop,
         #grid_grid_searches,
-        #tb_grid_toolbar_item_w2ui-reload {
+        #tb_grid_toolbar_item_w2ui-reload,
+        #grid_grid_fcolumns > table * {
             display: none;
         }
 
         .w2ui-head  {
-            padding: 0 !important;
+            padding: 0;
         }
 
         .w2ui-col-number,
         .w2ui-grid-header,
-        .w2ui-col-header {
+        .w2ui-col-header,
+        .w2ui-grid-data *, 
+        #grid_grid_search_all,
+        #grid_grid_fcolumns > table:after {
             font-size: 16px !important;
+        }
+
+        .w2ui-col-number,
+        .w2ui-grid-header,
+        .w2ui-col-header,
+        #grid_grid_fcolumns > table:after {
             font-weight: 700;
-            margin: 3px 3px 2px 3px !important;
         }
 
         .w2ui-col-header {
-            margin: 0 !important;
+            margin: 0;
+            padding-bottom: 5px !important;
         }
-
-            /* .w2ui-col-number,
-            .w2ui-head {
-                margin: 0 !important;
-            } */
 
         .w2ui-grid-fcolumns,
         .w2ui-head .w2ui-col-number,
         #grid_grid_fcolumns {
-            /* margin: 0px 6px 4px 0; */
-            /* height: 40px; */
             padding: 0 6px 6px 4px; 
         }
 
         td.w2ui-head.w2ui-col-number * div {
-            height: 39px !important;
+            height: 41px;
             border: 0;
         }
+
         div#grid_grid_fcolumns.w2ui-grid-fcolumns {
-            /* margin: 0px 6px 4px 0; */
-            /* height: 40px; */
-            padding: 0 !important;
-            margin: 0 !important;
-            height: 30px !important;
+            padding: 0;
+            margin: 0;
+            height: 29px;
+            border-bottom: 1px solid #dcdcdc;
         }
 
         .w2ui-head {
             border: 0;
         }
 
-        .w2ui-col-header .w2ui-col-selected {
+        .w2ui-col-header .w2ui-col-selected,
+        .w2ui-tb-line {
             border: 0;
             padding:0;
         }
 
-        .w2ui-grid .w2ui-grid-body table .w2ui-col-number div {
-            /* padding: 7px 6px 6px 4  px; */
-            margin: 8px 6px 4px 0 !important;
-        }
-
-        .w2ui-grid-data *, #grid_grid_search_all {
-            font-size: 16px !important;
-        }
-
-        .w2ui-grid-data * {
-            margin: 3px 2px 2px 4px !important;
-        }
-
-        .w2ui-tb-line {
-            padding-left: 0;
-        }
-
-        #grid_grid_fcolumns > table * {
-            display: none;
-        }
-
         div#grid_grid_fcolumns {
             background-color: #e2e7ec;
-            /* padding: 5px; */
             border-bottom: 1px solid #dcdcdc;
-            margin: 5px !important;
-            height: 10px !important;
         }
 
         #grid_grid_fcolumns > table:after {
-            margin: 7px 0 0 20px;
+            margin: 6px 0 0 20px;
             content: '#';
             position: absolute;
             color: rgba(75, 75, 75, 0.667);
@@ -144,7 +124,7 @@ var config = {
     grid: {
         name: 'grid',
         selectType: 'cell',
-        recordHeight: 23,
+        recordHeight: 28,
         liveSearch: true,
         multiSearch: true,
         show: {
@@ -174,8 +154,9 @@ query(() => {
         { field: 'isoCode', text: 'iso', size: '46px', resizable: false, sortable: true, editable: { type: 'text' } },
         { field: 'Country', text: 'Country', size: '50%', resizable: true, sortable: true, editable: { type: 'text' } },
         { field: 'Modified', text: 'Modified', size: '106px', resizable: false, sortable: true, editable: { type: 'text' } },
-        { field: 'Coordinates', text: 'Coordinates', size: '176px', resizable: false, sortable: true, editable: { type: 'text' } }
+        { field: 'Coordinates', text: 'Coordinates', size: '176px', resizable: false, sortable: true, editable: { type: 'text' } },
     ]
+
     w2ui.grid.lineNumberWidth = 58
     w2ui.grid.multiSearch = true
 
