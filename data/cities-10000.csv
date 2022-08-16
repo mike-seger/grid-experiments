@@ -8931,7 +8931,6 @@ GeonameID,Rank,City,Population,AsciiName,isoCode,Country,Modified,Coordinates
 1854384,8930,Okaya,54286,Okaya,JP,Japan,2017-07-22,"36.05659,138.0451"
 2776421,8931,Hietzing,54265,Hietzing,AT,Austria,2018-07-29,"48.18623,16.2965"
 2648187,8932,Gravesend,54263,Gravesend,GB,United Kingdom,2018-08-01,"51.44206,0.37106"
-6295533,8933,Zürich (Kreis 11),54260,Zuerich (Kreis 11),CH,Switzerland,2012-07-30,"47.42326,8.52166"
 2222230,8934,Sangmélima,54251,Sangmelima,CM,Cameroon,2020-06-10,"2.93333,11.98333"
 5808276,8935,Richland,54248,Richland,US,United States,2017-05-21,"46.28569,-119.28446"
 1256369,8936,Sidhi,54242,Sidhi,IN,India,2015-08-07,"24.4038,81.87954"
@@ -9999,3 +9998,4 @@ GeonameID,Rank,City,Population,AsciiName,isoCode,Country,Modified,Coordinates
 3600026,9998,Puerto Cortez,48013,Puerto Cortez,HN,Honduras,2016-02-02,"15.82562,-87.92968"
 286402,9999,Shināş,48009,Shinas,OM,Oman,2020-06-10,"24.7426,56.46698"
 1861207,10000,Iwakura,48007,Iwakura,JP,Japan,2017-07-22,"35.28333,136.86667"
+6090785,10001,North Vancouver,48000,North Vancouver,CA,Canada,2021-08-25,"49.31636,-123.06934"
