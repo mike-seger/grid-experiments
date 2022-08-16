@@ -4,7 +4,7 @@
 	<meta charset="UTF-8" />
 	<meta http-equiv="X-UA-Compatible" content="IE=edge" />
 	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-	<title>Ag Grid App</title>
+	<title>Ag Grid Test</title>
 	<script src="https://unpkg.com/ag-grid-community/dist/ag-grid-community.min.noStyle.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/d3-dsv@3"></script>
 	<link rel="stylesheet" href="https://unpkg.com/ag-grid-community/styles/ag-grid.css"/>
@@ -13,17 +13,17 @@
 
     <style>
         body, html {
-			overflow: hidden;
-			padding: 0;
-			margin: 0;
-			border: 0;
-		}
+            overflow: hidden;
+            padding: 0;
+            margin: 0;
+            border: 0;
+        }
 
         .container {
-			height: calc(100vh - 18px);
-			flex-direction: column;
-			padding: 9px;
-		}
+            height: calc(100vh - 18px);
+            flex-direction: column;
+            padding: 9px;
+        }
     </style>
  </head>
  <body>
@@ -46,8 +46,8 @@
         const gridOptions = {
             headerHeight: 30,
             rowHeight: 28,
-			// each entry here represents one column
-			columnDefs: [
+            // each entry here represents one column
+            columnDefs: [
                 {   
                     headerName: "",
                     valueGetter: "node.rowIndex + 1",
@@ -63,16 +63,15 @@
                     lockPosition: true,
                     //type: 'numericColumn',
                 },
-                { field: "id", hide: true },
-                { field: "city" },
-                { field: "population" },
-                { field: "country" },
-                { field: "iso_country" },
-                { field: "geo_id", type:'numericColumn' },
-                { field: "latitude", type: 'numericColumn' },
-                { field: "longitude", type: 'numericColumn' },
-                { field: "modified" },
-			],
+                { field: "GeonameID", hide: true },
+                { field: "Rank", type: 'numericColumn' },
+                { field: "City" },
+                { field: "Population", type: 'numericColumn' },
+                { field: "isoCode" },
+                { field: "Country" },
+                { field: "Modified" },
+                { field: "Coordinates" },
+            ],
 
             defaultColDef: {
                 flex: 1,
