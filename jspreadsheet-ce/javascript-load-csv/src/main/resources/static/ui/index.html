@@ -915,7 +915,7 @@
 		const urlParams = new URLSearchParams(window.location.search);
 		let remoteBaseUri = urlParams.get('rbase');
 		if(!remoteBaseUri) {
-			if(isStatic()) remoteBaseUri = "../../../../../../../../data/";
+			if(isStatic()) remoteBaseUri = "../../../../../../../data/";
 			else remoteBaseUri = "../api/v1/admin/csv";
 		}
 		return remoteBaseUri;
