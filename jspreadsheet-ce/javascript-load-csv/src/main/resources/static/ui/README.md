@@ -1,0 +1,1 @@
+http://localhost:8001/jspreadsheet-ce/javascript-load-csv/src/main/resources/static/ui/?rbase=../../../../../../../../data/&static=true

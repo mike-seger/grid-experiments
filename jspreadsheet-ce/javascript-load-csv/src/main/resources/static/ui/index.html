@@ -102,7 +102,6 @@
 	let originalValiueHashes = {};
 
 	let downloadFormat = "TSV";
-	let remoteBaseUri = isStatic()? "../../db/changelog/data/" : "../api/v1/admin/csv";
 
 	function stringWidth(text) {
 		const font = "16px sans-serif"	
@@ -131,7 +130,7 @@
 		}
 
 		const colConfig = entity.attributes[colIndex];
-		if(colConfig.id) return;
+		if(colConfig.id || colConfig.hidden) return;
 
 		const longestString = findLongestString(js.getColumnData(colIndex));
 		const sortableMargin = entity.sortable === true?dropdownMargin:0;
@@ -178,7 +177,7 @@
 		const xOffset = 0;
 		const x = element.offsetLeft; //getBoundingClientRect().left + window.pageXOffset + xOffset;
 		const body = document.querySelector("body");
-		//console.log("x: "+x+"  scrollLeft: 	"+body.scrollLeft+"  scrollWidth: 	"+body.scrollWidth+" offsetWidth: 	"+body.offsetWidth);
+		//	console.log("x: "+x+"  scrollLeft: 	"+body.scrollLeft+"  scrollWidth: 	"+body.scrollWidth+" offsetWidth: 	"+body.offsetWidth);
 		const bodyLeft = body.scrollLeft?body.scrollLeft:0;
 		if(x<bodyLeft || x+td.offsetWidth >bodyLeft+body.offsetWidth) {
 			if(x<bodyLeft && col==1) body.scrollLeft = 0;
@@ -421,7 +420,7 @@
 
 	async function getData(theEntity) {
 		const entity = theEntity?theEntity:currentEntity;
-		const uri = remoteBaseUri+entity.getUri;
+		const uri = getRemoteBaseUri()+entity.getUri;
 		try {
 			const response = await fetch(uri, { method: "GET" });
 			const data = await response.text();
@@ -472,9 +471,9 @@
 		let method = "PUT";
 		let tabSeparated = true;
 		if(file.type === "text/tab-separated-values") {
-			uri = remoteBaseUri + entity.putUri;
+			uri = getRemoteBaseUri() + entity.putUri;
 		} else if(file.type === "text/csv") {
-			uri = remoteBaseUri + entity.putUri;
+			uri = getRemoteBaseUri() + entity.putUri;
 			tabSeparated = false;
 		} else {
 			errorDialog("Unsupported file type: "+file.type);
@@ -737,8 +736,8 @@
 		const data = getCurrentData(js);
 		if(data.length===0) return;
 		const entity = currentEntity;
-		const saveUri = remoteUrl(remoteBaseUri + entity.putUri, false, false);
-		const deleteUri = remoteBaseUri + entity.deleteUri;
+		const saveUri = remoteUrl(getRemoteBaseUri() + entity.putUri, false, false);
+		const deleteUri = getRemoteBaseUri() + entity.deleteUri;
 		console.log("URI: "+saveUri+" entity:"+currentEntity.name);
 		let success = false;
 		if(entity.idField) {
@@ -897,11 +896,33 @@
 	}
 
 	function isStatic() {
-		return location.port==8000 || location.host.includes(".github.io");
+		const urlParams = new URLSearchParams(window.location.search);
+		const static = urlParams.get('static');
+		return static || location.port==8000 || location.port==8001 || location.host.includes(".github.io");
+	}
+
+	function getConfigUri() {
+		const urlParams = new URLSearchParams(window.location.search);
+		let configUri = urlParams.get('conf');
+		if(!configUri) {
+			if(isStatic()) configUri = 'config.json';
+			else configUri = '/configuration';
+		}
+		return configUri;
+	}
+
+	function getRemoteBaseUri() {
+		const urlParams = new URLSearchParams(window.location.search);
+		let remoteBaseUri = urlParams.get('rbase');
+		if(!remoteBaseUri) {
+			if(isStatic()) remoteBaseUri = "../../../../../../../../data/";
+			else remoteBaseUri = "../api/v1/admin/csv";
+		}
+		return remoteBaseUri;
 	}
 
 	async function loadConfiguration() {
-		const configUrl = isStatic()? remoteBaseUri+'config.json' : remoteBaseUri+'/configuration'
+		const configUrl = getRemoteBaseUri() + getConfigUri()
 		const response = await fetch(configUrl);
 		const configuration = await response.json();
 		console.log(configuration);
