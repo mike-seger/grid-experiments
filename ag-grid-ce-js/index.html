@@ -18,10 +18,6 @@
             margin: 0;
             border: 0;
         }
-/* 
-        div.ag-cell * , div.ag-header-cell-text * {
-            font-family: sans-serif !important;
-        } */
 
         .container {
             height: calc(100vh - 18px);
@@ -39,7 +35,7 @@
     <div class="container">
         <div id="myGrid" class="ag-theme-alpine" style="height: 100%; width: 100%"></div>
     </div>
-        <script type="text/javascript">
+    <script type="text/javascript">
         // Function to demonstrate calling grid's API
         function deselect(){
             gridOptions.api.deselectAll()
@@ -48,8 +44,16 @@
         function getCsvUrl() {
             const urlParams = new URLSearchParams(window.location.search);
             let csv = urlParams.get('csv');
-            if(!csv) csv = "cities-1400.csv";
+            if(!csv) csv = "cities-140491.csv";
             return "../data/"+csv;
+        }
+
+        function getRows() {
+            const urlParams = new URLSearchParams(window.location.search);
+            let rows = urlParams.get('rows');
+            if(!rows) rows = 1000;
+            rows = Math.max(Number(rows), 1);
+            return rows;
         }
 
         function stringFormatter(params) {
@@ -83,7 +87,7 @@
                 { field: "isoCode", headerName: 'ISO', maxWidth: 80 },
                 { field: "Country", headerName: 'Country' },
                 { field: "Modified", headerName: 'Modified', minWidth: 130, maxWidth: 130 },
-                { field: "Coordinates", headerName: 'Coordinates', maxWidth: 150 },
+                { field: "Coordinates", headerName: 'Coordinates', maxWidth: 196 },
             ],
 
             defaultColDef: {
@@ -114,10 +118,14 @@
         document.addEventListener('DOMContentLoaded', function () {
             var gridDiv = document.querySelector('#myGrid');
             new agGrid.Grid(gridDiv, gridOptions);
-
             fetch(getCsvUrl())
                 .then((response) => response.text())
-                .then((csv) => gridOptions.api.setRowData( d3.csvParse(csv)));
+                .then((csv) => {
+                    let rawData = d3.csvParse(csv);
+                    const data = rawData.slice(0, Math.min(rawData.length-1, getRows()));
+                    rawData = null;
+                    gridOptions.api.setRowData(data);
+                });
         });
 	</script>
  </body>

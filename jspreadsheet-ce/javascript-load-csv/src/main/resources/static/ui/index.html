@@ -361,7 +361,9 @@
 			console.log(columns);
 		}
 		getData(entity).then((csv) => {
-			data = d3.csvParse(csv);
+			let rawData = d3.csvParse(csv);
+            const data = rawData.slice(0, Math.min(rawData.length-1, getRows()));
+            rawData = null;
 			jspreadsheet.tabs(spreadsheet1, [{
 				sheetName: entity.name,
 				data: data,
@@ -919,6 +921,14 @@
 			else remoteBaseUri = "../api/v1/admin/csv";
 		}
 		return remoteBaseUri;
+	}
+
+	function getRows() {
+		const urlParams = new URLSearchParams(window.location.search);
+		let rows = urlParams.get('rows');
+		if(!rows) rows = 1000;
+		rows = Math.max(Number(rows), 1);
+		return rows;
 	}
 
 	async function loadConfiguration() {

@@ -139,8 +139,16 @@ var config = {
 function getCsvUrl() {
     const urlParams = new URLSearchParams(window.location.search);
     let csv = urlParams.get('csv');
-    if(!csv) csv = "cities-1400.csv";
+    if(!csv) csv = "cities-140491.csv";
     return "../data/"+csv;
+}
+
+function getRows() {
+    const urlParams = new URLSearchParams(window.location.search);
+    let rows = urlParams.get('rows');
+    if(!rows) rows = 1000;
+    rows = Math.max(Number(rows), 1);
+    return rows;
 }
 
 query(() => {
@@ -163,7 +171,9 @@ query(() => {
     fetch(getCsvUrl())
         .then((response) => response.text())
         .then((csv) => {
-            const data = d3.csvParse(csv);
+            let rawData = d3.csvParse(csv);
+            const data = rawData.slice(0, Math.min(rawData.length-1, getRows()));
+            rawData = null;
             for (var i = 0; i < data.length; i++) data[i].recid = i;
             w2ui.grid.records = data;
             w2ui.grid.total = w2ui.grid.records.length
@@ -171,7 +181,7 @@ query(() => {
             w2ui.grid.hideColumn('GeonameID')
             w2ui.grid.searches.forEach(search => { search.operator = 'contains' })
             w2ui.grid.render(query('#main')[0])
-            w2ui.grid.focus()
+            w2ui.grid.focus();
         }
     )
 })
