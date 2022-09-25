@@ -189,14 +189,15 @@ query(() => {
         }
     )
 
-    chrome.runtime.sendMessage({greeting: "hello"}, function (response) {
-        if (!chrome.runtime.lastError) {
-            // if you have any response
-        } else {
-            // if you don't have any response it's ok but you should actually handle
-            // it and we are doing this when we are examining chrome.runtime.lastError
-        }
-    })
+    chrome.runtime.onMessage.addListener(
+      function(request, sender, sendResponse) {
+        console.log(sender.tab ?
+          "from a content script:" + sender.tab.url :
+          "from the extension");
+        if (request.greeting === "hello")
+          sendResponse({farewell: "goodbye"});
+      }
+    )
 })
 </script>
 
