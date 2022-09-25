@@ -176,7 +176,7 @@ query(() => {
         .then((response) => response.text())
         .then((csv) => {
             let rawData = d3.csvParse(csv);
-            const data = rawData.slice(0, Math.min(rawData.length-1, getRows()));
+            const data = rawData.slice(0, Math.min(rawData.length, getRows()));
             rawData = null;
             for (var i = 0; i < data.length; i++) data[i].recid = i;
             w2ui.grid.records = data;
