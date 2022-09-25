@@ -1,4 +1,4 @@
-/* w2ui 2.0.x (nightly) (8/14/2022, 11:01:06 AM) (c) http://w2ui.com, vitmalina@gmail.com */
+/* w2ui 2.0.x (nightly) (9/22/2022, 8:47:45 PM) (c) http://w2ui.com, vitmalina@gmail.com */
 /**
  * Part of w2ui 2.0 library
  *  - Dependencies: w2utils
@@ -386,9 +386,10 @@ const w2locale = {
         'Your remote data source record count has changed, reloading from the first record.': '---'
     }
 }
+/* mQuery 0.7 (nightly) (9/3/2022, 8:23:49 AM), vitmalina@gmail.com */
 class Query {
     constructor(selector, context, previous) {
-        this.version = 0.6
+        this.version = 0.7
         this.context = context ?? document
         this.previous = previous ?? null
         let nodes = []
@@ -424,7 +425,35 @@ class Query {
     static _fragment(html) {
         let tmpl = document.createElement('template')
         tmpl.innerHTML = html
+        tmpl.content.childNodes.forEach(node => {
+            let newNode = Query._scriptConvert(node)
+            if (newNode != node) {
+                tmpl.content.replaceChild(newNode, node)
+            }
+        })
         return tmpl.content
+    }
+    // innerHTML, append, etc. script tags will not be executed unless they are proper script tags
+    static _scriptConvert(node) {
+        let convert = (txtNode) => {
+            let doc = txtNode.ownerDocument
+            let scNode = doc.createElement('script')
+            scNode.text = txtNode.text
+            let attrs = txtNode.attributes
+            for (let i = 0; i < attrs.length; i++) {
+                scNode.setAttribute(attrs[i].name, attrs[i].value);
+            }
+            return scNode
+        }
+        if (node.tagName == 'SCRIPT') {
+            node = convert(node)
+        }
+        if (node.querySelectorAll) {
+            node.querySelectorAll('script').forEach(textNode => {
+                textNode.parentNode.replaceChild(convert(textNode), textNode)
+            })
+        }
+        return node
     }
     static _fixProp(name) {
         let fixes = {
@@ -461,8 +490,9 @@ class Query {
                 this.each(node => {
                     // if insert before a single node, just move new one, else clone and move it
                     let clone = (single ? el : el.cloneNode(true))
-                    node[method](clone)
                     nodes.push(clone)
+                    node[method](clone)
+                    Query._scriptConvert(clone)
                 })
             })
             if (!single) html.remove()
@@ -819,7 +849,13 @@ class Query {
             let obj = {}
             if (typeof name == 'object') obj = name; else obj[name] = value
             this.each(node => {
-                Object.entries(obj).forEach(([nm, val]) => { node[Query._fixProp(nm)] = val })
+                Object.entries(obj).forEach(([nm, val]) => {
+                    let prop = Query._fixProp(nm)
+                    node[prop] = val
+                    if (prop == 'innerHTML') {
+                        Query._scriptConvert(node)
+                    }
+                })
             })
             return this
         }
@@ -930,6 +966,7 @@ query.html = (str) => { let frag = Query._fragment(str); return query(frag.child
  * == TODO ==
  *  - add w2utils.lang wrap for all captions in all buttons.
  *  - check transition (also with layout)
+ *  - deprecate w2utils.tooltip
  *
  * == 2.0 changes
  *  - CSP - fixed inline events (w2utils.tooltip still has it)
@@ -950,7 +987,7 @@ class Utils {
         this.version = '2.0.x'
         this.tmp = {}
         this.settings = this.extend({}, {
-            'dataType'       : 'HTTPJSON', // can be HTTP, HTTPJSON, RESTFULL, RESTFULLJSON, JSON (case sensitive)
+            'dataType'       : 'HTTPJSON', // can be HTTP, HTTPJSON, RESTFULL, JSON (case sensitive)
             'dateStartYear'  : 1950,  // start year for date-picker
             'dateEndYear'    : 2030,  // end year for date picker
             'macButtonOrder' : false, // if true, Yes on the right side
@@ -1650,9 +1687,9 @@ class Utils {
     }
     transition(div_old, div_new, type, callBack) {
         return new Promise((resolve, reject) => {
-            let styles = div_old.computedStyleMap()
-            let width  = styles.get('width').value
-            let height = styles.get('height').value
+            let styles = getComputedStyle(div_old)
+            let width  = parseInt(styles.width)
+            let height = parseInt(styles.height)
             let time   = 0.5
             if (!div_old || !div_new) {
                 console.log('ERROR: Cannot do transition when one of the divs is null')
@@ -1813,7 +1850,6 @@ class Utils {
             options.spinner = arguments[2]
         }
         options = this.extend({
-            // opacity: 0.3, // default comes from css
             spinner: false
         }, options)
         // for backward compatibility
@@ -1852,7 +1888,8 @@ class Utils {
         if (options.bgColor) {
             $lock.css({ 'background-color': options.bgColor })
         }
-        let opacity = $lock.css('opacity') || 0.3
+        let styles = getComputedStyle($lock.get(0))
+        let opacity = styles.opacity ?? 0.15
         $lock
             .on('mousedown', function() {
                 if (typeof options.onClick == 'function') {
@@ -1972,11 +2009,11 @@ class Utils {
                 edata.finish()
             }
         }
-        if (typeof options == 'string') {
+        if (typeof options == 'string' || typeof options == 'number') {
             options = {
-                width : (options.length < 300 ? 350 : 550),
-                height: (options.length < 300 ? 170: 250),
-                text  : options,
+                width : (String(options).length < 300 ? 350 : 550),
+                height: (String(options).length < 300 ? 170: 250),
+                text  : String(options),
             }
         }
         if (typeof options != 'object') {
@@ -2071,7 +2108,7 @@ class Utils {
                 <div class="w2ui-message-buttons">${options.buttons || ''}</div>
             `
         }
-        let styles  = getComputedStyle(where.box)
+        let styles  = getComputedStyle(query(where.box).get(0))
         let pWidth  = parseFloat(styles.width)
         let pHeight = parseFloat(styles.height)
         let titleHeight = 0
@@ -2854,7 +2891,7 @@ class Utils {
         if (Array.isArray(menu)) {
             menu.forEach((it, m) => {
                 if (typeof it === 'string' || typeof it === 'number') {
-                    menu[m] = { id: it, text: it }
+                    menu[m] = { id: it, text: String(it) }
                 } else if (it != null) {
                     if (it.caption != null && it.text == null) it.text = it.caption
                     if (it.text != null && it.id == null) it.id = it.text
@@ -3014,7 +3051,7 @@ class Dialog extends w2base {
      */
     open(options) {
         let self = this
-        if (w2popup.status == 'closing') {
+        if (w2popup.status == 'closing' || query('#w2ui-popup').hasClass('animating')) {
             // if called when previous is closing
             setTimeout(() => { self.open.call(self, options) }, 100)
             return
@@ -3117,9 +3154,14 @@ class Dialog extends w2base {
                         </div>`
             }
             // first insert just body
-            msg = `<div id="w2ui-popup" class="w2ui-popup w2ui-anim-open animating" style="left: ${left}px; top: ${top}px;
-                        width: ${parseInt(options.width)}px; height: ${parseInt(options.height)}px;
-                        transition: ${options.speed}s"></div>`
+            let styles = `
+                left: ${left}px;
+                top: ${top}px;
+                width: ${parseInt(options.width)}px;
+                height: ${parseInt(options.height)}px;
+                transition: ${options.speed}s
+            `
+            msg = `<div id="w2ui-popup" class="w2ui-popup w2ui-anim-open animating" style="${w2utils.stripSpaces(styles)}"></div>`
             query('body').append(msg)
             query('#w2ui-popup')[0]._w2popup = {
                 self: this,
@@ -3129,11 +3171,11 @@ class Dialog extends w2base {
                 closed: new Promise((resolve) => { this._promClosed = resolve }),
             }
             // then content
+            styles = `${!options.title ? 'top: 0px !important;' : ''} ${!options.buttons ? 'bottom: 0px !important;' : ''}`
             msg = `
                 <span name="hidden-first" tabindex="0" style="position: absolute; top: -100px"></span>
                 <div class="w2ui-popup-title" style="${!options.title ? 'display: none' : ''}">${btn}</div>
-                <div class="w2ui-box" style="${!options.title ? 'top: 0px !important;' : ''}
-                        ${!options.buttons ? 'bottom: 0px !important;' : ''}">
+                <div class="w2ui-box" style="${styles}">
                     <div class="w2ui-popup-body ${!options.title || ' w2ui-popup-no-title'}
                         ${!options.buttons || ' w2ui-popup-no-buttons'}" style="${options.style}">
                     </div>
@@ -3214,6 +3256,7 @@ class Dialog extends w2base {
             // transition
             let div_old = query('#w2ui-popup .w2ui-box')[0]
             let div_new = query('#w2ui-popup .w2ui-box-temp')[0]
+            query('#w2ui-popup').addClass('animating')
             w2utils.transition(div_old, div_new, options.transition, () => {
                 // clean up
                 query(div_old).remove()
@@ -3225,6 +3268,7 @@ class Dialog extends w2base {
                 }
                 // focus on first button
                 self.setFocus(options.focus)
+                query('#w2ui-popup').removeClass('animating')
             })
             // call event onOpen
             w2popup.status = 'open'
@@ -3322,8 +3366,8 @@ class Dialog extends w2base {
             w2popup.status = 'loading'
             let [url, selector] = String(options.url).split('#')
             if (url) {
-                fetch(url).then(res => { return res.text() }).then(html => {
-                    this.template(html, selector, options).then(() => { resolve() })
+                fetch(url).then(res => res.text()).then(html => {
+                    resolve(this.template(html, selector, options))
                 })
             }
         })
@@ -3757,8 +3801,8 @@ class Tooltip {
             anchorClass     : '',       // add class for anchor when tooltip is shown
             anchorStyle     : '',       // add style for anchor when tooltip is shown
             autoShow        : false,    // if autoShow true, then tooltip will show on mouseEnter and hide on mouseLeave
-            autoShowOn      : null,     // when options.auto = true, mouse event to show on
-            autoHideOn      : null,     // when options.auto = true, mouse event to hide on
+            autoShowOn      : null,     // when options.autoShow = true, mouse event to show on
+            autoHideOn      : null,     // when options.autoShow = true, mouse event to hide on
             arrowSize       : 8,        // size of the carret
             margin          : 0,        // extra margin from the anchor
             screenMargin    : 2,        // min margin from screen to tooltip
@@ -5169,10 +5213,10 @@ class MenuTooltip extends Tooltip {
             .get(0)
         if (el) {
             if (el.offsetTop + el.clientHeight > view.clientHeight + view.scrollTop) {
-                el.scrollIntoView({ behavior: 'intant', block: 'start', inline: 'start' })
+                el.scrollIntoView({ behavior: 'smooth', block: 'start', inline: 'start' })
             }
             if (el.offsetTop < view.scrollTop + (search ? search.clientHeight : 0)) {
-                el.scrollIntoView({ behavior: 'instant', block: 'end', inline: 'end' })
+                el.scrollIntoView({ behavior: 'smooth', block: 'end', inline: 'end' })
             }
         }
     }
@@ -5497,7 +5541,7 @@ class MenuTooltip extends Tooltip {
                     parents = ''
                     refreshIndex = true
                 }
-                if (Array.isArray(item.items) && item.items.length > 0 && item.expanded) {
+                if (Array.isArray(item?.items) && item.items.length > 0 && item.expanded) {
                     event.delegate = query(overlay.box).find(`.w2ui-menu-item[index="${index}"]`).get(0)
                     overlay.selected = index
                     this.menuClick(overlay, event, parseInt(index), parents)
@@ -5508,7 +5552,7 @@ class MenuTooltip extends Tooltip {
             case 39: { // right
                 if (!overlay.displayed) return
                 let { item, index, parents } = this.getCurrent(overlay.name)
-                if (Array.isArray(item.items) && item.items.length > 0 && !item.expanded) {
+                if (Array.isArray(item?.items) && item.items.length > 0 && !item.expanded) {
                     event.delegate = query(overlay.box).find('.w2ui-selected').get(0)
                     this.menuClick(overlay, event, parseInt(index), parents)
                 }
@@ -6750,17 +6794,17 @@ class w2toolbar extends w2base {
                 case 'left': {
                     scroll = scrollLeft - width1 + 50 // 35 is width of both button
                     if (scroll <= 0) scroll = 0
-                    scrollBox.get(0).scrollTo({ top: 0, left: scroll, behavior: 'instant' })
+                    scrollBox.get(0).scrollTo({ top: 0, left: scroll, behavior: instant ? 'atuo' : 'smooth' })
                     break
                 }
                 case 'right': {
                     scroll = scrollLeft + width1 - 50 // 35 is width of both button
                     if (scroll >= width2 - width1) scroll = width2 - width1
-                    scrollBox.get(0).scrollTo({ top: 0, left: scroll, behavior: 'instant'})
+                    scrollBox.get(0).scrollTo({ top: 0, left: scroll, behavior: instant ? 'atuo' : 'smooth' })
                     break
                 }
             }
-            setTimeout(() => { this.resize(); resolve() }, 0)
+            setTimeout(() => { this.resize(); resolve() }, instant ? 0 : 500)
         })
     }
     render(box) {
@@ -7200,6 +7244,7 @@ class w2toolbar extends w2base {
  *  - deprecarted obj.img, node.img
  *  - CSP - fixed inline events
  *  - observeResize for the box
+ *  - handleTooltip and handle.tooltip - text/function
  */
 
 class w2sidebar extends w2base {
@@ -7224,7 +7269,7 @@ class w2sidebar extends w2base {
         this.levelPadding  = 12
         this.skipRefresh   = false
         this.tabIndex      = null // will only be set if > 0 and not null
-        this.handle        = { size: 0, style: '', html: '' },
+        this.handle        = { size: 0, style: '', html: '', tooltip: '' },
         this.onClick       = null // Fire when user click on Node Text
         this.onDblClick    = null // Fire when user dbl clicks
         this.onContextMenu = null
@@ -7887,8 +7932,8 @@ class w2sidebar extends w2base {
             let nd = this.get(id)
             if (nd == null) return
             let item = query(this.box).find('#node_'+ w2utils.escapeId(id)).get(0)
-            item.scrollIntoView({ block: "center", inline: "center", behavior: 'instant' })
-            setTimeout(() => { this.resize(); resolve() }, 0)
+            item.scrollIntoView({ block: "center", inline: "center", behavior: instant ? 'atuo' : 'smooth' })
+            setTimeout(() => { this.resize(); resolve() }, instant ? 0 : 500)
         })
     }
     dblClick(id, event) {
@@ -8085,8 +8130,11 @@ class w2sidebar extends w2base {
         if (this.box == null) return
         let time = Date.now()
         // event before
-        let edata = this.trigger('refresh', { target: (id != null ? id : this.name),
-            fullRefresh: (id != null ? false : true) })
+        let edata = this.trigger('refresh', {
+            target: (id != null ? id : this.name),
+            nodeId: (id != null ? id : null),
+            fullRefresh: (id != null ? false : true)
+        })
         if (edata.isCancelled === true) return
         // adjust top and bottom
         let flatHTML = ''
@@ -8247,7 +8295,10 @@ class w2sidebar extends w2base {
                         data-dblclick="dblClick|${nd.id}|event"
                         data-contextmenu="contextMenu|${nd.id}|event">
                         ${obj.handle.html
-                            ? `<div class="w2ui-node-handle" style="width: ${obj.handle.size}px; ${obj.handle.style}">
+                            ? `<div class="w2ui-node-handle w2ui-eaction" style="width: ${obj.handle.size}px; ${obj.handle.style}"
+                                    data-mouseenter="handleTooltip|this|${nd.id}"
+                                    data-mouseleave="handleTooltip|this"
+                                >
                                    ${typeof obj.handle.html == 'function' ? obj.handle.html.call(obj, nd) : obj.handle.html}
                               </div>`
                             : ''
@@ -8283,6 +8334,22 @@ class w2sidebar extends w2base {
                 name: this.name + '_tooltip',
                 html: w2utils.base64decode(text),
                 position: 'right|left'
+            })
+        } else {
+            w2tooltip.hide(this.name + '_tooltip')
+        }
+    }
+    handleTooltip(anchor, id) {
+        let text = this.handle.tooltip
+        if (typeof text == 'function') {
+            text = text(id)
+        }
+        if (text !== '' && id != null) {
+            w2tooltip.show({
+                anchor: anchor,
+                name: this.name + '_tooltip',
+                html: text,
+                position: 'top|bottom'
             })
         } else {
             w2tooltip.hide(this.name + '_tooltip')
@@ -8784,17 +8851,17 @@ class w2tabs extends w2base {
                 case 'left': {
                     let scroll = scrollLeft - width1 + 50 // 35 is width of both button
                     if (scroll <= 0) scroll = 0
-                    scrollBox.get(0).scrollTo({ top: 0, left: scroll, behavior: 'instant' })
+                    scrollBox.get(0).scrollTo({ top: 0, left: scroll, behavior: instant ? 'atuo' : 'smooth' })
                     break
                 }
                 case 'right': {
                     let scroll = scrollLeft + width1 - 50 // 35 is width of both button
                     if (scroll >= width2 - width1) scroll = width2 - width1
-                    scrollBox.get(0).scrollTo({ top: 0, left: scroll, behavior: 'instant' })
+                    scrollBox.get(0).scrollTo({ top: 0, left: scroll, behavior: instant ? 'atuo' : 'smooth' })
                     break
                 }
             }
-            setTimeout(() => { this.resize(); resolve() }, 0)
+            setTimeout(() => { this.resize(); resolve() }, instant ? 0 : 350)
         })
     }
     scrollIntoView(id, instant) {
@@ -8803,8 +8870,8 @@ class w2tabs extends w2base {
             let tab = this.get(id)
             if (tab == null) return
             let tabEl = query(this.box).find('#tabs_' + this.name + '_tab_' + w2utils.escapeId(id)).get(0)
-            tabEl.scrollIntoView({ block: "start", inline: "center", behavior: 'instant' })
-            setTimeout(() => { this.resize(); resolve() }, 0)
+            tabEl.scrollIntoView({ block: "start", inline: "center", behavior: instant ? 'atuo' : 'smooth' })
+            setTimeout(() => { this.resize(); resolve() }, instant ? 0 : 500)
         })
     }
     resize() {
@@ -8945,6 +9012,7 @@ class w2tabs extends w2base {
  *  - remove jQuery dependency
  *  - layout.confirm - refactored
  *  - layout.message - refactored
+ *  - panel.removed
  */
 
 let w2panels = ['top', 'left', 'main', 'preview', 'right', 'bottom']
@@ -9170,7 +9238,7 @@ class w2layout extends w2base {
         if (pan == null) return false
         // resize
         query(this.box).find(':scope > div > .w2ui-panel')
-            .css('transition', '0s')
+            .css('transition', (instant !== true ? '.2s' : '0s'))
         setTimeout(() => { this.set(panel, { size: size }) }, 1)
         // clean
         setTimeout(() => {
@@ -10070,6 +10138,10 @@ class w2layout extends w2base {
  *  - editDone(...)
  *  - liveSearch
  *  - deprecated onUnselect event
+ *  - requestComplete(data, action, callBack, resolve, reject) - new argument list
+ *  - msgAJAXError -> msgHTTPError
+ *  - deleted grid.method
+ *  - added grid.prepareParams
  */
 
 class w2grid extends w2base {
@@ -10104,45 +10176,48 @@ class w2grid extends w2base {
                 indexes : [],
                 columns : {}
             },
-            _selection  : null,     // last result of selectionSave()
-            multi       : false,    // last multi flag, true when searching for multiple fields
-            scrollTop   : 0,        // last scrollTop position
-            scrollLeft  : 0,        // last scrollLeft position
-            colStart    : 0,        // for column virtual scrolling
-            colEnd      : 0,        // for column virtual scrolling
-            xhr         : null,     // last jquery xhr requests
-            xhr_cmd     : '',       // last xhr command, e.g. 'get'
-            xhr_offset  : null,     // last xhr offset, integer
-            xhr_start   : 0,        // timestamp of start of last xhr request
-            xhr_response: 0,        // time it took to complete the last xhr request in seconds
-            xhr_hasMore : false,    // flag to indicate if there are more items to pull from the server
-            pull_more   : false,
-            pull_refresh: true,
-            loaded      : false,    // loaded state of grid
-            range_start : null,     // last range start cell
-            range_end   : null,     // last range end cell
-            sel_ind     : null,     // last selected cell index
-            sel_col     : null,     // last selected column
-            sel_type    : null,     // last selection type, e.g. 'click' or 'key'
-            sel_recid   : null,     // last selected record id
-            idCache     : {},       // object, id cache for get()
-            move        : null,     // object, move details
-            cancelClick : null,     // boolean flag to indicate if the click event should be ignored, set during mouseMove()
-            inEditMode  : false,    // flag to indicate if we're currently in edit mode during inline editing
-            _edit       : null,     // object with details on the last edited cell, { value, index, column, recid }
-            kbd_timer   : null,     // last id of blur() timer
-            marker_timer: null,     // last id of markSearch() timer
-            click_time  : null,     // timestamp of last click
-            click_recid : null,     // last clicked record id
-            bubbleEl    : null,     // last bubble element
-            colResizing : false,    // flag to indicate that a column is currently being resized
-            tmp         : null,     // object with last column resizing details
-            copy_event  : null,     // last copy event
-            userSelect  : '',       // last user select type, e.g. 'text'
-            columnDrag  : false,    // false or an object with a remove() method
-            state       : null,     // last grid state
-            show_extra  : 0,        // last show extra for virtual scrolling
-            _toolbar_height: 0,     // height of grid's toolbar
+            saved_sel     : null,     // last result of selectionSave()
+            multi         : false,    // last multi flag, true when searching for multiple fields
+            scrollTop     : 0,        // last scrollTop position
+            scrollLeft    : 0,        // last scrollLeft position
+            colStart      : 0,        // for column virtual scrolling
+            colEnd        : 0,        // for column virtual scrolling
+            fetch: {
+                action    : '',       // last fetch command, e.g. 'load'
+                offset    : null,     // last fetch offset, integer
+                start     : 0,        // timestamp of start of last fetch request
+                response  : 0,        // time it took to complete the last fetch request in seconds
+                options   : null,
+                controller: null,
+                loaded    : false,    // data is loaded from the server
+                hasMore   : false     // flag to indicate if there are more items to pull from the server
+            },
+            pull_more     : false,
+            pull_refresh  : true,
+            range_start   : null,     // last range start cell
+            range_end     : null,     // last range end cell
+            sel_ind       : null,     // last selected cell index
+            sel_col       : null,     // last selected column
+            sel_type      : null,     // last selection type, e.g. 'click' or 'key'
+            sel_recid     : null,     // last selected record id
+            idCache       : {},       // object, id cache for get()
+            move          : null,     // object, move details
+            cancelClick   : null,     // boolean flag to indicate if the click event should be ignored, set during mouseMove()
+            inEditMode    : false,    // flag to indicate if we're currently in edit mode during inline editing
+            _edit         : null,     // object with details on the last edited cell, { value, index, column, recid }
+            kbd_timer     : null,     // last id of blur() timer
+            marker_timer  : null,     // last id of markSearch() timer
+            click_time    : null,     // timestamp of last click
+            click_recid   : null,     // last clicked record id
+            bubbleEl      : null,     // last bubble element
+            colResizing   : false,    // flag to indicate that a column is currently being resized
+            tmp           : null,     // object with last column resizing details
+            copy_event    : null,     // last copy event
+            userSelect    : '',       // last user select type, e.g. 'text'
+            columnDrag    : false,    // false or an object with a remove() method
+            state         : null,     // last grid state
+            show_extra    : 0,        // last show extra for virtual scrolling
+            toolbar_height: 0,        // height of grid's toolbar
         }
         this.header            = ''
         this.url               = ''
@@ -10208,7 +10283,6 @@ class w2grid extends w2base {
         this.vs_extra          = 5
         this.style             = ''
         this.tabIndex          = null
-        this.method            = null // if defined, then overwrites ajax method
         this.dataType          = null // if defined, then overwrites w2utils.settings.dataType
         this.parser            = null
         this.advanceOnEdit     = true // automatically begin editing the next cell after submitting an inline edit?
@@ -10273,7 +10347,7 @@ class w2grid extends w2base {
         }
         this.msgDelete     = 'Are you sure you want to delete ${count} ${records}?'
         this.msgNotJSON    = 'Returned data is not in valid JSON format.'
-        this.msgAJAXerror  = 'AJAX error. See console for more details.'
+        this.msgHTTPError  = 'HTTP error. See console for more details.'
         this.msgRefresh    = 'Refreshing...'
         this.msgNeedReload = 'Your remote data source record count has changed, reloading from the first record.'
         this.msgEmpty      = '' // if not blank, then it is message when server returns no records
@@ -10293,7 +10367,7 @@ class w2grid extends w2base {
         this.operators = { // for search fields
             'text'    : ['is', 'begins', 'contains', 'ends'], // could have "in" and "not in"
             'number'  : ['=', 'between', '>', '<', '>=', '<='],
-            'date'    : ['is', 'between', { oper: 'less', text: 'before'}, { oper: 'more', text: 'after' }],
+            'date'    : ['is', { oper: 'less', text: 'before'}, { oper: 'more', text: 'since' }, 'between'],
             'list'    : ['is'],
             'hex'     : ['is', 'between'],
             'color'   : ['is', 'begins', 'contains', 'ends'],
@@ -11324,16 +11398,16 @@ class w2grid extends w2base {
             let index_ftop    = parseInt(query(this.box).find('#grid_'+ this.name +'_frec_top').next().attr('index'))
             let index_fbottom = parseInt(query(this.box).find('#grid_'+ this.name +'_frec_bottom').prev().attr('index'))
             if (td1.length === 0 && first.index < index_top && last.index > index_top) {
-                td1 = query(this.box).find('#grid_'+ this.name +'_rec_top').next().find('td[col='+ first.column +']')
+                td1 = query(this.box).find('#grid_'+ this.name +'_rec_top').next().find('td[col="'+ first.column +'"]')
             }
             if (td2.length === 0 && last.index > index_bottom && first.index < index_bottom) {
-                td2 = query(this.box).find('#grid_'+ this.name +'_rec_bottom').prev().find('td[col='+ _lastColumn +']')
+                td2 = query(this.box).find('#grid_'+ this.name +'_rec_bottom').prev().find('td[col="'+ _lastColumn +'"]')
             }
             if (td1f.length === 0 && first.index < index_ftop && last.index > index_ftop) { // frozen
-                td1f = query(this.box).find('#grid_'+ this.name +'_frec_top').next().find('td[col='+ first.column +']')
+                td1f = query(this.box).find('#grid_'+ this.name +'_frec_top').next().find('td[col="'+ first.column +'"]')
             }
             if (td2f.length === 0 && last.index > index_fbottom && first.index < index_fbottom) { // frozen
-                td2f = query(this.box).find('#grid_'+ this.name +'_frec_bottom').prev().find('td[col='+ last.column +']')
+                td2f = query(this.box).find('#grid_'+ this.name +'_frec_bottom').prev().find('td[col="'+ last.column +'"]')
             }
             // do not show selection cell if it is editable
             let edit = query(this.box).find('#grid_'+ this.name + '_editable')
@@ -11672,8 +11746,8 @@ class w2grid extends w2base {
                 if (!Array.isArray(s) || s.indexOf(col) == -1) continue
                 // default action
                 s.splice(s.indexOf(col), 1)
-                query(this.box).find('#grid_'+ this.name +'_rec_'+ w2utils.escapeId(recid)).find(' > td[col='+ col +']').removeClass('w2ui-selected w2ui-inactive')
-                query(this.box).find('#grid_'+ this.name +'_frec_'+ w2utils.escapeId(recid)).find(' > td[col='+ col +']').removeClass('w2ui-selected w2ui-inactive')
+                query(this.box).find(`#grid_${this.name}_rec_${w2utils.escapeId(recid)} > td[col="${col}"]`).removeClass('w2ui-selected w2ui-inactive')
+                query(this.box).find(`#grid_${this.name}_frec_${w2utils.escapeId(recid)} > td[col="${col}"]`).removeClass('w2ui-selected w2ui-inactive')
                 // check if any row/column still selected
                 let isColSelected = false
                 let isRowSelected = false
@@ -11683,7 +11757,7 @@ class w2grid extends w2base {
                     if (tmp[i].recid == recid) isRowSelected = true
                 }
                 if (!isColSelected) {
-                    query(this.box).find('.w2ui-grid-columns td[col='+ col +'] .w2ui-col-header, .w2ui-grid-fcolumns td[col='+ col +'] .w2ui-col-header').removeClass('w2ui-col-selected')
+                    query(this.box).find(`.w2ui-grid-columns td[col="${col}"] .w2ui-col-header, .w2ui-grid-fcolumns td[col="${col}"] .w2ui-col-header`).removeClass('w2ui-col-selected')
                 }
                 if (!isRowSelected) {
                     query(this.box).find('#grid_'+ this.name +'_frec_'+ w2utils.escapeId(recid)).find('.w2ui-col-number').removeClass('w2ui-row-selected')
@@ -11880,8 +11954,17 @@ class w2grid extends w2base {
             })
             hasHiddenSearches = true
         }
+        if (arguments.length === 0 && overlay.length === 0) {
+            if (this.multiSearch) {
+                field = this.searchData
+                value = this.last.logic
+            } else {
+                field = this.last.field
+                value = this.last.search
+            }
+        }
         // 1: search() - advanced search (reads from popup)
-        if (arguments.length === 0) {
+        if (arguments.length === 0 && overlay.length !== 0) {
             this.focus() // otherwise search drop down covers searches
             last_logic = overlay.find(`#grid_${this.name}_logic`).val()
             last_search = ''
@@ -12084,10 +12167,10 @@ class w2grid extends w2base {
             last_logic  = logic
             for (let i = 0; i < field.length; i++) {
                 let data = field[i]
-                if (typeof data.value == 'number') data.operator = this.defaultOperator.number
-                if (typeof data.value == 'string') data.operator = this.defaultOperator.text
-                if (Array.isArray(data.value)) data.operator = this.defaultOperator.enum
-                if (w2utils.isDate(data.value)) data.operator = this.defaultOperator.date
+                if (typeof data.value == 'number' && data.operator == null) data.operator = this.defaultOperator.number
+                if (typeof data.value == 'string' && data.operator == null) data.operator = this.defaultOperator.text
+                if (Array.isArray(data.value) && data.operator == null) data.operator = this.defaultOperator.enum
+                if (w2utils.isDate(data.value) && data.operator == null) data.operator = this.defaultOperator.date
                 // merge current field and search if any
                 searchData.push(data)
             }
@@ -12116,7 +12199,7 @@ class w2grid extends w2base {
         this.searchClose()
         // apply search
         if (url) {
-            this.last.xhr_offset = 0
+            this.last.fetch.offset = 0
             this.reload()
         } else {
             // local search
@@ -12425,7 +12508,7 @@ class w2grid extends w2base {
         }
         return false
     }
-    searchReset(noRefresh) {
+    searchReset(noReload) {
         let searchData = []
         let hasHiddenSearches = false
         // add hidden searches
@@ -12469,7 +12552,7 @@ class w2grid extends w2base {
             }
         }
         this.last.multi      = false
-        this.last.xhr_offset = 0
+        this.last.fetch.offset = 0
         // reset scrolling position
         this.last.scrollTop         = 0
         this.last.scrollLeft        = 0
@@ -12480,7 +12563,7 @@ class w2grid extends w2base {
         let all = input.val('').get(0)
         if (all._w2field) { all._w2field.reset() }
         // apply search
-        if (!noRefresh) this.reload()
+        if (!noReload) this.reload()
         // event after
         edata.finish()
     }
@@ -12558,12 +12641,12 @@ class w2grid extends w2base {
     }
     // clears records and related params
     clear(noRefresh) {
-        this.total           = 0
-        this.records         = []
-        this.summary         = []
-        this.last.xhr_offset = 0 // need this for reload button to work on remote data set
-        this.last.idCache    = {} // optimization to free memory
-        this.last.selection   = { indexes: [], columns: {} }
+        this.total   = 0
+        this.records = []
+        this.summary = []
+        this.last.fetch.offset = 0 // need this for reload button to work on remote data set
+        this.last.idCache   = {} // optimization to free memory
+        this.last.selection = { indexes: [], columns: {} }
         this.reset(true)
         // refresh
         if (!noRefresh) this.refresh()
@@ -12595,11 +12678,11 @@ class w2grid extends w2base {
     load(url, callBack) {
         if (url == null) {
             console.log('ERROR: You need to provide url argument when calling .load() method of "'+ this.name +'" object.')
-            return
+            return new Promise((resolve, reject) => { reject() })
         }
         // default action
         this.clear(true)
-        this.request('get', {}, url, callBack)
+        return this.request('load', {}, url, callBack)
     }
     reload(callBack) {
         let grid = this
@@ -12607,7 +12690,7 @@ class w2grid extends w2base {
         grid.selectionSave()
         if (url) {
             // need to remember selection (not just last.selection object)
-            this.load(url, () => {
+            return this.load(url, () => {
                 grid.selectionRestore()
                 if (typeof callBack == 'function') callBack()
             })
@@ -12616,21 +12699,70 @@ class w2grid extends w2base {
             this.localSearch()
             this.selectionRestore()
             if (typeof callBack == 'function') callBack({ status: 'success' })
+            return new Promise(resolve => { resolve() })
         }
     }
-    request(cmd, add_params, url, callBack) {
-        if (add_params == null) add_params = {}
+    prepareParams(url, fetchOptions) {
+        let dataType = this.dataType ?? w2utils.settings.dataType
+        let postParams = fetchOptions.body
+        switch (dataType) {
+            case 'HTTPJSON':
+                postParams = { request: postParams }
+                if (['PUT', 'DELETE'].includes(fetchOptions.method)) {
+                    fetchOptions.method = 'POST';
+                }
+                body2params()
+                break
+            case 'HTTP':
+                if (['PUT', 'DELETE'].includes(fetchOptions.method)) {
+                    fetchOptions.method = 'POST';
+                }
+                body2params()
+                break
+            case 'RESTFULL':
+                if (['PUT', 'DELETE'].includes(fetchOptions.method)) {
+                    fetchOptions.headers['Content-Type'] = 'application/json'
+                } else {
+                    body2params()
+                }
+                break
+            case 'JSON':
+                if (fetchOptions.method == 'GET') {
+                    postParams = { request: postParams }
+                    body2params()
+                } else {
+                    fetchOptions.headers['Content-Type'] = 'application/json'
+                    fetchOptions.method = 'POST'
+                }
+                break
+        }
+        fetchOptions.body = typeof fetchOptions.body == 'string' ? fetchOptions.body : JSON.stringify(fetchOptions.body);
+        return fetchOptions
+        function body2params() {
+            Object.keys(postParams).forEach(key => {
+                let param = postParams[key]
+                if (typeof param == 'object') param = JSON.stringify(param)
+                url.searchParams.append(key, param)
+            })
+            delete fetchOptions.body
+        }
+    }
+    request(action, postData, url, callBack) {
+        let self = this
+        let resolve, reject
+        let requestProm = new Promise((res, rej) => { resolve = res; reject = rej })
+        if (postData == null) postData = {}
         if (!url) url = this.url
-        if (!url) return
+        if (!url) return new Promise((resolve, reject) => { reject() })
         // build parameters list
         if (!w2utils.isInt(this.offset)) this.offset = 0
-        if (!w2utils.isInt(this.last.xhr_offset)) this.last.xhr_offset = 0
+        if (!w2utils.isInt(this.last.fetch.offset)) this.last.fetch.offset = 0
         // add list params
         let edata
         let params = {
-            limit       : this.limit,
-            offset      : parseInt(this.offset) + parseInt(this.last.xhr_offset),
-            searchLogic : this.last.logic,
+            limit: this.limit,
+            offset: parseInt(this.offset) + parseInt(this.last.fetch.offset),
+            searchLogic: this.last.logic,
             search: this.searchData.map((search) => {
                 let _search = w2utils.clone(search)
                 if (this.searchMap && this.searchMap[_search.field]) _search.field = this.searchMap[_search.field]
@@ -12651,31 +12783,37 @@ class w2grid extends w2base {
         }
         // append other params
         w2utils.extend(params, this.postData)
-        w2utils.extend(params, add_params)
+        w2utils.extend(params, postData)
         // other actions
-        if (cmd == 'delete' || cmd == 'save') {
+        if (action == 'delete' || action == 'save') {
             delete params.limit
             delete params.offset
-            params.action = cmd
-            if (cmd == 'delete') {
+            params.action = action
+            if (action == 'delete') {
                 params[this.recid || 'recid'] = this.getSelection()
             }
         }
         // event before
-        if (cmd == 'get') {
-            edata = this.trigger('request', { target: this.name, url, postData: params, httpHeaders: this.httpHeaders })
-            if (edata.isCancelled === true) { if (typeof callBack == 'function') callBack({ status: 'error', message: w2utils.lang('Request aborted.') }); return }
+        if (action == 'load') {
+            edata = this.trigger('request', { target: this.name, url, postData: params, httpMethod: 'GET',
+                httpHeaders: this.httpHeaders })
+            if (edata.isCancelled === true) return new Promise((resolve, reject) => { reject() })
         } else {
-            edata = { url, postData: params, httpHeaders: this.httpHeaders }
+            edata = { detail: {
+                url,
+                postData: params,
+                httpMethod: action == 'save' ? 'PUT' : 'DELETE',
+                httpHeaders: this.httpHeaders
+            }}
         }
         // call server to get data
-        if (this.last.xhr_offset === 0) {
+        if (this.last.fetch.offset === 0) {
             this.lock(w2utils.lang(this.msgRefresh), true)
         }
-        if (this.last.xhr) try { this.last.xhr.abort() } catch (e) {}
+        if (this.last.fetch.controller) try { this.last.fetch.controller.abort() } catch (e) {}
         // URL
         url = edata.detail.url
-        switch (cmd) {
+        switch (action) {
             case 'save':
                 if (url?.save) url = url.save
                 break
@@ -12695,136 +12833,125 @@ class w2grid extends w2base {
                 }
             }
         }
+        url = new URL(url, location)
         // ajax options
-        let ajaxOptions = {
-            type     : 'GET',
-            url      : url,
-            data     : edata.detail.postData,
-            headers  : edata.detail.httpHeaders,
-            dataType : 'json' // expected data type from server
-        }
-        let dataType = this.dataType || w2utils.settings.dataType
-        switch (dataType) {
-            case 'HTTP':
-                ajaxOptions.data = (typeof ajaxOptions.data == 'object' ? String($.param(ajaxOptions.data, false)).replace(/%5B/g, '[').replace(/%5D/g, ']') : ajaxOptions.data)
-                break
-            case 'HTTPJSON':
-                ajaxOptions.data = { request: JSON.stringify(ajaxOptions.data) }
-                break
-            case 'RESTFULL':
-                ajaxOptions.type = 'GET'
-                if (cmd == 'save') ajaxOptions.type = 'PUT' // so far it is always update
-                if (cmd == 'delete') ajaxOptions.type = 'DELETE'
-                ajaxOptions.data = (typeof ajaxOptions.data == 'object' ? String($.param(ajaxOptions.data, false)).replace(/%5B/g, '[').replace(/%5D/g, ']') : ajaxOptions.data)
-                break
-            case 'RESTFULLJSON':
-                ajaxOptions.type = 'GET'
-                if (cmd == 'save') ajaxOptions.type = 'PUT' // so far it is always update
-                if (cmd == 'delete') ajaxOptions.type = 'DELETE'
-                ajaxOptions.data        = JSON.stringify(ajaxOptions.data)
-                ajaxOptions.contentType = 'application/json'
-                break
-            case 'JSON':
-                ajaxOptions.type        = 'POST'
-                ajaxOptions.data        = JSON.stringify(ajaxOptions.data)
-                ajaxOptions.contentType = 'application/json'
-                break
-        }
-        if (this.method) ajaxOptions.type = this.method
-        this.last.xhr_cmd   = cmd
-        this.last.xhr_start = Date.now()
-        this.last.loaded    = false
-        this.last.xhr       = jQuery.ajax(ajaxOptions)
-            .done((data, status, xhr) => {
-                this.requestComplete(status, xhr, cmd, callBack)
-            })
-            .fail((xhr, status, error) => {
-                // trigger event
-                let errorObj = { status: status, error: error, rawResponseText: xhr.responseText }
-                let edata2   = this.trigger('error', { error: errorObj, xhr: xhr })
-                if (edata2.isCancelled === true) return
-                // default behavior
-                if (status != 'abort') { // it can be aborted by the grid itself
-                    let data
-                    try { data = typeof xhr.responseJSON === 'object' ? xhr.responseJSON : JSON.parse(xhr.responseText) } catch (e) {}
-                    console.log('ERROR: Server communication failed.',
-                        '\n   EXPECTED:', { status: 'success', total: 5, records: [{ recid: 1, field: 'value' }] },
-                        '\n         OR:', { status: 'error', message: 'error message' },
-                        '\n   RECEIVED:', typeof data == 'object' ? data : xhr.responseText)
-                    this.requestComplete('error', xhr, cmd, callBack)
+        let fetchOptions = this.prepareParams(url, {
+            method: edata.detail.httpMethod,
+            headers: edata.detail.httpHeaders,
+            body: edata.detail.postData
+        })
+        Object.assign(this.last.fetch, {
+            action: action,
+            options: fetchOptions,
+            controller: new AbortController(),
+            start: Date.now(),
+            loaded: false
+        })
+        fetchOptions.signal = this.last.fetch.controller.signal
+        fetch(url, fetchOptions)
+            .catch(processError)
+            .then(resp => {
+                if (resp == null) return // request aborted
+                if (resp?.status != 200) {
+                    processError(resp ?? {})
+                    return
                 }
-                // event after
-                edata2.finish()
+                self.unlock()
+                resp.json()
+                    .catch(processError)
+                    .then(data => {
+                        this.requestComplete(data, action, callBack, resolve, reject)
+                    })
             })
-        if (cmd == 'get') {
+        if (action == 'load') {
             // event after
             edata.finish()
         }
+        return requestProm
+        function processError(response) {
+            if (response?.name === 'AbortError') {
+                // request was aborted by the grid
+                return
+            }
+            self.unlock()
+            // trigger event
+            let edata2 = self.trigger('error', { response, lastFetch: self.last.fetch })
+            if (edata2.isCancelled === true) return
+            // default behavior
+            if (response.status && response.status != 200) {
+                self.error(response.status + ': ' + response.statusText)
+            } else {
+                console.log('ERROR: Server communication failed.',
+                    '\n   EXPECTED:', { total: 5, records: [{ recid: 1, field: 'value' }] },
+                    '\n         OR:', { error: true, message: 'error message' })
+                self.requestComplete({ error: true, message: 'HTTP Request error', response }, action, callBack, resolve, reject)
+            }
+            // event after
+            edata2.finish()
+        }
     }
-    requestComplete(status, xhr, cmd, callBack) {
-        this.unlock()
-        this.last.xhr_response = (Date.now() - this.last.xhr_start)/1000
+    requestComplete(data, action, callBack, resolve, reject) {
+        let error = data.error ?? false
+        if (data.error == null && data.status === 'error') error = true
+        this.last.fetch.response = (Date.now() - this.last.fetch.start)/1000
         setTimeout(() => {
             if (this.show.statusResponse) {
-                this.status(w2utils.lang('Server Response ${count} seconds', {count: this.last.xhr_response}))
+                this.status(w2utils.lang('Server Response ${count} seconds', {count: this.last.fetch.response}))
             }
         }, 10)
-        this.last.pull_more    = false
+        this.last.pull_more = false
         this.last.pull_refresh = true
         // event before
         let event_name = 'load'
-        if (this.last.xhr_cmd == 'save') event_name = 'save'
-        if (this.last.xhr_cmd == 'delete') event_name = 'delete'
-        let edata = this.trigger(event_name, { target: this.name, xhr: xhr, status: status })
+        if (this.last.fetch.action == 'save') event_name = 'save'
+        if (this.last.fetch.action == 'delete') event_name = 'delete'
+        let edata = this.trigger(event_name, { target: this.name, error, data, lastFetch: this.last.fetch })
         if (edata.isCancelled === true) {
-            if (typeof callBack == 'function') callBack({ status: 'error', message: w2utils.lang('Request aborted.') })
+            reject()
             return
         }
         // parse server response
-        let data
-        if (status != 'error') {
+        if (!error) {
             // default action
             if (typeof this.parser == 'function') {
-                data = this.parser(xhr.responseJSON)
+                data = this.parser(data)
                 if (typeof data != 'object') {
                     console.log('ERROR: Your parser did not return proper object')
                 }
             } else {
-                data = xhr.responseJSON
                 if (data == null) {
                     data = {
-                        status       : 'error',
-                        message      : w2utils.lang(this.msgNotJSON),
-                        responseText : xhr.responseText
+                        error: true,
+                        message: w2utils.lang(this.msgNotJSON),
                     }
                 } else if (Array.isArray(data)) {
                     // if it is plain array, assume these are records
                     data = {
-                        status  : 'success',
-                        records : data,
-                        total   : data.length
+                        error,
+                        records: data,
+                        total: data.length
                     }
                 }
             }
-            if (data.status == 'error') {
+            if (data.error) {
                 this.error(data.message)
-            } else if (cmd == 'get') {
+            } else if (action == 'load') {
                 if (data.total == null) data.total = -1
                 if (data.records == null) {
                     data.records = []
                 }
                 if (data.records.length == this.limit) {
-                    let loaded            = this.records.length + data.records.length
-                    this.last.xhr_hasMore = (loaded == this.total ? false : true)
+                    let loaded = this.records.length + data.records.length
+                    this.last.fetch.hasMore = (loaded == this.total ? false : true)
                 } else {
-                    this.last.xhr_hasMore = false
-                    this.total            = this.offset + this.last.xhr_offset + data.records.length
+                    this.last.fetch.hasMore = false
+                    this.total = this.offset + this.last.fetch.offset + data.records.length
                 }
-                if (!this.last.xhr_hasMore) {
+                if (!this.last.fetch.hasMore) {
                     // if no more records, then hide spinner
                     query(this.box).find('#grid_'+ this.name +'_rec_more, #grid_'+ this.name +'_frec_more').hide()
                 }
-                if (this.last.xhr_offset === 0) {
+                if (this.last.fetch.offset === 0) {
                     this.records = []
                     this.summary = []
                 } else {
@@ -12832,10 +12959,10 @@ class w2grid extends w2base {
                         let grid = this
                         this.message(w2utils.lang(this.msgNeedReload))
                             .ok(() => {
-                                delete grid.last.xhr_offset
+                                delete grid.last.fetch.offset
                                 grid.reload()
                             })
-                        return
+                        return new Promise(resolve => { resolve() })
                     }
                 }
                 if (w2utils.isInt(data.total)) this.total = parseInt(data.total)
@@ -12868,18 +12995,17 @@ class w2grid extends w2base {
                         this.summary.push(rec)
                     })
                 }
-            } else if (cmd == 'delete') {
+            } else if (action == 'delete') {
                 this.reset() // unselect old selections
-                this.reload()
-                return
+                return this.reload()
             }
         } else {
             data = {
-                status       : 'error',
-                message      : w2utils.lang(this.msgAJAXerror),
-                responseText : xhr.responseText
+                error, data,
+                message: w2utils.lang(this.msgHTTPError),
             }
-            this.error(w2utils.lang(this.msgAJAXerror))
+            this.error(w2utils.lang(this.msgHTTPError))
+            reject(data)
         }
         // event after
         let url = this.url?.get ?? this.url
@@ -12889,7 +13015,7 @@ class w2grid extends w2base {
         }
         this.total = parseInt(this.total)
         // do not refresh if loading on infinite scroll
-        if (this.last.xhr_offset === 0) {
+        if (this.last.fetch.offset === 0) {
             this.refresh()
         } else {
             this.scroll()
@@ -12897,13 +13023,14 @@ class w2grid extends w2base {
         }
         // call back
         if (typeof callBack == 'function') callBack(data) // need to be before event:after
+        resolve(data)
         // after event
         edata.finish()
-        this.last.loaded = true
+        this.last.fetch.loaded = true
     }
     error(msg) {
         // let the management of the error outside of the grid
-        let edata = this.trigger('error', { target: this.name, message: msg , xhr: this.last.xhr })
+        let edata = this.trigger('error', { target: this.name, message: msg })
         if (edata.isCancelled === true) {
             return
         }
@@ -12964,14 +13091,11 @@ class w2grid extends w2base {
         let url = this.url?.save ?? this.url
         // event before
         let edata = this.trigger('save', { target: this.name, changes: changes })
-        if (edata.isCancelled === true) {
-            if (url && typeof callBack == 'function') callBack({ status: 'error', message: w2utils.lang('Request aborted.') })
-            return
-        }
+        if (edata.isCancelled === true) return
         if (url) {
             this.request('save', { 'changes' : edata.detail.changes }, null,
                 (data) => {
-                    if (data.status !== 'error') {
+                    if (!data.error) {
                         // only merge changes, if save was successful
                         this.mergeChanges()
                     }
@@ -13639,7 +13763,7 @@ class w2grid extends w2base {
         query(this.box).removeClass('w2ui-inactive').find('.w2ui-inactive').removeClass('w2ui-inactive')
         setTimeout(() => {
             let txt = query(this.box).find(`#grid_${this.name}_focus`).get(0)
-            if (document.activeElement != txt) {
+            if (txt && document.activeElement != txt) {
                 txt.focus()
             }
         }, 10)
@@ -13871,7 +13995,6 @@ class w2grid extends w2base {
                             obj.scrollIntoView(ind, prev, true)
                         }
                     } else {
-                        event.metaKey = false
                         obj.click({ recid: recid, column: prev }, event)
                         obj.scrollIntoView(ind, prev, true)
                     }
@@ -13925,7 +14048,6 @@ class w2grid extends w2base {
                             obj.scrollIntoView(ind, next, true)
                         }
                     } else {
-                        event.metaKey = false
                         obj.click({ recid: recid, column: next }, event)
                         obj.scrollIntoView(ind, next, true)
                     }
@@ -13975,7 +14097,7 @@ class w2grid extends w2base {
                     obj.selectNone(true) // no need to trigger select event
                     obj.click({ recid: obj.records[prev].recid, column: columns[0] }, event)
                 }
-                obj.scrollIntoView(prev, null, false, numRows != 1) // top align record
+                obj.scrollIntoView(prev, null, true, numRows != 1) // top align record
                 if (event.preventDefault) event.preventDefault()
             } else {
                 // if selected more then one, then select first
@@ -14021,7 +14143,7 @@ class w2grid extends w2base {
                     obj.selectNone(true) // no need to trigger select event
                     obj.click({ recid: obj.records[next].recid, column: columns[0] }, event)
                 }
-                obj.scrollIntoView(next, null, false, numRows != 1) // top align record
+                obj.scrollIntoView(next, null, true, numRows != 1) // top align record
                 cancel = true
             } else {
                 // if selected more then one, then select first
@@ -14086,7 +14208,7 @@ class w2grid extends w2base {
         let len = this.last.searchIds.length
         if (len > 0) ind = this.last.searchIds.indexOf(ind) // if search is applied
         // smooth or instant
-        records.css({ 'scroll-behavior': 'instant' })
+        records.css({ 'scroll-behavior': instant ? 'auto' : 'smooth' })
         // vertical
         if (recHeight < this.recordHeight * (len > 0 ? len : buffered) && records.length > 0) {
             // scroll to correct one
@@ -14296,8 +14418,7 @@ class w2grid extends w2base {
             // expand column
             let row1 = query(this.box).find('#grid_'+ this.name +'_rec_'+ recid +'_expanded')
             let row2 = query(this.box).find('#grid_'+ this.name +'_frec_'+ recid +'_expanded')
-            let innerHeight = row1.find(':scope div:first-child')[0].clientHeight
-            console.log(innerHeight)
+            let innerHeight = row1.find(':scope div:first-child')[0]?.clientHeight ?? 50
             if (row1[0].clientHeight < innerHeight) {
                 row1.css({ height: innerHeight + 'px' })
             }
@@ -14432,7 +14553,7 @@ class w2grid extends w2base {
         } else {
             // event after
             edata.finish({ direction })
-            this.last.xhr_offset = 0
+            this.last.fetch.offset = 0
             this.reload()
         }
     }
@@ -14871,7 +14992,7 @@ class w2grid extends w2base {
         if (this.multiSearch && this.searchData.length > 0) {
             if (query(this.box).find('.w2ui-grid-searches').length == 0) {
                 query(this.box).find('.w2ui-grid-toolbar')
-                    .css('height', (this.last._toolbar_height + 35) + 'px')
+                    .css('height', (this.last.toolbar_height + 35) + 'px')
                     .append(`<div id="grid_${this.name}_searches" class="w2ui-grid-searches"></div>`)
             }
             let searches = `
@@ -14932,7 +15053,7 @@ class w2grid extends w2base {
             query(this.box).find(`#grid_${this.name}_search_logic`).html(w2utils.lang(this.last.logic == 'AND' ? 'All' : 'Any'))
         } else {
             query(this.box).find('.w2ui-grid-toolbar')
-                .css('height', this.last._toolbar_height + 'px')
+                .css('height', this.last.toolbar_height + 'px')
                 .find('.w2ui-grid-searches')
                 .remove()
         }
@@ -14993,7 +15114,10 @@ class w2grid extends w2base {
             records.add(frecords)
                 .on('click', { delegate: 'tr' }, (event) => {
                     let recid = query(event.delegate).attr('recid')
-                    this.click(recid, event)
+                    // do not generate click if empty record is clicked
+                    if (recid != '-none-') {
+                        this.click(recid, event)
+                    }
                 })
                 .on('contextmenu', { delegate: 'tr' }, (event) => {
                     let recid = query(event.delegate).attr('recid')
@@ -15145,6 +15269,7 @@ class w2grid extends w2base {
             .on('click.body-global', { delegate: '.w2ui-editable-checkbox' }, event => {
                 let dt = query(event.delegate).data()
                 this.editChange.call(this, event.delegate, dt.changeind, dt.colind, event)
+                this.updateToolbar()
             })
         // show empty message
         if (this.records.length === 0 && this.msgEmpty) {
@@ -15223,7 +15348,7 @@ class w2grid extends w2base {
         // init toolbar
         this.initToolbar()
         if (this.toolbar != null) this.toolbar.render(query(this.box).find('#grid_'+ this.name +'_toolbar')[0])
-        this.last._toolbar_height = query(this.box).find(`#grid_${this.name}_toolbar`).prop('offsetHeight')
+        this.last.toolbar_height = query(this.box).find(`#grid_${this.name}_toolbar`).prop('offsetHeight')
         // re-init search_all
         if (this.last.field && this.last.field != 'all') {
             let sd = this.searchData
@@ -15384,7 +15509,7 @@ class w2grid extends w2base {
                         if (['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName)) {
                             target.focus()
                         } else {
-                            if ($input.get(0) !== document.active) $input.get(0).focus()
+                            if ($input.get(0) !== document.active) $input.get(0).focus({ preventScroll: true })
                         }
                     }
                 }, 50)
@@ -16620,16 +16745,17 @@ class w2grid extends w2base {
         }
         let html = ''
         operators.forEach(oper => {
-            let text = oper
+            let displayText = oper
+            let operValue = oper
             if (Array.isArray(oper)) {
-                text = oper[1]
-                oper = oper[0]
-                if (text == null) text = oper
+                displayText = oper[1]
+                operValue = oper[0]
             } else if (w2utils.isPlainObject(oper)) {
-                text = oper.text
-                oper = oper.oper
+                displayText = oper.text
+                operValue = oper.oper
             }
-            html += `<option value="${oper}">${w2utils.lang(text)}</option>\n`
+            if (displayText == null) displayText = oper
+            html += `<option name="11" value="${operValue}">${w2utils.lang(displayText)}</option>\n`
         })
         return html
     }
@@ -16728,7 +16854,7 @@ class w2grid extends w2base {
             if (typeof search.options != 'object') search.options = {}
             // operators
             let operator  = search.operator
-            let operators = this.operators[this.operatorsMap[search.type]] || []
+            let operators = [...this.operators[this.operatorsMap[search.type]]] || [] // need a copy
             if (search.operators) operators = search.operators
             // normalize
             if (w2utils.isPlainObject(operator)) operator = operator.oper
@@ -17300,11 +17426,11 @@ class w2grid extends w2base {
         // load more if needed
         let s = Math.floor(records.prop('scrollTop') / this.recordHeight)
         let e = s + Math.floor(records.prop('clientHeight') / this.recordHeight)
-        if (e + 10 > buffered && this.last.pull_more !== true && (buffered < this.total - this.offset || (this.total == -1 && this.last.xhr_hasMore))) {
+        if (e + 10 > buffered && this.last.pull_more !== true && (buffered < this.total - this.offset || (this.total == -1 && this.last.fetch.hasMore))) {
             if (this.autoLoad === true) {
                 this.last.pull_more   = true
-                this.last.xhr_offset += this.limit
-                this.request('get')
+                this.last.fetch.offset += this.limit
+                this.request('load')
             }
             // scroll function
             let more = query(this.box).find('#grid_'+ this.name +'_rec_more, #grid_'+ this.name +'_frec_more')
@@ -17316,8 +17442,8 @@ class w2grid extends w2base {
                     query(this).find('td').html('<div><div style="width: 20px; height: 20px;" class="w2ui-spinner"></div></div>')
                     // load more
                     obj.last.pull_more   = true
-                    obj.last.xhr_offset += obj.limit
-                    obj.request('get')
+                    obj.last.fetch.offset += obj.limit
+                    obj.request('load')
                 })
                 .find('td')
                 .html(obj.autoLoad
@@ -18141,14 +18267,14 @@ class w2grid extends w2base {
         return ret
     }
     selectionSave() {
-        this.last._selection = this.getSelection()
-        return this.last._selection
+        this.last.saved_sel = this.getSelection()
+        return this.last.saved_sel
     }
     selectionRestore(noRefresh) {
-        let time            = Date.now()
+        let time = Date.now()
         this.last.selection = { indexes: [], columns: {} }
-        let sel             = this.last.selection
-        let lst             = this.last._selection
+        let sel = this.last.selection
+        let lst = this.last.saved_sel
         if (lst) for (let i = 0; i < lst.length; i++) {
             if (w2utils.isPlainObject(lst[i])) {
                 // selectType: cell
@@ -18164,7 +18290,7 @@ class w2grid extends w2base {
                 if (tmp != null) sel.indexes.push(tmp)
             }
         }
-        delete this.last._selection
+        delete this.last.saved_sel
         if (noRefresh !== true) this.refresh()
         return Date.now() - time
     }
@@ -18183,6 +18309,7 @@ class w2grid extends w2base {
         }, options)
     }
 }
+
 /**
  * Part of w2ui 2.0 library
  *  - Dependencies: mQuery, w2utils, w2base, w2tabs, w2toolbar, w2tooltip, w2field
@@ -18206,6 +18333,10 @@ class w2grid extends w2base {
  *  - setFieldVallue(fieldName, value)
  *  - getValue(..., original) -- return original if any
  *  - added .hideErrors()
+ *  - reuqest, save, submit - return promises
+ *  - added prepareParams
+ *  - this.recid = null if no record needs to be pulled
+ *  - remove form.multiplart
  */
 
 class w2form extends w2base {
@@ -18220,12 +18351,11 @@ class w2form extends w2base {
         this.formHTML     = '' // form HTML (might be loaded from the url)
         this.page         = 0 // current page
         this.pageStyle    = ''
-        this.recid        = 0 // can be null or 0
+        this.recid        = null // if not null, then load record
         this.fields       = []
         this.actions      = {}
         this.record       = {}
         this.original     = null
-        this.method       = null // only used when not null, otherwise set based on w2utils.settings.dataType
         this.dataType     = null // only used when not null, otherwise from w2utils.settings.dataType
         this.postData     = {}
         this.httpHeaders  = {}
@@ -18235,11 +18365,11 @@ class w2form extends w2base {
         this.focus        = 0 // focus first or other element
         this.autosize     = true // autosize, if false the container must have a height set
         this.nestedFields = true // use field name containing dots as separator to look into object
-        this.multipart    = false
         this.tabindexBase = 0 // this will be added to the auto numbering
         this.isGenerated  = false
         this.last         = {
-            xhr: null, // jquery xhr requests
+            fetchCtrl: null,    // last fetch AbortController
+            fetchOptions: null, // last fetch options
             errors: []
         }
         this.onRequest    = null
@@ -18268,8 +18398,6 @@ class w2form extends w2base {
             'date', 'time', 'datetime', 'list', 'combo', 'enum', 'file']
         // mix in options
         w2utils.extend(this, options)
-        // When w2utils.settings.dataType is JSON, then we can convert the save request to multipart/form-data. So we can upload large files with the form
-        // The original body is JSON.stringified to __body
         // remember items
         let record   = options.record
         let original = options.original
@@ -18325,10 +18453,13 @@ class w2form extends w2base {
                 .then(text => {
                     this.formHTML = text
                     this.isGenerated = true
+                    if (this.box) this.render(this.box)
                 })
         } else if (!this.formURL && !this.formHTML) {
             this.formHTML    = this.generateHTML()
             this.isGenerated = true
+        } else if (this.formHTML) {
+            this.isGenerated = true;
         }
         // render if box specified
         if (typeof this.box == 'string') this.box = query(this.box).get(0)
@@ -18621,7 +18752,8 @@ class w2form extends w2base {
             case 'combo':
                 let item = value
                 // find item in options.items, if any
-                if (item?.id == null) {
+                console.log(field.options)
+                if (item?.id == null && Array.isArray(field.options?.items)) {
                     field.options.items.forEach(it => {
                         if (it.id === value) item = it
                     })
@@ -18765,12 +18897,13 @@ class w2form extends w2base {
     }
     reload(callBack) {
         let url = (typeof this.url !== 'object' ? this.url : this.url.get)
-        if (url && this.recid !== 0 && this.recid != null) {
+        if (url && this.recid != null) {
             // this.clear();
-            this.request(callBack)
+            return this.request(callBack) // returns promise
         } else {
             // this.refresh(); // no need to refresh
             if (typeof callBack === 'function') callBack()
+            return new Promise(resolve => { resolve() }) // resolved promise
         }
     }
     clear() {
@@ -18783,8 +18916,8 @@ class w2form extends w2base {
                 this.refresh(field)
             })
         } else {
-            this.recid    = 0
-            this.record   = {}
+            this.recid = null
+            this.record = {}
             this.original = null
             this.refresh()
             this.hideErrors()
@@ -18792,10 +18925,13 @@ class w2form extends w2base {
     }
     error(msg) {
         // let the management of the error outside of the form
-        let edata = this.trigger('error', { target: this.name, message: msg , xhr: this.last.xhr })
-        if (edata.isCancelled === true) {
-            return
-        }
+        let edata = this.trigger('error', {
+            target: this.name,
+            message: msg,
+            fetchCtrl: this.last.fetchCtrl,
+            fetchOptions: this.last.fetchOptions
+        })
+        if (edata.isCancelled === true) return
         // need a time out because message might be already up)
         setTimeout(() => { this.message(msg) }, 1)
         // event after
@@ -18890,15 +19026,17 @@ class w2form extends w2base {
             }
             // === check required - if field is '0' it should be considered not empty
             let val = this.getValue(field.field)
-            if (field.required && field.hidden !== true && !['div', 'custom', 'html', 'empty'].includes(field.type)
+            if (field.hidden !== true && field.required
+                    && !['div', 'custom', 'html', 'empty'].includes(field.type)
                     && (val == null || val === '' || (Array.isArray(val) && val.length === 0)
                         || (w2utils.isPlainObject(val) && Object.keys(val).length == 0))) {
                 errors.push({ field: field, error: w2utils.lang('Required field') })
             }
-            if (field.options && field.hidden !== true && field.options.minLength > 0
-                    && ['enum', 'list', 'combo'].indexOf(field.type) == -1 // since minLength is used there too
-                    && this.getValue(field.field).length < field.options.minLength) {
-                errors.push({ field: field, error: w2utils.lang('Field should be at least ${count} characters.', {count: field.options.minLength}) })
+            if (field.hidden !== true && field.options?.minLength > 0
+                    && !['enum', 'list', 'combo'].includes(field.type) // since minLength is used there for other purpose
+                    && (val == null || val.length < field.options.minLength)) {
+                errors.push({ field: field, error: w2utils.lang('Field should be at least ${count} characters.',
+                    { count: field.options.minLength })})
             }
         }
         // event before
@@ -18920,7 +19058,7 @@ class w2form extends w2base {
         if (errors.length <= 0) return
         // show errors
         this.goto(errors[0].field.page)
-        query(errors[0].field.$el).parents('.w2ui-field')[0].scrollIntoView(true)
+        query(errors[0].field.$el).parents('.w2ui-field')[0].scrollIntoView({ block: 'nearest', inline: 'nearest' })
         // show errors
         // show only for visible controls
         errors.forEach(error => {
@@ -19003,7 +19141,7 @@ class w2form extends w2base {
             }
             if (fld.type == 'file') {
                 let tmp = { nestedFields: true, record: data }
-                let val = this.getValue.call(tmp, fld.field)
+                let val = this.getValue.call(tmp, fld.field) ?? []
                 val.forEach(v => {
                     delete v.file
                     delete v.modified
@@ -19019,8 +19157,49 @@ class w2form extends w2base {
         }
         return data
     }
+    prepareParams(url, fetchOptions) {
+        let dataType = this.dataType ?? w2utils.settings.dataType
+        let postParams = fetchOptions.body
+        switch (dataType) {
+            case 'HTTPJSON':
+                postParams = { request: postParams }
+                body2params()
+                break
+            case 'HTTP':
+                body2params()
+                break
+            case 'RESTFULL':
+                if (fetchOptions.method == 'POST') {
+                    fetchOptions.headers['Content-Type'] = 'application/json'
+                } else {
+                    body2params()
+                }
+                break
+            case 'JSON':
+                if (fetchOptions.method == 'GET') {
+                    postParams = { request: postParams }
+                    body2params()
+                } else {
+                    fetchOptions.headers['Content-Type'] = 'application/json'
+                    fetchOptions.method = 'POST'
+                }
+                break
+        }
+        fetchOptions.body = typeof fetchOptions.body == 'string' ? fetchOptions.body : JSON.stringify(fetchOptions.body);
+        return fetchOptions
+        function body2params() {
+            Object.keys(postParams).forEach(key => {
+                let param = postParams[key]
+                if (typeof param == 'object') param = JSON.stringify(param)
+                url.searchParams.append(key, param)
+            })
+            delete fetchOptions.body
+        }
+    }
     request(postData, callBack) { // if (1) param then it is call back if (2) then postData and callBack
         let self = this
+        let resolve, reject
+        let responseProm = new Promise((res, rej) => { resolve = res; reject = rej })
         // check for multiple params
         if (typeof postData === 'function') {
             callBack = postData
@@ -19028,25 +19207,19 @@ class w2form extends w2base {
         }
         if (postData == null) postData = {}
         if (!this.url || (typeof this.url === 'object' && !this.url.get)) return
-        if (this.recid == null) this.recid = 0
         // build parameters list
         let params = {}
         // add list params
-        params.cmd   = 'get'
+        params.action = 'get'
         params.recid = this.recid
         params.name  = this.name
         // append other params
         w2utils.extend(params, this.postData)
         w2utils.extend(params, postData)
         // event before
-        let edata = this.trigger('request', { target: this.name, url: this.url, method: this.method,
+        let edata = this.trigger('request', { target: this.name, url: this.url, httpMethod: 'GET',
             postData: params, httpHeaders: this.httpHeaders })
-        if (edata.isCancelled === true) {
-            if (typeof callBack === 'function') {
-                callBack({ error: true, message: w2utils.lang('Request aborted.') })
-            }
-            return
-        }
+        if (edata.isCancelled === true) return
         // default action
         this.record = {}
         this.original = null
@@ -19054,8 +19227,7 @@ class w2form extends w2base {
         this.lock(w2utils.lang(this.msgRefresh))
         let url = edata.detail.url
         if (typeof url === 'object' && url.get) url = url.get
-        // TODO: cancel previous fetch
-        if (this.last.xhr) try { this.last.xhr.abort() } catch (e) {}
+        if (this.last.fetchCtrl) try { this.last.fetchCtrl.abort() } catch (e) {}
         // process url with routeData
         if (Object.keys(this.routeData).length != 0) {
             let info = w2utils.parseRoute(url)
@@ -19067,51 +19239,33 @@ class w2form extends w2base {
             }
         }
         url = new URL(url, location)
-        let fetchOptions = {
-            method: 'GET',
-            headers: edata.detail.httpHeaders
-        }
-        let postParams = edata.detail.postData
-        let dataType = edata.detail.dataType ?? this.dataType ?? w2utils.settings.dataType
-        dataType = 'HTTP'
-        switch (dataType) {
-            case 'HTTP':
-            case 'RESTFULL': {
-                Object.keys(postParams).forEach(key => url.searchParams.append(key, postParams[key]))
-                break
-            }
-            case 'HTTPJSON':
-            case 'RESTFULLJSON': {
-                postParams = { request: JSON.stringify(postParams) }
-                Object.keys(postParams).forEach(key => url.searchParams.append(key, postParams[key]))
-                break
-            }
-            case 'JSON': {
-                fetchOptions.method = 'POST'
-                fetchOptions.body = JSON.stringify(postParams)
-                fetchOptions.headers.contentType = 'application/json'
-                break
-            }
-        }
-        if (this.method) fetchOptions.method = this.method
-        if (edata.detail.method) fetchOptions.method = edata.detail.method
-        this.last.xhr = fetch(url, fetchOptions)
+        let fetchOptions = this.prepareParams(url, {
+            method: edata.detail.httpMethod,
+            headers: edata.detail.httpHeaders,
+            body: edata.detail.postData
+        })
+        this.last.fetchCtrl = new AbortController()
+        fetchOptions.signal = this.last.fetchCtrl.signal
+        this.last.fetchOptions = fetchOptions
+        fetch(url, fetchOptions)
             .catch(processError)
             .then((resp) => {
-                self.unlock()
-                if (resp.status != 200) {
-                    processError(resp)
-                    return
-                }
-                // event before
-                let edata = self.trigger('load', { target: self.name, xhr: this.last.xhr, data: resp })
-                if (edata.isCancelled === true) {
-                    if (typeof callBack === 'function') callBack({ error: true, message: w2utils.lang('Request aborted.') })
+                if (resp?.status != 200) {
+                    // if resp is undefined, it means request was aborted
+                    if (resp) processError(resp)
                     return
                 }
                 resp.json()
                     .catch(processError)
                     .then(data => {
+                        // event before
+                        let edata = self.trigger('load', {
+                            target: self.name,
+                            fetchCtrl: this.last.fetchCtrl,
+                            fetchOptions: this.last.fetchOptions,
+                            data: resp
+                        })
+                        if (edata.isCancelled === true) return
                         if (!data.record) {
                             data = {
                                 error: false,
@@ -19125,20 +19279,26 @@ class w2form extends w2base {
                             self.record = w2utils.clone(data.record)
                         }
                         // event after
+                        self.unlock();
                         edata.finish()
                         self.refresh()
                         self.setFocus()
                         // call back
                         if (typeof callBack === 'function') callBack(data)
+                        resolve(data)
                     })
             })
         // event after
         edata.finish()
-        return
+        return responseProm
         function processError(response) {
+            if (response.name === 'AbortError') {
+                // request was aborted by the form
+                return
+            }
             self.unlock()
             // trigger event
-            let edata2 = self.trigger('error', { response, xhr: self.last.xhr })
+            let edata2 = self.trigger('error', { response, fetchCtrl: self.last.fetchCtrl, fetchOptions: self.last.fetchOptions })
             if (edata2.isCancelled === true) return
             // default behavior
             if (response.status && response.status != 200) {
@@ -19151,6 +19311,7 @@ class w2form extends w2base {
             }
             // event after
             edata2.finish()
+            reject(response)
         }
     }
     submit(postData, callBack) {
@@ -19158,6 +19319,8 @@ class w2form extends w2base {
     }
     save(postData, callBack) {
         let self = this
+        let resolve, reject
+        let saveProm = new Promise((res, rej) => { resolve = res; reject = rej })
         // check for multiple params
         if (typeof postData === 'function') {
             callBack = postData
@@ -19176,31 +19339,21 @@ class w2form extends w2base {
         // build parameters list
         let params = {}
         // add list params
-        params.cmd   = 'save'
+        params.action = 'save'
         params.recid = self.recid
-        params.name  = self.name
+        params.name = self.name
         // append other params
         w2utils.extend(params, self.postData)
         w2utils.extend(params, postData)
-        // clear up files
-        if (!self.multipart)
-            self.fields.forEach((item) => {
-                if (item.type === 'file' && Array.isArray(self.getValue(item.field))) {
-                    self.getValue(item.field).forEach((fitem) => {
-                        delete fitem.file
-                    })
-                }
-            })
         params.record = w2utils.clone(self.record)
         // event before
-        let edata = self.trigger('submit', { target: self.name, url: self.url, method: self.method,
+        let edata = self.trigger('submit', { target: self.name, url: self.url, httpMethod: 'POST',
             postData: params, httpHeaders: self.httpHeaders })
         if (edata.isCancelled === true) return
         // default action
         let url = edata.detail.url
         if (typeof url === 'object' && url.save) url = url.save
-        // TODO: abort if called twice
-        // if (self.last.xhr) try { self.last.xhr.abort() } catch (e) {}
+        if (self.last.fetchCtrl) self.last.fetchCtrl.abort()
         // process url with routeData
         if (Object.keys(self.routeData).length > 0) {
             let info = w2utils.parseRoute(url)
@@ -19212,103 +19365,34 @@ class w2form extends w2base {
             }
         }
         url = new URL(url, location)
-        let fetchOptions = {
-            method: 'POST',
+        let fetchOptions = this.prepareParams(url, {
+            method: edata.detail.httpMethod,
             headers: edata.detail.httpHeaders,
             body: edata.detail.postData
-            // TODO: check multiplart save
-            // xhr() {
-            //     let xhr = new window.XMLHttpRequest()
-            //     // upload
-            //     xhr.upload.addEventListener('progress', function progress(evt) {
-            //         if (evt.lengthComputable) {
-            //             let edata3 = self.trigger('progress', { total: evt.total, loaded: evt.loaded, originalEvent: evt })
-            //             if (edata3.isCancelled === true) return
-            //             // only show % if it takes time
-            //             let percent = Math.round(evt.loaded / evt.total * 100)
-            //             if ((percent && percent != 100) || $(self.box).find('#'+ self.name + '_progress').text() != '') {
-            //                 $(self.box).find('#'+ self.name + '_progress').text(''+ percent + '%')
-            //             }
-            //             // event after
-            //             edata3.finish()
-            //         }
-            //     }, false)
-            //     return xhr
-            // }
-        }
-        let dataType = edata.detail.dataType ?? this.dataType ?? w2utils.settings.dataType
-        let postParams = edata.detail.postData
-        switch (dataType) {
-            case 'HTTP':
-                fetchOptions.type = 'GET'
-                Object.keys(postParams).forEach(key => url.searchParams.append(key, postParams[key]))
-                delete fetchOptions.body
-                break
-            case 'HTTPJSON':
-                fetchOptions.type = 'GET'
-                postParams = JSON.stringify({ request: postParams })
-                Object.keys(postParams).forEach(key => url.searchParams.append(key, postParams[key]))
-                delete fetchOptions.body
-                break
-            case 'RESTFULL':
-                break
-            case 'RESTFULLJSON':
-                fetchOptions.body = JSON.stringify(fetchOptions.body)
-                fetchOptions.headers.contentType = 'application/json'
-                break
-            case 'JSON':
-                fetchOptions.headers.contentType = 'application/json'
-                if (!self.multipart) {
-                    fetchOptions.body = JSON.stringify(fetchOptions.body)
-                } else {
-                    // TODO: check file upload processing
-                    function append(fd, dob, fob, p){
-                        if (p == null) p = ''
-                        function isObj(dob, fob, p){
-                            if (typeof dob === 'object' && dob instanceof File) fd.append(p, dob)
-                            if (typeof dob === 'object'){
-                                if (!!dob && dob.constructor === Array) {
-                                    for (let i = 0; i < dob.length; i++) {
-                                        let aux_fob = !!fob ? fob[i] : fob
-                                        isObj(dob[i], aux_fob, p+'['+i+']')
-                                    }
-                                } else {
-                                    append(fd, dob, fob, p)
-                                }
-                            }
-                        }
-                        for(let prop in dob){
-                            let aux_p   = p == '' ? prop : '${p}[${prop}]'
-                            let aux_fob = !!fob ? fob[prop] : fob
-                            isObj(dob[prop], aux_fob, aux_p)
-                        }
-                    }
-                    let fdata = new FormData()
-                    fdata.append('__body', JSON.stringify(fetchOptions.body))
-                    append(fdata, fetchOptions.body)
-                    fetchOptions.body = fdata
-                    // fetchOptions.contentType = false
-                    // fetchOptions.processData = false
-                }
-                break
-        }
-        if (this.method) fetchOptions.method = this.method
-        if (edata.detail.method) fetchOptions.method = edata.detail.method
-        this.last.xhr = fetch(url, fetchOptions)
+        })
+        this.last.fetchCtrl = new AbortController()
+        fetchOptions.signal = this.last.fetchCtrl.signal
+        this.last.fetchOptions = fetchOptions
+        fetch(url, fetchOptions)
             .catch(processError)
             .then(resp => {
                 self.unlock()
-                if (resp.status != 200) {
-                    processError(resp)
+                if (resp?.status != 200) {
+                    processError(resp ?? {})
                     return
                 }
-                // event before
-                let edata = self.trigger('save', { target: self.name, xhr: this.last.xhr, data: resp })
-                if (edata.isCancelled === true) return
                 // parse server response
                 resp.json()
                     .catch(processError)
                     .then(data => {
+                        // event before
+                        let edata = self.trigger('save', {
+                            target: self.name,
+                            fetchCtrl: this.last.fetchCtrl,
+                            fetchOptions: this.last.fetchOptions,
+                            data
+                        })
+                        if (edata.isCancelled === true) return
                         // server error, not due to network issues
                         if (data.error === true) {
                             self.error(w2utils.lang(data.message))
@@ -19319,16 +19403,21 @@ class w2form extends w2base {
                         edata.finish()
                         self.refresh()
                         // call back
-                        if (typeof callBack === 'function') callBack(data, this.last.xhr)
+                        if (typeof callBack === 'function') callBack(data)
+                        resolve(data)
                     })
             })
         // event after
         edata.finish()
-        return
+        return saveProm
         function processError(response) {
+            if (response?.name === 'AbortError') {
+                // request was aborted by the form
+                return
+            }
             self.unlock()
             // trigger event
-            let edata2 = self.trigger('error', { response, xhr: self.last.xhr })
+            let edata2 = self.trigger('error', { response, fetchCtrl: self.last.fetchCtrl, fetchOptions: self.last.fetchOptions })
             if (edata2.isCancelled === true) return
             // default behavior
             if (response.status && response.status != 200) {
@@ -19341,6 +19430,7 @@ class w2form extends w2base {
             }
             // event after
             edata2.finish()
+            reject()
         }
     }
     lock(msg, showSpinner) {
@@ -20097,8 +20187,8 @@ class w2form extends w2base {
         // after render actions
         this.resize()
         let url = (typeof this.url !== 'object' ? this.url : this.url.get)
-        if (url && this.recid !== 0 && this.recid != null) {
-            this.request()
+        if (url && this.recid != null) {
+            this.request().catch(error => this.refresh()) // even if there was error, still need refresh
         } else {
             this.refresh()
         }
@@ -20375,13 +20465,13 @@ class w2field extends w2base {
                 defaults = {
                     items           : [],
                     selected        : {},
-                    url             : null, // url to pull data from // TODO: implement
-                    recId           : null, // map retrieved data from url to id, can be string or function
-                    recText         : null, // map retrieved data from url to text, can be string or function
-                    method          : null, // default comes from w2utils.settings.dataType
-                    interval        : 350,  // number of ms to wait before sending server call on search
+                    url             : null,   // url to pull data from // TODO: implement
+                    recId           : null,   // map retrieved data from url to id, can be string or function
+                    recText         : null,   // map retrieved data from url to text, can be string or function
+                    method          : null,   // default httpMethod
+                    interval        : 350,    // number of ms to wait before sending server call on search
                     postData        : {},
-                    minLength       : 1,    // min number of chars when trigger search
+                    minLength       : 1,      // min number of chars when trigger search
                     cacheMax        : 250,
                     maxDropHeight   : 350,    // max height for drop down menu
                     maxDropWidth    : null,   // if null then auto set
@@ -20436,42 +20526,42 @@ class w2field extends w2base {
                 break
             case 'enum':
                 defaults = {
-                    items           : [], // id, text, tooltip, icon
+                    items           : [],    // id, text, tooltip, icon
                     selected        : [],
-                    max             : 0, // max number of selected items, 0 - unlimited
-                    url             : null, // not implemented
-                    recId           : null, // map retrieved data from url to id, can be string or function
-                    recText         : null, // map retrieved data from url to text, can be string or function
-                    interval        : 350, // number of ms to wait before sending server call on search
-                    method          : null, // default comes from w2utils.settings.dataType
+                    max             : 0,     // max number of selected items, 0 - unlimited
+                    url             : null,  // not implemented
+                    recId           : null,  // map retrieved data from url to id, can be string or function
+                    recText         : null,  // map retrieved data from url to text, can be string or function
+                    interval        : 350,   // number of ms to wait before sending server call on search
+                    method          : null,  // default httpMethod
                     postData        : {},
-                    minLength       : 1, // min number of chars when trigger search
+                    minLength       : 1,     // min number of chars when trigger search
                     cacheMax        : 250,
-                    maxItemWidth    : 250, // max width for a single item
-                    maxDropHeight   : 350, // max height for drop down menu
-                    maxDropWidth    : null, // if null then auto set
+                    maxItemWidth    : 250,   // max width for a single item
+                    maxDropHeight   : 350,   // max height for drop down menu
+                    maxDropWidth    : null,  // if null then auto set
                     match           : 'contains', // ['contains', 'is', 'begins', 'ends']
                     align           : '',    // align drop down related to search field
                     altRows         : true,  // alternate row color
                     openOnFocus     : false, // if to show overlay onclick or when typing
                     markSearch      : false,
-                    renderDrop      : null, // render function for drop down item
-                    renderItem      : null, // render selected item
-                    compare         : null, // compare function for filtering
-                    filter          : true, // alias for compare
-                    hideSelected    : true, // hide selected item from drop down
-                    style           : '',   // style for container div
-                    onSearch        : null, // when search needs to be performed
-                    onRequest       : null, // when request is submitted
-                    onLoad          : null, // when data is received
-                    onError         : null, // when data fails to load due to server error or other failure modes
-                    onClick         : null, // when an item is clicked
-                    onAdd           : null, // when an item is added
-                    onNew           : null, // when new item should be added
-                    onRemove        : null, // when an item is removed
-                    onMouseEnter    : null, // when an item is mouse over
-                    onMouseLeave    : null, // when an item is mouse out
-                    onScroll        : null  // when div with selected items is scrolled
+                    renderDrop      : null,  // render function for drop down item
+                    renderItem      : null,  // render selected item
+                    compare         : null,  // compare function for filtering
+                    filter          : true,  // alias for compare
+                    hideSelected    : true,  // hide selected item from drop down
+                    style           : '',    // style for container div
+                    onSearch        : null,  // when search needs to be performed
+                    onRequest       : null,  // when request is submitted
+                    onLoad          : null,  // when data is received
+                    onError         : null,  // when data fails to load due to server error or other failure modes
+                    onClick         : null,  // when an item is clicked
+                    onAdd           : null,  // when an item is added
+                    onNew           : null,  // when new item should be added
+                    onRemove        : null,  // when an item is removed
+                    onMouseEnter    : null,  // when an item is mouse over
+                    onMouseLeave    : null,  // when an item is mouse out
+                    onScroll        : null   // when div with selected items is scrolled
                 }
                 options  = w2utils.extend({}, defaults, options, { suffix: '' })
                 if (typeof options.items == 'function') {
@@ -20487,22 +20577,22 @@ class w2field extends w2base {
                 defaults     = {
                     selected      : [],
                     max           : 0,
-                    maxSize       : 0, // max size of all files, 0 - unlimited
-                    maxFileSize   : 0, // max size of a single file, 0 -unlimited
-                    maxItemWidth  : 250, // max width for a single item
-                    maxDropHeight : 350, // max height for drop down menu
+                    maxSize       : 0,    // max size of all files, 0 - unlimited
+                    maxFileSize   : 0,    // max size of a single file, 0 -unlimited
+                    maxItemWidth  : 250,  // max width for a single item
+                    maxDropHeight : 350,  // max height for drop down menu
                     maxDropWidth  : null, // if null then auto set
                     readContent   : true, // if true, it will readAsDataURL content of the file
                     silent        : true,
                     align         : 'both', // same width as control
                     altRows       : true, // alternate row color
                     renderItem    : null, // render selected item
-                    style         : '', // style for container div
+                    style         : '',   // style for container div
                     onClick       : null, // when an item is clicked
                     onAdd         : null, // when an item is added
                     onRemove      : null, // when an item is removed
                     onMouseEnter  : null, // when an item is mouse over
-                    onMouseLeave  : null // when an item is mouse out
+                    onMouseLeave  : null  // when an item is mouse out
                 }
                 options = w2utils.extend({}, defaults, options)
                 this.options = options
@@ -20584,7 +20674,7 @@ class w2field extends w2base {
     }
     refresh() {
         let options = this.options
-        let time    = (new Date()).getTime()
+        let time    = Date.now()
         let styles  = getComputedStyle(this.el)
         // enum
         if (this.type == 'list') {
@@ -20830,7 +20920,7 @@ class w2field extends w2base {
             }
             this.resize()
         }
-        return (new Date()).getTime() - time
+        return Date.now() - time
     }
     // resizing width of list, enum, file controls
     resize() {
@@ -20960,7 +21050,7 @@ class w2field extends w2base {
             // if default group symbol does not match - replase it
             let group = parseInt(1000).toLocaleString(w2utils.settings.locale, { useGrouping: true }).slice(1, 2)
             if (group !== this.options.groupSymbol) {
-                val = val.replace(new RegExp(group, 'g'), this.options.groupSymbol)
+                val = val.replaceAll(group, this.options.groupSymbol)
             }
         }
         return val
@@ -21899,10 +21989,8 @@ class w2field extends w2base {
 
 // Register jQuery plugins
 (function($) {
-    // if jQuery is not defined, then exit
-    if (!$) return
     // register globals if needed
-    $.w2globals = function() {
+    let w2globals = function() {
         (function (win, obj) {
             Object.keys(obj).forEach(key => {
                 win[key] = obj[key]
@@ -21917,8 +22005,11 @@ class w2field extends w2base {
     // if url has globals at the end, then register globals
     let param = String(undefined).split('?')[1] || ''
     if (param == 'globals' || param.substr(0, 8) == 'globals=') {
-        $.w2globals()
+        w2globals()
     }
+    // if jQuery is not defined, then exit
+    if (!$) return
+    $.w2globals = w2globals
     $.fn.w2render = function(name) {
         if ($(this).length > 0) {
             if (typeof name === 'string' && w2ui[name]) w2ui[name].render($(this)[0])
