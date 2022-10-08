@@ -29,17 +29,21 @@ public class GroupedOpenApiConfiguration {
 	public GroupedOpenApiConfiguration(
 			ApplicationContext context,
 			ConfigurableListableBeanFactory beanFactory,
-			@Value("${net128.shared.web.extra-package-pat:.*net128.*}")
-			String extraPackagePat) {
+			@Value("${com.net128.shared.web.extra-package-pat:.*net128.*}")
+			String extraPackagePat,
+			@Value("${com.net128.shared.web.main-package-pat:-}")
+			String mainPackagePat) {
 		this.context = context;
 		this.beanFactory = beanFactory;
 		this.extraPackagePat = extraPackagePat;
+		this.mainPackagePat = mainPackagePat;
 		mainClass = getMainClass();
 	}
 
 	private final ApplicationContext context;
 	private final ConfigurableListableBeanFactory beanFactory;
 	private final String extraPackagePat;
+	private final String mainPackagePat;
 
 	public final String propertyUtilsPrimaryName = "springdoc-swagger-ui.urlsPrimaryName";
 
@@ -83,7 +87,8 @@ public class GroupedOpenApiConfiguration {
 			return apiGroup(defaultMainGroupName);
 		}
 
-		var mainPackage = packageNames.iterator().next();
+		var mainPackage = mainPackagePat.equals("-")?
+			packageNames.iterator().next() : mainPackagePat;
 		packageNames.remove(mainPackage);
 		registerExtraGroupedOpenApis(packageNames);
 		return apiGroup(mainPackage);

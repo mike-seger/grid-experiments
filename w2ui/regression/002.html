@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>W2UI</title>
+    <!-- <link rel="icon" type="image/x-icon" href="grid.ico"> -->
+    <link rel="icon" sizes="any" type="image/svg+xml" href="grid.svg">
+    
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/d3-dsv@3"></script>
+    <!-- <script type="text/javascript" src="https://rawgit.com/vitmalina/w2ui/master/dist/w2ui.js"></script> -->
+    <script type="text/javascript" src="./w2ui.js"></script>
+    <link rel="stylesheet" type="text/css" href="https://rawgit.com/vitmalina/w2ui/master/dist/w2ui.min.css" />
+
+    <style>
+        body, html { overflow: hidden; }
+        body { height: 100vh; }
+    </style>
+
+</head>
+
+<body>
+
+<div id="main" style="width: 100%; height: calc(100% - 16px);"></div>
+
+<script type="text/javascript">
+var config = {
+    grid: {
+        name: 'grid',
+        selectType: 'cell',
+        recordHeight: 28,
+        liveSearch: true,
+        multiSearch: true,
+        show: {
+            toolbar: true,
+            footer: true,
+            lineNumbers: true
+        },
+    }
+}
+
+query(() => {
+    new w2grid(config.grid)
+    w2ui.grid.columns = [
+        { field: 'GeonameID', text: 'GeonameID', hidden: true, size: '85px', resizable: false, sortable: true, editable: { type: 'text' } },
+        { field: 'Rank', text: 'Rank', size: '70px', resizable: false, sortable: true, editable: { type: 'text' } },
+        { field: 'City', text: 'City', size: '50%', resizable: true, sortable: true, editable: { type: 'text' } },
+        { field: 'Population', text: 'Population', size: '116px', resizable: false, sortable: true, editable: { type: 'text' },
+            render: function (record, extra) { return record.Population.toString().replace(/\B(?=(\d{3})+(?!\d))/g, "'") } },
+        { field: 'isoCode', text: 'iso', size: '46px', resizable: false, sortable: true, editable: { type: 'text' } },
+        { field: 'Country', text: 'Country', size: '50%', resizable: true, sortable: true, editable: { type: 'text' } },
+        { field: 'Modified', text: 'Modified', size: '106px', resizable: false, sortable: true, editable: { type: 'text' } },
+        { field: 'Coordinates', text: 'Coordinates', size: '176px', resizable: false, sortable: true, editable: { type: 'text' } },
+    ]
+
+    w2ui.grid.lineNumberWidth = 58
+    w2ui.grid.multiSearch = true
+
+    fetch("cities.csv")
+        .then((response) => response.text())
+        .then((csv) => {
+            const data = d3.csvParse(csv);
+            for (var i = 0; i < data.length; i++) data[i].recid = i;
+            w2ui.grid.records = data;
+            w2ui.grid.total = w2ui.grid.records.length
+            w2ui.grid.buffered = w2ui.grid.total
+            //w2ui.grid.hideColumn('GeonameID')
+            w2ui.grid.searches.forEach(search => { search.operator = 'contains' })
+            w2ui.grid.render(query('#main')[0])
+            w2ui.grid.focus();
+        }
+    )
+})
+</script>
+
+</body>
+</html>
