@@ -6,9 +6,194 @@
             body {
                 font-family: sans-serif;
             }
+
+            @font-face {
+                font-family: 'icomoon';
+                src: 
+                    url('fonts/icomoon.ttf') format('truetype'),
+                    url('fonts/icomoon.svg#icomoon') format('svg');
+                font-weight: normal;
+                font-style: normal;
+                font-display: swap;
+            }
+
+            .fonttest {
+                font-family: 'icomoon';
+                font-weight: normal;
+                font-style: normal;
+            }
+
+            #toolbar * {
+                font-size: 14px;
+                color: black;
+                background-color: white;
+            }
+
+            /* .w2ui-toolbar .w2ui-tb-line {
+                padding: 0 !important;
+                min-height: 23px !important;
+                height: 23px !important;
+            } */
+
+            .w2ui-toolbar .w2ui-scroll-wrapper .w2ui-tb-button {
+                height: 23px !important;
+            }
+
+            .w2ui-toolbar .w2ui-scroll-wrapper .w2ui-tb-break {
+                margin-top: -3px;
+                height: 18px !important;
+            }
+
+            .w2ui-toolbar, .w2ui-tb-text *, 
+            .w2ui-toolbar .w2ui-scroll-wrapper .w2ui-tb-button .w2ui-tb-text,
+            .w2ui-toolbar .w2ui-scroll-wrapper .w2ui-tb-button .w2ui-tb-text
+            {
+                padding: 0 !important;
+                font-size: 14px;
+            }
+
+            .w2ui-tb-line {
+                padding: 4px 0 !important;
+                border: 1px solid rgb(177, 177, 177) !important;
+                height: 32px !important;
+            }
+
+            .fonttest {
+                display: none;
+            }
         </style>
+        <link rel="stylesheet" type="text/css" href="https://rawgit.com/vitmalina/w2ui/master/dist/w2ui.min.css">
     </head>
     <body>
-        <h2>CSV UI (w2ui)</h2>
+        <div id="toolbar"></div>
+        <div class="fonttest">
+            file_upload: &#xe901;<br />
+            file_download: &#xe902;<br />
+            save: &#xe903;<br />
+            table: &#xe904;<br />
+            arrow-up: &#xe905;<br />
+            arrow-down: &#xe906;<br />
+            table_view: &#xe907;<br />
+            refresh: &#xe908;<br />
+            loop, sync: &#xe909;<br />
+            filter_list: &#xe90a;<br />
+            vertical_align_top: &#xe90b;<br />
+            vertical_align_bottom: &#xe90c;<br />
+        </div>
+
+        <script type="module">
+            import { w2ui, w2toolbar } from 'https://rawgit.com/vitmalina/w2ui/master/dist/w2ui.es6.min.js'
+
+            function isStatic() {
+                const urlParams = new URLSearchParams(window.location.search);
+                const isStatic = urlParams.get('static');
+                return isStatic || location.port==8000 || location.port==8001 || location.host.includes(".github.io");
+            }
+
+            function getConfigUri() {
+                const urlParams = new URLSearchParams(window.location.search);
+                let configUri = urlParams.get('conf');
+                if(!configUri) {
+                    if(isStatic()) configUri = 'config.json';
+                    else configUri = '/configuration';
+                }
+                return configUri;
+            }
+
+            function getRemoteBaseUri() {
+                const urlParams = new URLSearchParams(window.location.search);
+                let remoteBaseUri = urlParams.get('rbase');
+                if(!remoteBaseUri) {
+                    if(isStatic()) remoteBaseUri = "../../../../../../../../data/";
+                    else remoteBaseUri = "../../api/v1/admin/csv";
+                }
+                return remoteBaseUri;
+            }
+
+            function createToolbar(entities) {
+                console.log(Object.keys(entities))
+                const entityItens = Object.keys(entities).map(key => 
+                    { return { id: key, text: entities[key].name } }
+                )
+
+                new w2toolbar({
+                    box: '#toolbar',
+                    name: 'toolbar',
+                    items: [
+                        { type: 'menu-radio', id: 'entities'/*, icon: 'w2ui-icon-info'*/,
+                            text(item) {
+                                const text = item.get(item.selected)?.text
+                                if(text === undefined) return "Select entity..."
+                                return text
+                            },
+                            style: 'width: 190px;',
+                            items: entityItens 
+                        },
+                        { type: 'break' },
+                        { type: 'button', 
+                            id: 'save', 
+                            style: 'font-family: icomoon;',
+                            text: '&#xe903;'
+                        },
+                        { type: 'menu-radio', id: 'format',
+                            text(item) { return item.get(item.selected)?.text },
+                            selected: 'TSV',
+                            items: [
+                                { id: 'TSV', text: 'TSV' },
+                                { id: 'CSV', text: 'CSV' },
+                            ]
+                        },
+                        { type: 'button', 
+                            id: 'download', 
+                            style: 'font-family: icomoon;',
+                            text: '&#xe90c;'
+                        },
+                        { type: 'button', 
+                            id: 'upload', 
+                            style: 'font-family: icomoon;',
+                            text: '&#xe90b;'
+                        },
+                        { type: 'break' },
+                        { type: 'button', 
+                            id: 'filter', 
+                            style: 'font-family: icomoon;',
+                            text: '&#xe90a;'
+                        },
+                        { type: 'button', 
+                            id: 'search', 
+                            style: 'font-family: icomoon;',
+                            text: '&#xe900;'
+                        },
+                        { type: 'break' },
+                        { type: 'button', 
+                            id: 'refresh', 
+                            style: 'font-family: icomoon;',
+                            text: '&#xe908;'
+                        },
+                        { type: 'spacer' },
+                        { type: 'button', id: 'help', style: 'font-family: icomoon;',  text: '?' }
+
+                    ]
+                })
+
+                w2ui.toolbar.on('*', (event) => {
+                    console.log('EVENT: '+ event.type + ' TARGET: '+ event.target, event)
+                })
+            }
+
+            async function loadConfiguration() {
+                const configUrl = getRemoteBaseUri() + getConfigUri()
+                const response = await fetch(configUrl)
+                const configuration = await response.json()
+                console.log(configuration)
+                const entities = configuration.entities
+                console.log(Object.keys(entities))
+                createToolbar(entities)
+            }
+
+            loadConfiguration();
+
+            </script>
+
     </body>
 </html>
