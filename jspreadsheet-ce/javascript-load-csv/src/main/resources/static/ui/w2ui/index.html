@@ -18,32 +18,44 @@
             }
 
             #toolbar * {
-                font-size: 14px;
+                font-size: 16px;
                 color: black;
                 background-color: white;
             }
 
-            .w2ui-toolbar .w2ui-scroll-wrapper .w2ui-tb-button {
-                height: 23px !important;
+            .w2ui-toolbar {
+                height: 25px !important;
             }
 
-            .w2ui-toolbar .w2ui-scroll-wrapper .w2ui-tb-break {
+            .w2ui-tb-button {
+                height: 25px !important;
+                border: none !important;
+                border-radius: 0 !important;
+                margin: -2px 0 0 -2px;
+            }
+
+            .w2ui-tb-button:hover, .w2ui-tb-button:hover * {
+                background-color: rgb(241, 241, 241) !important;
+            }
+
+            .w2ui-tb-break {
                 margin-top: -3px;
                 height: 18px !important;
             }
 
-            .w2ui-toolbar, .w2ui-tb-text *, 
-            .w2ui-toolbar .w2ui-scroll-wrapper .w2ui-tb-button .w2ui-tb-text,
-            .w2ui-toolbar .w2ui-scroll-wrapper .w2ui-tb-button .w2ui-tb-text
+            .w2ui-toolbar,
+            .w2ui-tb-text
             {
                 padding: 0 !important;
-                font-size: 14px;
+                margin: 0 !important;
+                font-size: 16px;
             }
 
             .w2ui-tb-line {
-                padding: 4px 0 !important;
+                padding: 0 !important;
                 border: 1px solid rgb(206, 206, 206) !important;
-                height: 32px !important;
+                min-height: 25px !important;
+                height: 25px !important;
             }
         </style>
         <link rel="stylesheet" type="text/css" href="https://rawgit.com/vitmalina/w2ui/master/dist/w2ui.min.css">
@@ -108,6 +120,7 @@
                         { type: 'menu-radio', id: 'format',
                             text(item) { return item.get(item.selected)?.text },
                             selected: 'TSV',
+                            style: 'width: 40px; margin-right: 5px;',
                             items: [
                                 { id: 'TSV', text: 'TSV' },
                                 { id: 'CSV', text: 'CSV' },
@@ -157,7 +170,6 @@
                 const configuration = await response.json()
                 console.log(configuration)
                 const entities = configuration.entities
-                console.log(Object.keys(entities))
                 createToolbar(entities)
             }
 
