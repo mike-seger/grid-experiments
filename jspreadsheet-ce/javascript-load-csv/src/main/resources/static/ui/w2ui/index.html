@@ -17,12 +17,6 @@
                 font-display: swap;
             }
 
-            .fonttest {
-                font-family: 'icomoon';
-                font-weight: normal;
-                font-style: normal;
-            }
-
             #toolbar * {
                 font-size: 14px;
                 color: black;
@@ -51,29 +45,11 @@
                 border: 1px solid rgb(206, 206, 206) !important;
                 height: 32px !important;
             }
-
-            .fonttest {
-                display: none;
-            }
         </style>
         <link rel="stylesheet" type="text/css" href="https://rawgit.com/vitmalina/w2ui/master/dist/w2ui.min.css">
     </head>
     <body>
         <div id="toolbar"></div>
-        <div class="fonttest">
-            file_upload: &#xe901;<br />
-            file_download: &#xe902;<br />
-            save: &#xe903;<br />
-            table: &#xe904;<br />
-            arrow-up: &#xe905;<br />
-            arrow-down: &#xe906;<br />
-            table_view: &#xe907;<br />
-            refresh: &#xe908;<br />
-            loop, sync: &#xe909;<br />
-            filter_list: &#xe90a;<br />
-            vertical_align_top: &#xe90b;<br />
-            vertical_align_bottom: &#xe90c;<br />
-        </div>
 
         <script type="module">
             import { w2ui, w2toolbar } from 'https://rawgit.com/vitmalina/w2ui/master/dist/w2ui.es6.min.js'
@@ -105,10 +81,10 @@
             }
 
             function createToolbar(entities) {
-                console.log(Object.keys(entities))
                 const entityItens = Object.keys(entities).map(key => 
                     { return { id: key, text: entities[key].name } }
                 )
+                const buttonStyle = 'font-family: icomoon; font-size: 17px;'
 
                 new w2toolbar({
                     box: '#toolbar',
@@ -126,7 +102,7 @@
                         { type: 'break' },
                         { type: 'button', 
                             id: 'save', 
-                            style: 'font-family: icomoon; font-size: 17px;',
+                            style: buttonStyle,
                             text: '&#xe903;'
                         },
                         { type: 'menu-radio', id: 'format',
@@ -139,29 +115,29 @@
                         },
                         { type: 'button', 
                             id: 'download', 
-                            style: 'font-family: icomoon; font-size: 17px;',
+                            style: buttonStyle,
                             text: '&#xe90c;'
                         },
                         { type: 'button', 
                             id: 'upload', 
-                            style: 'font-family: icomoon; font-size: 17px;',
+                            style: buttonStyle,
                             text: '&#xe90b;'
                         },
                         { type: 'break' },
                         { type: 'button', 
                             id: 'filter', 
-                            style: 'font-family: icomoon; font-size: 17px;',
+                            style: buttonStyle,
                             text: '&#xe90a;'
                         },
                         { type: 'button', 
                             id: 'search', 
-                            style: 'font-family: icomoon; font-size: 17px;',
+                            style: buttonStyle,
                             text: '&#xe900;'
                         },
                         { type: 'break' },
                         { type: 'button', 
                             id: 'refresh', 
-                            style: 'font-family: icomoon; font-size: 17px;',
+                            style: buttonStyle,
                             text: '&#xe908;'
                         },
                         { type: 'spacer' },
