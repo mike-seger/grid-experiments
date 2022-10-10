@@ -2,7 +2,9 @@
 <html>
     <head>
         <title>CSV UI (w2ui)</title>
-        <style>
+        <style> 
+            :root { --main-tb-height: 27px; }
+
             body {
                 font-family: sans-serif;
             }
@@ -24,47 +26,92 @@
             }
 
             .w2ui-toolbar {
-                height: 25px !important;
+                /* border: none !important;
+                margin: 0 !important; */
+                padding: 0 !important;
+                /* background-color: white; */
             }
 
-            .w2ui-tb-button {
-                height: 25px !important;
+            #toolbar .w2ui-toolbar {
+                height: var(--main-tb-height) !important;
                 border: none !important;
-                border-radius: 0 !important;
-                margin: -2px 0 0 -2px;
-            }
-
-            .w2ui-tb-button:hover, .w2ui-tb-button:hover * {
-                background-color: rgb(241, 241, 241) !important;
-            }
-
-            .w2ui-tb-break {
-                margin-top: -3px;
-                height: 18px !important;
-            }
-
-            .w2ui-toolbar,
-            .w2ui-tb-text
-            {
-                padding: 0 !important;
                 margin: 0 !important;
-                font-size: 16px;
+                padding: 2px !important;
+                background-color: white;
             }
 
-            .w2ui-tb-line {
-                padding: 0 !important;
+            #toolbar .w2ui-tb-button {
+                height: calc(var(--main-tb-height) - 6px) !important;
+                border: none !important;
+                padding-left: 3px;
+                /* border-radius: 0 !important; */
+                /* margin: -1px 0 0 0; */
+            }
+
+            #toolbar .w2ui-tb-button:hover, #toolbar .w2ui-tb-button:hover * {
+                /* background-color: rgb(241, 241, 241) !important; */
+                background-color: rgb(117, 167, 221) !important;
+                color: white;
+            }
+
+            #toolbar .w2ui-tb-break {
+                margin-top: -1.5px;
+                height: calc(var(--main-tb-height) - 8px) !important;
+            }
+
+            /* #toolbar .w2ui-toolbar, */
+            #toolbar .w2ui-tb-text
+            {
+                padding: 0 0 0 3px !important;
+                /* margin: 0 !important; */
+                /* font-size: 16px; */
+            }
+
+            #toolbar .w2ui-tb-line {
+                padding: 2px !important;
                 border: 1px solid rgb(206, 206, 206) !important;
-                min-height: 25px !important;
-                height: 25px !important;
+                min-height: var(--main-tb-height) !important;
+                height: calc(var(--main-tb-height) - 6px) !important;
+            }
+
+            #grid {
+                position: absolute;
+                top: calc(var(--main-tb-height) + 8px);
+                left: 8px;
+                height: calc(100% - var(--main-tb-height) - 16px);
+                width: calc(100% - 16px);
+                background-color: rgb(220, 237, 255);
+            }
+
+            .w2ui-grid {
+                border: 0 1px 1px 1px solid #e1e1e1 !important;
+                border-radius: 0 !important;
+                overflow: hidden!important;
+                margin-top: -1px !important;
+            }
+
+            .w2ui-grid .w2ui-grid-toolbar {
+                padding: 4px 4px 4px 0 !important;
+            }
+
+            .w2ui-grid-box {
+                /* position: relative; */
+                /* border: 0 1px 1px 1px solid #e1e1e1 !important; */
+                /* border: 0 !important; */
+                /* margin-top: -2px !important; */
+                /* border-radius: 2px;
+                overflow: hidden!important; */
             }
         </style>
         <link rel="stylesheet" type="text/css" href="https://rawgit.com/vitmalina/w2ui/master/dist/w2ui.min.css">
+        <script src="https://cdn.jsdelivr.net/npm/d3-dsv@3"></script>
     </head>
     <body>
         <div id="toolbar"></div>
+        <div id="grid"></div>
 
         <script type="module">
-            import { w2ui, w2toolbar } from 'https://rawgit.com/vitmalina/w2ui/master/dist/w2ui.es6.min.js'
+            import { w2ui, w2toolbar, w2grid } from 'https://rawgit.com/vitmalina/w2ui/master/dist/w2ui.es6.min.js'
 
             function isStatic() {
                 const urlParams = new URLSearchParams(window.location.search);
@@ -92,6 +139,58 @@
                 return remoteBaseUri;
             }
 
+            function loadEntity(entity) {
+                console.log(entity);
+
+                var config = {
+                    grid: {
+                        name: 'grid',
+                        selectType: 'cell',
+                        recordHeight: 28,
+                        liveSearch: true,
+                        multiSearch: true,
+                        show: {
+                            toolbar: true,
+                            footer: true,
+                            lineNumbers: true
+                        },
+                        style: 'font-size:16px; font-family: sans-serif; color:black;',
+                    }
+                }
+
+                const columnDefs = entity.attributes.map(attribute => {
+                    return { 
+                        field: attribute.columnName, 
+                        text: attribute.name,
+                        size: '85px', 
+                        resizable: false, 
+                        sortable: true, 
+                        editable: { type: 'text' }
+                    }
+                })
+                new w2grid(config.grid)
+                w2ui.grid.columns = columnDefs
+                w2ui.grid.lineNumberWidth = 58
+                w2ui.grid.multiSearch = true
+
+                const csvUri = getRemoteBaseUri()+entity.getUri;
+                const gridElement = document.getElementById("grid");
+                fetch(csvUri)
+                    .then((response) => response.text())
+                    .then((csv) => {
+                        const data = d3.csvParse(csv);
+                        for (var i = 0; i < data.length; i++) data[i].recid = i;
+                        w2ui.grid.records = data;
+                        w2ui.grid.total = w2ui.grid.records.length
+                        w2ui.grid.buffered = w2ui.grid.total
+                        //w2ui.grid.hideColumn('GeonameID')
+                        w2ui.grid.searches.forEach(search => { search.operator = 'contains' })
+                        w2ui.grid.render(gridElement)
+                        w2ui.grid.focus();
+                    }
+                )
+            }
+
             function createToolbar(entities) {
                 const entityItens = Object.keys(entities).map(key => 
                     { return { id: key, text: entities[key].name } }
@@ -102,13 +201,13 @@
                     box: '#toolbar',
                     name: 'toolbar',
                     items: [
-                        { type: 'menu-radio', id: 'entities'/*, icon: 'w2ui-icon-info'*/,
+                        { type: 'menu-radio', id: 'entities',
                             text(item) {
                                 const text = item.get(item.selected)?.text
                                 if(text === undefined) return "Select entity..."
                                 return text
                             },
-                            style: 'width: 190px;',
+                            style: 'width: 210px;',
                             items: entityItens 
                         },
                         { type: 'break' },
@@ -120,7 +219,7 @@
                         { type: 'menu-radio', id: 'format',
                             text(item) { return item.get(item.selected)?.text },
                             selected: 'TSV',
-                            style: 'width: 40px; margin-right: 5px;',
+                            style: 'width: 50px; padding-right: 5px;',
                             items: [
                                 { id: 'TSV', text: 'TSV' },
                                 { id: 'CSV', text: 'CSV' },
@@ -136,23 +235,6 @@
                             style: buttonStyle,
                             text: '&#xe90b;'
                         },
-                        { type: 'break' },
-                        { type: 'button', 
-                            id: 'filter', 
-                            style: buttonStyle,
-                            text: '&#xe90a;'
-                        },
-                        { type: 'button', 
-                            id: 'search', 
-                            style: buttonStyle,
-                            text: '&#xe900;'
-                        },
-                        { type: 'break' },
-                        { type: 'button', 
-                            id: 'refresh', 
-                            style: buttonStyle,
-                            text: '&#xe908;'
-                        },
                         { type: 'spacer' },
                         { type: 'button', id: 'help', text: '?' }
 
@@ -160,7 +242,33 @@
                 })
 
                 w2ui.toolbar.on('*', (event) => {
-                    console.log('EVENT: '+ event.type + ' TARGET: '+ event.target, event)
+                    if(event.type === 'click') {
+                        switch(event.target.replace(/:.*/, '')){
+                            case "save":
+                                console.log('save'); break;
+
+                            case "upload":
+                                console.log('upload'); break;
+
+                            case "download":
+                                console.log('download'); break;
+
+                            case "entities":
+                                if(event.target.indexOf(':')>0) {
+                                    const key = event.target.replace(/.*:/, '')
+                                    loadEntity(entities[key])
+                                }
+                                break;
+
+                            case "format":
+                                if(event.target.indexOf(':')>0)
+                                    console.log('format -> '+event.target.replace(/.*:/, ''));
+                                break;
+                            
+                            default: 
+                                console.log('default: '+event.target); break;
+                        }
+                    }
                 })
             }
 
