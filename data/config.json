@@ -112,6 +112,119 @@
       "name": "CITY-140491",
       "putUri": "cities-140491.csv",
       "sortable": true
+    },
+    "cities-1404.csv ": {
+      "attributes": [
+        {
+          "columnName": "ID",
+          "align": "left",
+          "enumConstants": null,
+          "hidden": true,
+          "id": true,
+          "name": "Rank",
+          "readOnly": true,
+          "title": "ID",
+          "type": "Int"
+        },
+        {
+          "columnName": "GeonameID",
+          "enumConstants": null,
+          "hidden": true,
+          "id": false,
+          "name": "GeonameID",
+          "readOnly": false,
+          "title": "Geoname ID",
+          "type": "Int"
+        },
+        {
+          "columnName": "Rank",
+          "align": "left",
+          "enumConstants": null,
+          "hidden": false,
+          "id": false,
+          "name": "Rank",
+          "readOnly": false,
+          "title": "Rank",
+          "type": "Int"
+        },
+        {
+          "columnName": "City",
+          "enumConstants": null,
+          "hidden": false,
+          "id": false,
+          "name": "City",
+          "readOnly": false,
+          "title": "City",
+          "type": "String"
+        },
+        {
+          "columnName": "Population",
+          "enumConstants": null,
+          "hidden": false,
+          "id": false,
+          "name": "Population",
+          "readOnly": false,
+          "title": "Population",
+          "type": "Int"
+        },
+        {
+          "columnName": "AsciiName",
+          "enumConstants": null,
+          "hidden": true,
+          "id": false,
+          "name": "AsciiName",
+          "readOnly": false,
+          "title": "AsciiName",
+          "type": "String"
+        },
+        {
+          "columnName": "isoCode",
+          "enumConstants": null,
+          "hidden": false,
+          "id": false,
+          "name": "isoCode",
+          "readOnly": false,
+          "title": "ISO",
+          "type": "String"
+        },
+        {
+          "columnName": "Country",
+          "enumConstants": null,
+          "hidden": false,
+          "id": false,
+          "name": "Country",
+          "readOnly": false,
+          "title": "Country",
+          "type": "String"
+        },
+        {
+          "columnName": "Modified",
+          "enumConstants": null,
+          "hidden": false,
+          "id": false,
+          "name": "Modified",
+          "readOnly": false,
+          "title": "Modified",
+          "type": "String"
+        },
+        {
+          "columnName": "Coordinates",
+          "enumConstants": null,
+          "hidden": false,
+          "id": false,
+          "name": "Coordinates",
+          "readOnly": false,
+          "title": "Coordinates",
+          "type": "String"
+        }
+      ],
+      "deleteUri": "cities-1404.csv",
+      "getUri": "cities-1404.csv ",
+      "id": "CITY-1404",
+      "idField": "Rank",
+      "name": "CITY-1404",
+      "putUri": "cities-1404.csv",
+      "sortable": true
     }
   }
 }
