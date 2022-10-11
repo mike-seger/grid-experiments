@@ -2,8 +2,8 @@
 <html>
     <head>
         <title>CSV UI (w2ui)</title>
-        <link rel="stylesheet" type="text/css" href="./w2ui/w2ui.css">
-        <!-- <link rel="stylesheet" type="text/css" href="https://rawgit.com/vitmalina/w2ui/master/dist/w2ui.min.css"> -->
+        <!-- <link rel="stylesheet" type="text/css" href="./w2ui/w2ui.css"> -->
+        <link rel="stylesheet" type="text/css" href="https://rawgit.com/vitmalina/w2ui/master/dist/w2ui.css">
         <script src="https://cdn.jsdelivr.net/npm/d3-dsv@3"></script>
         <script type="module">
             import { w2ui, w2toolbar, w2grid } 
@@ -62,10 +62,10 @@
                         liveSearch: true,
                         multiSearch: true,
                         resizable: true,
-                        sortable: true,
-                        reorderColumns: true,
-                        emptyRecords: false,
-                        reorderRows: true,
+                        //sortable: true,
+                        //reorderColumns: true,
+                        //emptyRecords: false,
+                        //reorderRows: true,
                         show: {
                             toolbar: true,
                             footer: true,
@@ -97,8 +97,8 @@
                     let type = 'text'
                     switch(attribute.type) {
                         case "Int": type = 'int'; break
-                        case "Float": type = 'int';  break
-                        case "Date": type = 'date';  break
+                        case "Float": type = 'float:2';  break
+                        case "Date": type = 'text';  break
                         case "Enum": type = 'list'; break
                     }
                     let columnDefinition = { 
@@ -113,9 +113,11 @@
                             value => { return { id: val, text: val } }
                         )
                         columnDefinition.editable.items = list
+                        columnDefinition.editable.type = 'select'
                         columnDefinition.editable.showAll = true
                     } else if(! (type === 'text')) {
                         columnDefinition.render = type
+                        columnDefinition.editable.type = type
                     }
                     return columnDefinition
                 })
@@ -140,6 +142,11 @@
                         w2ui.grid.buffered = w2ui.grid.total
                         //w2ui.grid.hideColumn('GeonameID')
                         w2ui.grid.searches.forEach(search => { search.operator = 'contains' })
+                        // w2ui.grid.refresh()
+                        // w2ui.grid.columns.forEach(col => {
+                        //     col.size = col.sizeCalculated
+                        // })
+                        // w2ui.grid.refresh()
                         w2ui.grid.render(gridElement)
                         w2ui.grid.focus()
                     }
@@ -303,7 +310,7 @@
             }
 
             #toolbar .w2ui-tb-break {
-                margin-top: -1.5px;
+                margin-top: 0;
                 height: calc(var(--main-tb-height) - 8px) !important;
             }
 
@@ -342,41 +349,19 @@
                 background-color: white !important;
             }
 
-            .w2ui-col-header  {
+            .w2ui-col-header,
+            .w2ui-col-number {
                 font-weight: 600;
+                color: black !important;
             }
 
             #tb_grid_toolbar_item_w2ui-reload {
                 display: none;
             }
 
-            /* .w2ui-col-header .w2ui-col-selected,
-            .w2ui-grid .w2ui-grid-body table .w2ui-head {
-                background-image: none !important;
-            }
-
-            .w2ui-col-header .w2ui-col-selected {
-                background-image: none !important;
-                background-color: rgb(196, 218, 255);
-            } */
-
-            .w2ui-col-selected {
-                background-image: none !important;
-                background-color: rgb(196, 218, 255) !important;
-            }
-
-            .w2ui-grid .w2ui-grid-body table .w2ui-head, .w2ui-head {
-                color: black !important;
-                background-color: rgb(196, 218, 255) !important;
-            }
-/* 
-            .w2ui-grid .w2ui-grid-body table .w2ui-col-selected {
-                background-color: rgb(196, 218, 255);
-            } */
-
-            
-            .w2ui-col-selected {
-                background-color: rgb(86, 131, 210) !important;
+            .w2ui-grid .w2ui-grid-body table .w2ui-col-selected,
+            .w2ui-grid .w2ui-grid-body table .w2ui-row-selected {
+                background-color: rgb(206, 226, 255) !important;
             }
 
         </style>
