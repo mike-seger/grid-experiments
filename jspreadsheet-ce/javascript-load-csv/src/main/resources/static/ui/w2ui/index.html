@@ -54,6 +54,36 @@
                 if(entity == null) return
                 loadedEntity = entity
 
+                function getSelectionText(grid) {
+                    const selection = grid.getSelection(true)
+                    const minCol = Math.min(...selection.map(cell => cell.column))
+                    const maxCol = Math.max(...selection.map(cell => cell.column))
+                    const minRecId = Math.min(...selection.map(cell => cell.recid))
+                    const maxRecId = Math.max(...selection.map(cell => cell.recid))               
+                    const rowIndexes = [...new Set(selection.map(cell => cell.index))].sort()
+                    const colIndexes = [...new Set(selection.map(cell => cell.column))].sort()
+                    const recIds = [...new Set(selection.map(cell => cell.recid))]
+                    console.log("rows("+rowIndexes+") / cols("+minCol+"-"+maxCol+")")
+                    
+                    //const colIndexes = Array.from({length: maxCol-minCol+1}, (x, i) => i+minCol)
+                    const values = rowIndexes.map(index => colIndexes.map(
+                        colIndex => { return grid.getCellValue(index, colIndex) }) )
+
+                    //const ranges = recIds.map(recid => { return [{ recid, column: minCol }, { recid, column: maxCol }] })
+                    const range = [
+                        { recid: minRecId, column: minCol }, 
+                        { recid: maxRecId, column: maxCol }
+                    ]
+                    console.log(d3.tsvFormatBody(grid.getRangeData(range)))
+
+                    console.log(d3.tsvFormatBody(grid.getChanges()))
+
+                    const result = d3.tsvFormatBody(values)
+                    console.log(d3.tsvFormatBody(values))
+                    return result
+                    //getCellValue(index, column_index, [summary], [extra])
+                }
+
                 var config = {
                     grid: {
                         name: 'grid',
@@ -76,18 +106,28 @@
                             event.detail.force = true
                         },
                         contextMenu: [
-                            { id: 'copy', text: 'Copy', icon: 'w2ui-icon-check' },
+                            { id: 'copySelection', text: 'Copy selection', icon: 'w2ui-icon-check' },
                             { text: '--' },
-                            { id: 'pasteBefore', text: 'Paste before', icon: 'w2ui-icon-paste' },
-                            { id: 'pasteAfter', text: 'Paste after', icon: 'w2ui-icon-paste' },
+                            { id: 'pasteBefore', text: 'Paste rows before', icon: 'w2ui-icon-paste' },
+                            { id: 'pasteAfter', text: 'Paste rows after', icon: 'w2ui-icon-paste' },
                             { text: '--' },
                             { id: 'insertRowsBefore', text: 'Insert new rows before', icon: 'w2ui-icon-plus' },
                             { id: 'insertRowsAfter', text: 'Insert new rows after', icon: 'w2ui-icon-plus' },
                             { text: '--' },
                             { id: 'deleteRows', text: 'Delete selected rows', icon: 'w2ui-icon-cross' },
                         ],
+
                         onContextMenuClick(event) {
                             console.log(event)
+                            console.log( this.getSelection(true) )
+                            const menuId = event.detail.menuItem.id
+                            switch(menuId) {
+                                case 'copySelection': {
+                                          //copy()
+                                        navigator.clipboard.writeText(getSelectionText(this))
+                                    }
+                                    break;
+                            }
                         },
                         columnClick() {}
                     }
