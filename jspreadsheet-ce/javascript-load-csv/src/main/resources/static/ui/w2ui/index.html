@@ -43,11 +43,11 @@
                 console.log(records)
             }
 
-            function changes() {
-                const changes = w2ui.grid.getChanges()
-                w2ui.grid.mergeChanges()
-                console.log('Changes were', changes)
-            }
+            // function changes() {
+            //     const changes = w2ui.grid.getChanges()
+            //     w2ui.grid.mergeChanges()
+            //     console.log('Changes were', changes)
+            // }
 
             function loadEntity(entity) {
                 console.log(entity)
@@ -55,6 +55,10 @@
                 loadedEntity = entity
 
                 function getSelectionText(grid) {
+                    const changes = grid.getChanges()
+                    //grid.save()
+                    grid.mergeChanges()
+                    grid.changes = changes
                     const selection = grid.getSelection(true)
                     const minCol = Math.min(...selection.map(cell => cell.column))
                     const maxCol = Math.max(...selection.map(cell => cell.column))
@@ -74,9 +78,14 @@
                         { recid: minRecId, column: minCol }, 
                         { recid: maxRecId, column: maxCol }
                     ]
-                    console.log(d3.tsvFormatBody(grid.getRangeData(range)))
-
-                    console.log(d3.tsvFormatBody(grid.getChanges()))
+                    const selectedRecords = grid.getRangeData(range, true)
+                        .filter(r => recIds.includes(r[0].record.recid))
+                        .map(record => { return record.map(col => { return col.data }) })
+                    
+                    console.log(d3.tsvFormatBody(selectedRecords))
+                    //console.log(grid.getRangeData(range, true))
+                    //console.log(d3.tsvFormatBody(grid.getRangeData(range, false)))
+                   //grid.getRangeData(range).filter()
 
                     const result = d3.tsvFormatBody(values)
                     console.log(d3.tsvFormatBody(values))
