@@ -76,23 +76,23 @@
                             event.detail.force = true
                         },
                         contextMenu: [
-                            { id: 'insertRowBefore', text: 'Insert a new row before', icon: 'w2ui-icon-plus' },
-                            { id: 'insertRowBefore', text: 'Insert a new row after', icon: 'w2ui-icon-plus' },
+                            { id: 'copy', text: 'Copy', icon: 'w2ui-icon-check' },
+                            { text: '--' },
+                            { id: 'pasteBefore', text: 'Paste before', icon: 'w2ui-icon-paste' },
+                            { id: 'pasteAfter', text: 'Paste after', icon: 'w2ui-icon-paste' },
+                            { text: '--' },
+                            { id: 'insertRowsBefore', text: 'Insert new rows before', icon: 'w2ui-icon-plus' },
+                            { id: 'insertRowsAfter', text: 'Insert new rows after', icon: 'w2ui-icon-plus' },
                             { text: '--' },
                             { id: 'deleteRows', text: 'Delete selected rows', icon: 'w2ui-icon-cross' },
                         ],
-                        onClick(event) {
-                            console.log(event)
-                        },
                         onContextMenuClick(event) {
                             console.log(event)
-                        }
+                        },
+                        columnClick() {}
                     }
                 }
 
-                // const hiddenColumns = entity.attributes.filter(
-
-                // )
                 const columnDefs = entity.attributes.map(attribute => {
                     let type = 'text'
                     switch(attribute.type) {
@@ -122,9 +122,9 @@
                     return columnDefinition
                 })
                 let grid = new w2grid(config.grid)
-                grid.on('*', (event) => {
-                    console.log(event)
-                })
+                // grid.on('*', (event) => {
+                //     console.log(event)
+                // })
 
                 w2ui.grid.columns = columnDefs
                 w2ui.grid.lineNumberWidth = 58
@@ -140,13 +140,7 @@
                         w2ui.grid.records = data
                         w2ui.grid.total = w2ui.grid.records.length
                         w2ui.grid.buffered = w2ui.grid.total
-                        //w2ui.grid.hideColumn('GeonameID')
                         w2ui.grid.searches.forEach(search => { search.operator = 'contains' })
-                        // w2ui.grid.refresh()
-                        // w2ui.grid.columns.forEach(col => {
-                        //     col.size = col.sizeCalculated
-                        // })
-                        // w2ui.grid.refresh()
                         w2ui.grid.render(gridElement)
                         w2ui.grid.focus()
                     }
@@ -364,6 +358,14 @@
                 background-color: rgb(206, 226, 255) !important;
             }
 
+            .w2ui-grid .w2ui-grid-toolbar .w2ui-grid-searches {
+                margin: 7px -20px 0px -20px;
+            }
+
+            .w2ui-grid-toolbar .w2ui-reset .w2ui-toolbar {
+                margin-top: 3px;
+                margin-bottom: 0;
+            }
         </style>
     </head>
 
