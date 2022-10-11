@@ -362,7 +362,7 @@
 		}
 		getData(entity).then((csv) => {
 			let rawData = d3.csvParse(csv);
-            const data = rawData.slice(0, Math.min(rawData.length-1, getRows()));
+            const data = rawData.slice(0, Math.min(rawData.length, getRows()));
             rawData = null;
 			jspreadsheet.tabs(spreadsheet1, [{
 				sheetName: entity.name,
