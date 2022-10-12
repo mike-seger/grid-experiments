@@ -85,6 +85,15 @@
                     return result
                 }
 
+                function deleteRows(grid) {
+                    const selection = grid.getSelection(true)
+                    const recIds = [...new Set(selection.map(cell => Number(cell.recid)))]
+                    grid.records = grid.records.filter(record => ! recIds.includes(record.recid))
+                    grid.total = grid.records.length
+                    grid.buffered = grid.total
+                    grid.refresh()
+                }
+
                 function insertRows(grid, after) {
                     const selection = grid.getSelection(true)
                     const indexes = [...new Set(selection.map(cell => Number(cell.index)))].sort((a,b) => a-b)
@@ -97,8 +106,6 @@
                             record.recid = index
                             return record
                     })
-                    //grid.records.splice(pos, 0, ...newRecords)
-                    //newRecords.forEach(record => grid.refreshRow(record.recid))
                     const len = grid.records.length
                     const head = grid.records.slice(0, pos);
                     const tail = grid.records.slice(pos, pos+len);
@@ -107,7 +114,6 @@
                     grid.records = [...head, ...newRecords,  ...tail]
                     grid.total = grid.records.length
                     grid.buffered = grid.total
-                    //grid.records.forEach(record => grid.refreshRow(record.recid))
                     grid.refresh()
                     console.log(grid.records)
                 }
@@ -134,9 +140,6 @@
                         contextMenu: [
                             { id: 'copySelection', text: 'Copy selection', icon: 'w2ui-icon-check' },
                             { text: '--' },
-                            { id: 'pasteBefore', text: 'Paste rows before', icon: 'w2ui-icon-paste' },
-                            { id: 'pasteAfter', text: 'Paste rows after', icon: 'w2ui-icon-paste' },
-                            { text: '--' },
                             { id: 'insertRowsBefore', text: 'Insert new rows before', icon: 'w2ui-icon-plus' },
                             { id: 'insertRowsAfter', text: 'Insert new rows after', icon: 'w2ui-icon-plus' },
                             { text: '--' },
@@ -147,14 +150,16 @@
                             console.log(event)
                             const menuId = event.detail.menuItem.id
                             event.onComplete = function() {
-                                if(menuId.startsWith('insert') || menuId.startsWith('paste'))
-                                    insertRows(grid, menuId.endsWith('After'))
                                 switch(menuId) {
-                                    case 'pasteBefore':
-                                        //navigator.clipboard.writeText(getSelectionText(this))
+                                    case 'deleteRows':
+                                        deleteRows(grid)
                                         break;
                                     case 'copySelection':
                                         navigator.clipboard.writeText(getSelectionText(this))
+                                        break;
+                                    default:
+                                        if(menuId.startsWith('insert'))
+                                            insertRows(grid, menuId.endsWith('After'))
                                         break;
                                 }
                             }
