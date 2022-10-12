@@ -69,6 +69,21 @@
                     return result
                 }
 
+                function updateCellClass(grid, event, className) {
+                    const recid = event.detail.recid;
+                    const column = grid.columns[event.detail.column].field
+                    const index = grid.get(recid, true)
+                    const record = grid.records[index]
+                    if(!record.w2ui) record.w2ui = {}
+                    if(!record.w2ui.class) record.w2ui.class = {}
+                    if(className) record.w2ui.class[column] = className
+                    else delete record.w2ui.class[column]
+                    console.log({record, event})
+                    event.onComplete = function() {
+                        grid.refreshRow(recid)
+                    }
+                }
+
                 var config = {
                     grid: {
                         name: 'grid',
@@ -104,17 +119,25 @@
 
                         onContextMenuClick(event) {
                             console.log(event)
-                            console.log( this.getSelection(true) )
                             const menuId = event.detail.menuItem.id
-                            switch(menuId) {
-                                case 'copySelection': {
-                                          //copy()
-                                        navigator.clipboard.writeText(getSelectionText(this))
-                                    }
-                                    break;
+                            event.onComplete = function() {
+                                switch(menuId) {
+                                    case 'copySelection': {
+                                            navigator.clipboard.writeText(getSelectionText(this))
+                                        }
+                                        break;
+                                }
                             }
                         },
-                        columnClick() {}
+                        columnClick() {},
+
+                        onRestore(event) {
+                            updateCellClass(this, event)
+                        },
+
+                        onChange(event) {
+                            updateCellClass(this, event, "cell-modified")
+                        }
                     }
                 }
 
@@ -390,6 +413,14 @@
             .w2ui-grid-toolbar .w2ui-reset .w2ui-toolbar {
                 margin-top: 3px;
                 margin-bottom: 0;
+            }
+
+            #w2overlay-context-menu *, .w2ui-overlay * {
+                font-size: 12px !important;
+            }
+
+            .w2ui-changed {
+                background-color: rgb(232, 249, 233) !important;
             }
         </style>
     </head>
