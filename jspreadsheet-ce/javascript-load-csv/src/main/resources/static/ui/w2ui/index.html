@@ -43,32 +43,27 @@
                 console.log(records)
             }
 
-            // function changes() {
-            //     const changes = w2ui.grid.getChanges()
-            //     w2ui.grid.mergeChanges()
-            //     console.log('Changes were', changes)
-            // }
-
             function loadEntity(entity) {
                 console.log(entity)
                 if(entity == null) return
                 loadedEntity = entity
 
+                function modifiedRecord(record) {
+                    if(! record?.w2ui?.changes) return record
+                    const changes = record.w2ui.changes
+                    var result = {...record, ...changes}
+                    delete result.w2ui
+                    return result
+                }
+
                 function getSelectionText(grid) {
-                    grid.mergeChanges()
                     const selection = grid.getSelection(true)
-                    const minCol = Math.min(...selection.map(cell => cell.column))
-                    const maxCol = Math.max(...selection.map(cell => cell.column))
-                    const minRecId = Math.min(...selection.map(cell => cell.recid))
-                    const maxRecId = Math.max(...selection.map(cell => cell.recid))               
-                    const recIds = [...new Set(selection.map(cell => cell.recid))]
-                    const range = [
-                        { recid: minRecId, column: minCol }, 
-                        { recid: maxRecId, column: maxCol }
-                    ]
-                    const selectedRecords = grid.getRangeData(range, true)
-                        .filter(r => recIds.includes(r[0].record.recid))
-                        .map(record => { return record.map(col => { return col.data }) })
+                    const columnIndexes = [...new Set(selection.map(cell => cell.column))].sort()
+                    const indexes = [...new Set(selection.map(cell => cell.index))].sort()
+                    const selectedRecords = indexes.map(index => grid.records[index])
+                        .map(record => modifiedRecord(record))
+                        .map(record => { return columnIndexes
+                            .map(column => record[grid.columns[column].field]) })
                     const result = d3.tsvFormatBody(selectedRecords)
                     console.log(result)
                     return result
