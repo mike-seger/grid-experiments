@@ -68,7 +68,7 @@
                     const indexes = [...new Set(selection.map(cell => Number(cell.index)))].sort((a,b) => a-b)
                     indexes.forEach(index => 
                         columnIndexes.forEach(column => { 
-                            grid.editChange({ type: 'custom', value: ''}, index, column) })      
+                            grid.editChange({ type: 'custom', value: null}, index, column) })      
                     )
                 }
 
@@ -83,6 +83,33 @@
                     const result = d3.tsvFormatBody(selectedRecords)
                     console.log(result)
                     return result
+                }
+
+                function insertRows(grid, after) {
+                    const selection = grid.getSelection(true)
+                    const indexes = [...new Set(selection.map(cell => Number(cell.index)))].sort((a,b) => a-b)
+                    const pos = (after?indexes.slice(-1)[0]+1:indexes[0])%grid.records.length
+                    const newRecords = Array.from(new Array(indexes.length), (x, i) => 
+                            i + grid.records.length)
+                        .map(index => { 
+                            const record = Object.fromEntries(grid.columns
+                                .map(col => { return [col.field, null]  }))
+                            record.recid = index
+                            return record
+                    })
+                    //grid.records.splice(pos, 0, ...newRecords)
+                    //newRecords.forEach(record => grid.refreshRow(record.recid))
+                    const len = grid.records.length
+                    const head = grid.records.slice(0, pos);
+                    const tail = grid.records.slice(pos, pos+len);
+                    grid.add(newRecords);
+
+                    grid.records = [...head, ...newRecords,  ...tail]
+                    grid.total = grid.records.length
+                    grid.buffered = grid.total
+                    //grid.records.forEach(record => grid.refreshRow(record.recid))
+                    grid.refresh()
+                    console.log(grid.records)
                 }
 
                 var config = {
@@ -120,7 +147,12 @@
                             console.log(event)
                             const menuId = event.detail.menuItem.id
                             event.onComplete = function() {
+                                if(menuId.startsWith('insert') || menuId.startsWith('paste'))
+                                    insertRows(grid, menuId.endsWith('After'))
                                 switch(menuId) {
+                                    case 'pasteBefore':
+                                        //navigator.clipboard.writeText(getSelectionText(this))
+                                        break;
                                     case 'copySelection':
                                         navigator.clipboard.writeText(getSelectionText(this))
                                         break;
