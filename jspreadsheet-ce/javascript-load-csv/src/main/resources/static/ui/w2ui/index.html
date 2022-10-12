@@ -48,6 +48,12 @@
                 if(entity == null) return
                 loadedEntity = entity
 
+                function refreshSelection(grid) {
+                    const selection = grid.getSelection(true)
+                    const recids = [...new Set(selection.map(cell => Number(cell.recid)))].sort((a,b) => a-b)
+                    recids.forEach(recid => grid.refreshRow(recid))
+                }
+
                 function modifiedRecord(record) {
                     if(! record?.w2ui?.changes) return record
                     const changes = record.w2ui.changes
@@ -56,10 +62,20 @@
                     return result
                 }
 
+                function deleteSelectionText(grid) {
+                    const selection = grid.getSelection(true)
+                    const columnIndexes = [...new Set(selection.map(cell => Number(cell.column)))].sort((a,b) => a-b)
+                    const indexes = [...new Set(selection.map(cell => Number(cell.index)))].sort((a,b) => a-b)
+                    indexes.forEach(index => 
+                        columnIndexes.forEach(column => { 
+                            grid.editChange({ type: 'custom', value: ''}, index, column) })      
+                    )
+                }
+
                 function getSelectionText(grid) {
                     const selection = grid.getSelection(true)
-                    const columnIndexes = [...new Set(selection.map(cell => cell.column))].sort()
-                    const indexes = [...new Set(selection.map(cell => cell.index))].sort()
+                    const columnIndexes = [...new Set(selection.map(cell => Number(cell.column)))].sort((a,b) => a-b)
+                    const indexes = [...new Set(selection.map(cell => Number(cell.index)))].sort((a,b) => a-b)
                     const selectedRecords = indexes.map(index => grid.records[index])
                         .map(record => modifiedRecord(record))
                         .map(record => { return columnIndexes
@@ -67,21 +83,6 @@
                     const result = d3.tsvFormatBody(selectedRecords)
                     console.log(result)
                     return result
-                }
-
-                function updateCellClass(grid, event, className) {
-                    const recid = event.detail.recid;
-                    const column = grid.columns[event.detail.column].field
-                    const index = grid.get(recid, true)
-                    const record = grid.records[index]
-                    if(!record.w2ui) record.w2ui = {}
-                    if(!record.w2ui.class) record.w2ui.class = {}
-                    if(className) record.w2ui.class[column] = className
-                    else delete record.w2ui.class[column]
-                    console.log({record, event})
-                    event.onComplete = function() {
-                        grid.refreshRow(recid)
-                    }
                 }
 
                 var config = {
@@ -92,10 +93,6 @@
                         liveSearch: true,
                         multiSearch: true,
                         resizable: true,
-                        //sortable: true,
-                        //reorderColumns: true,
-                        //emptyRecords: false,
-                        //reorderRows: true,
                         show: {
                             toolbar: true,
                             footer: true,
@@ -103,7 +100,9 @@
                         },
                         style: 'font-size:16px; font-family: sans-serif; color:black;',
                         onDelete(event) {
-                            event.detail.force = true
+                            deleteSelectionText(this)
+                            refreshSelection(this) 
+                            event.preventDefault()
                         },
                         contextMenu: [
                             { id: 'copySelection', text: 'Copy selection', icon: 'w2ui-icon-check' },
@@ -122,22 +121,18 @@
                             const menuId = event.detail.menuItem.id
                             event.onComplete = function() {
                                 switch(menuId) {
-                                    case 'copySelection': {
-                                            navigator.clipboard.writeText(getSelectionText(this))
-                                        }
+                                    case 'copySelection':
+                                        navigator.clipboard.writeText(getSelectionText(this))
                                         break;
                                 }
                             }
                         },
-                        columnClick() {},
 
-                        onRestore(event) {
-                            updateCellClass(this, event)
+                        onCopy: function(event) {
+                            navigator.clipboard.writeText(getSelectionText(this))
                         },
 
-                        onChange(event) {
-                            updateCellClass(this, event, "cell-modified")
-                        }
+                        columnClick() {},
                     }
                 }
 
