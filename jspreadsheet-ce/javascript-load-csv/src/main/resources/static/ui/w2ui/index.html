@@ -15,7 +15,7 @@
                 entities: null,
                 loadedEntity: null,
                 selectedEntityName: null,
-                delimFormat: 'TSV',
+                delimFormat: 'TSV'
             }
 
             function isStatic() {
@@ -81,13 +81,10 @@
             }
 
             async function submitData(uri, method, body) {
-                // serverText.innerText = "Uploading...";
-                // serverMessage.modal.open();
                 try {
                     const response = await fetch(uri, {
                         method: method,
                         body: body})
-                    //resetMessage();
                     const success = await handleFetchTextResponse(response);
                     if(success) loadEntity(globalState.loadedEntity)
                 } catch(e) {
@@ -95,7 +92,7 @@
                 }
             }
 
-            async function save(/*uri,*/ records) {
+            async function save(records) {
                 if(records.length==0) return
                 const uri = remoteUrl(getRemoteBaseUri() + globalState.loadedEntity.putUri, false, false);
                 try {
@@ -129,12 +126,7 @@
                     return;
                 }
 
-                if(!isStatic()) {
-                    submitData(remoteUrl(uri, tabSeparated, true), method, file)
-                } //else {
-                //     serverMessage.modal.open();
-                //     serverText.innerText = noDbMessage;
-                // }
+                submitData(remoteUrl(uri, tabSeparated, true), method, file)
             }
 
             function localRecord(record) {
@@ -176,73 +168,74 @@
                 dlLink.remove()
             }
 
-            function loadEntity(entity) {
-                console.log(entity)
-                if(entity == null) return
-                globalState.loadedEntity = entity
 
-                function refreshSelection(grid) {
+            function refreshSelection(grid) {
                     const selection = grid.getSelection(true)
                     const recids = [...new Set(selection.map(cell => Number(cell.recid)))].sort((a,b) => a-b)
                     recids.forEach(recid => grid.refreshRow(recid))
                 }
 
-                function deleteSelectionText(grid) {
-                    const selection = grid.getSelection(true)
-                    const columnIndexes = [...new Set(selection.map(cell => Number(cell.column)))].sort((a,b) => a-b)
-                    const indexes = [...new Set(selection.map(cell => Number(cell.index)))].sort((a,b) => a-b)
-                    indexes.forEach(index => 
-                        columnIndexes.forEach(column => { 
-                            grid.editChange({ type: 'custom', value: null}, index, column) })      
-                    )
-                }
+            function deleteSelectionText(grid) {
+                const selection = grid.getSelection(true)
+                const columnIndexes = [...new Set(selection.map(cell => Number(cell.column)))].sort((a,b) => a-b)
+                const indexes = [...new Set(selection.map(cell => Number(cell.index)))].sort((a,b) => a-b)
+                indexes.forEach(index => 
+                    columnIndexes.forEach(column => { 
+                        grid.editChange({ type: 'custom', value: null}, index, column) })      
+                )
+            }
 
-                function getSelectionText(grid) {
-                    const selection = grid.getSelection(true)
-                    const columnIndexes = [...new Set(selection.map(cell => Number(cell.column)))].sort((a,b) => a-b)
-                    const indexes = [...new Set(selection.map(cell => Number(cell.index)))].sort((a,b) => a-b)
-                    const selectedRecords = indexes.map(index => grid.records[index])
-                        .map(record => localRecord(record))
-                        .map(record => { return columnIndexes
-                            .map(column => record[grid.columns[column].field]) })
-                    const result = d3.tsvFormatBody(selectedRecords)
-                    console.log(result)
-                    return result
-                }
+            function getSelectionText(grid) {
+                const selection = grid.getSelection(true)
+                const columnIndexes = [...new Set(selection.map(cell => Number(cell.column)))].sort((a,b) => a-b)
+                const indexes = [...new Set(selection.map(cell => Number(cell.index)))].sort((a,b) => a-b)
+                const selectedRecords = indexes.map(index => grid.records[index])
+                    .map(record => localRecord(record))
+                    .map(record => { return columnIndexes
+                        .map(column => record[grid.columns[column].field]) })
+                const result = d3.tsvFormatBody(selectedRecords)
+                console.log(result)
+                return result
+            }
 
-                function deleteRows(grid) {
-                    const selection = grid.getSelection(true)
-                    const recIds = [...new Set(selection.map(cell => Number(cell.recid)))]
-                    grid.records = grid.records.filter(record => ! recIds.includes(record.recid))
-                    grid.total = grid.records.length
-                    grid.buffered = grid.total
-                    grid.refresh()
-                }
+            function deleteRows(grid) {
+                const selection = grid.getSelection(true)
+                const recIds = [...new Set(selection.map(cell => Number(cell.recid)))]
+                grid.records = grid.records.filter(record => ! recIds.includes(record.recid))
+                grid.total = grid.records.length
+                grid.buffered = grid.total
+                grid.refresh()
+            }
 
-                function insertRows(grid, after) {
-                    const selection = grid.getSelection(true)
-                    let indexes = [...new Set(selection.map(cell => Number(cell.index)))].sort((a,b) => a-b)
-                    if(indexes.length==0) { indexes = [0]; after=false; }
-                    const pos = (after?indexes.slice(-1)[0]+1:indexes[0])
-                    const newRecords = Array.from(new Array(indexes.length), (x, i) => 
-                            i + grid.records.length)
-                        .map(index => { 
-                            const record = Object.fromEntries(grid.columns
-                                .map(col => { return [col.field, null]  }))
-                            record.recid = index
-                            return record
-                    })
-                    const len = grid.records.length
-                    const head = grid.records.slice(0, pos);
-                    const tail = grid.records.slice(pos, pos+len);
-                    grid.add(newRecords);
+            function insertRows(grid, after) {
+                const selection = grid.getSelection(true)
+                let indexes = [...new Set(selection.map(cell => Number(cell.index)))].sort((a,b) => a-b)
+                if(indexes.length==0) { indexes = [0]; after=false; }
+                const pos = (after?indexes.slice(-1)[0]+1:indexes[0])
+                const newRecords = Array.from(new Array(indexes.length), (x, i) => 
+                        i + grid.records.length)
+                    .map(index => { 
+                        const record = Object.fromEntries(grid.columns
+                            .map(col => { return [col.field, null]  }))
+                        record.recid = index
+                        return record
+                })
+                const len = grid.records.length
+                const head = grid.records.slice(0, pos);
+                const tail = grid.records.slice(pos, pos+len);
+                grid.add(newRecords);
 
-                    grid.records = [...head, ...newRecords,  ...tail]
-                    grid.total = grid.records.length
-                    grid.buffered = grid.total
-                    grid.refresh()
-                    console.log(grid.records)
-                }
+                grid.records = [...head, ...newRecords,  ...tail]
+                grid.total = grid.records.length
+                grid.buffered = grid.total
+                grid.refresh()
+                console.log(grid.records)
+            }
+
+            function loadEntity(entity) {
+                console.log(entity)
+                if(entity == null) return
+                globalState.loadedEntity = entity
 
                 var config = {
                     grid: {
@@ -297,7 +290,7 @@
                             navigator.clipboard.writeText(getSelectionText(this))
                         },
 
-                        columnClick() {},
+                        columnClick() {}
                     }
                 }
 
@@ -329,6 +322,7 @@
                     }
                     return columnDefinition
                 })
+
                 let grid = new w2grid(config.grid)
                 // grid.on('*', (event) => {
                 //     console.log(event)
@@ -341,25 +335,32 @@
                 const csvUri = getRemoteBaseUri()+entity.getUri
                 const gridElement = document.getElementById("grid")
                 fetch(csvUri)
-                    .then((response) => response.text())
-                    .then((csv) => {
+                    .then(response => response.text())
+                    .then(csv => {
                         const data = d3.csvParse(csv)
+                        // entity.attributes.map(attribute => {
                         for (var i = 0; i < data.length; i++) data[i].recid = i
                         w2ui.grid.records = data
                         w2ui.grid.total = w2ui.grid.records.length
                         w2ui.grid.buffered = w2ui.grid.total
                         w2ui.grid.searches.forEach(search => { search.operator = 'contains' })
+                        hideColumns(grid, entity.attributes)
                         w2ui.grid.render(gridElement)
                         w2ui.grid.focus()
-                    }
-                )
+                    }) 
+            }
+
+            function hideColumns(grid, attributes) {
+                grid.hideColumn(...(attributes
+                    .filter(attribute => attribute.hidden))
+                    .map(attribute => attribute.columnName))
             }
 
             function createToolbar(entities) {
                 const entityItens = Object.keys(entities).map(key => 
                     { return { id: key, text: entities[key].name } }
                 )
-                const buttonStyle = 'font-family: icomoon; font-size: 17px;'
+                const iconButtonStyle = 'font-family: icomoon; font-size: 17px;'
 
                 new w2toolbar({
                     box: '#toolbar',
@@ -377,7 +378,7 @@
                         { type: 'break' },
                         { type: 'button', 
                             id: 'save', 
-                            style: buttonStyle,
+                            style: iconButtonStyle,
                             text: '&#xe903;'
                         },
                         { type: 'menu-radio', id: 'format',
@@ -391,29 +392,28 @@
                         },
                         { type: 'button', 
                             id: 'download', 
-                            style: buttonStyle,
+                            style: iconButtonStyle,
                             text: '&#xe90c;'
                         },
                         { type: 'button', 
                             id: 'upload', 
-                            style: buttonStyle,
+                            style: iconButtonStyle,
                             text: '&#xe90b;'
                         },
                         { type: 'break' },
                         { type: 'button',
                             id: 'refresh',
-                            style: buttonStyle,
+                            style: iconButtonStyle,
                             text: '&#xe908;'
                         },
                         { type: 'spacer' },
                         { type: 'button', id: 'help', text: '?' }
-
                     ]
                 })
 
                 w2ui.toolbar.on('*', (event) => {
                     if(event.type === 'click') {
-                        switch(event.target.replace(/:.*/, '')){
+                        switch(event.target.replace(/:.+/, '')){
                             case "save":
                                 console.log('save')
                                 save(w2ui.grid.records)
