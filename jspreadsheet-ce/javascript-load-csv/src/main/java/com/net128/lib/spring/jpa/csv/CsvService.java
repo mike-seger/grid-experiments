@@ -34,7 +34,9 @@ public class CsvService {
 		readerMapper = csvMapper()
 			.enable(CsvParser.Feature.TRIM_SPACES)
 			.enable(CsvParser.Feature.SKIP_EMPTY_LINES)
-			.enable(CsvParser.Feature.EMPTY_STRING_AS_NULL);
+			.enable(CsvParser.Feature.EMPTY_STRING_AS_NULL)
+		;
+		readerMapper.setPropertyNamingStrategy(PropertyNamingStrategies.SNAKE_CASE);
 		readerSchema = CsvSchema.emptySchema()
 			.withHeader().withLineSeparator(new String(CsvSchema.DEFAULT_LINEFEED));
 		readerTsvSchema = readerSchema.withColumnSeparator('\t').withoutQuoteChar();
@@ -129,8 +131,9 @@ public class CsvService {
 			var count = 0;
 			if (reader != null) {
 				while (reader.hasNext()) {
-					var item = reader.next();
+					T item = null;
 					try {
+						item = reader.next();
 						jpaRepository.save(item);
 						count++;
 					} catch(Exception e) {
@@ -162,6 +165,7 @@ public class CsvService {
 			.with(MapperFeature.ACCEPT_CASE_INSENSITIVE_ENUMS)
 			.with(MapperFeature.ACCEPT_CASE_INSENSITIVE_PROPERTIES);
 		mapper.setConfig(newConfig);
+		mapper.setPropertyNamingStrategy(PropertyNamingStrategies.SNAKE_CASE);
 		return mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
 			.findAndRegisterModules()
 			.registerModule(new JavaTimeModule())
@@ -172,6 +176,7 @@ public class CsvService {
 	private CsvMapper csvMapper() {
 		CsvMapper csvMapper = new CsvMapper();
 		csvMapper = (CsvMapper)configureMapper(csvMapper);
+		csvMapper.setPropertyNamingStrategy(PropertyNamingStrategies.SNAKE_CASE);
 		return csvMapper;
 	}
 }

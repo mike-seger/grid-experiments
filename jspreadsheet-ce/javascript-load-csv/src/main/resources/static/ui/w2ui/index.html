@@ -5,13 +5,18 @@
         <!-- <link rel="stylesheet" type="text/css" href="./w2ui/w2ui.css"> -->
         <link rel="stylesheet" type="text/css" href="https://rawgit.com/vitmalina/w2ui/master/dist/w2ui.css">
         <script src="https://cdn.jsdelivr.net/npm/d3-dsv@3"></script>
+        <!-- <script src="https://cdn.jsdelivr.net/npm/d3-fetch@3"></script> -->
         <script type="module">
             import { w2ui, w2toolbar, w2grid } 
-//                from 'https://rawgit.com/vitmalina/w2ui/master/dist/w2ui.es6.min.js'
-                from './w2ui/w2ui.es6.js'
+                from 'https://rawgit.com/vitmalina/w2ui/master/dist/w2ui.es6.js'
+                //from './w2ui/w2ui.es6.js'
 
-            let entities = null
-            let loadedEntity = null
+            const globalState = {
+                entities: null,
+                loadedEntity: null,
+                selectedEntityName: null,
+                delimFormat: 'TSV',
+            }
 
             function isStatic() {
                 const urlParams = new URLSearchParams(window.location.search)
@@ -39,27 +44,147 @@
                 return remoteBaseUri
             }
 
-            function grid2Csv(records) {
-                console.log(records)
+            function remoteUrl(url, tabSeparated, deleteAll) {
+                return url+(url.includes('?')?"&":"?")+"tabSeparated="+(tabSeparated === true)
+                    + "&deleteAll="+(deleteAll === true)
+            }
+
+            function importFile() {
+                if(globalState.loadedEntity==null) return
+                let input = document.createElement('input')
+                input.type = 'file'
+                input.onchange = _this => {	uploadFile(input.files[0]);	}
+                input.click()
+            }
+
+            function extractText(responseText) {
+                let text = responseText
+                if(text.indexOf("<body")>=0) {
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(text, "text/html");
+                    text = doc.body.textContent
+                }
+                return text
+            }
+
+            async function handleFetchTextResponse(response) {
+                const responseMessage = await response.text()
+                const responseText = extractText(responseMessage)
+                if(response.status==200) {
+                    alert(responseText)
+                    return true
+                } else {
+                    alert(responseText)
+                    console.log(responseText)
+                }
+                return false;
+            }
+
+            async function submitData(uri, method, body) {
+                // serverText.innerText = "Uploading...";
+                // serverMessage.modal.open();
+                try {
+                    const response = await fetch(uri, {
+                        method: method,
+                        body: body})
+                    //resetMessage();
+                    const success = await handleFetchTextResponse(response);
+                    if(success) loadEntity(globalState.loadedEntity)
+                } catch(e) {
+                    alert(e.message);
+                }
+            }
+
+            async function save(/*uri,*/ records) {
+                if(records.length==0) return
+                const uri = remoteUrl(getRemoteBaseUri() + globalState.loadedEntity.putUri, false, false);
+                try {
+                    const modRecords = modifiedRecords(records)
+                    if(modRecords.length==0) return
+                    const response = await fetch(uri, {
+                        method: 'PUT',
+                        headers: { 'Content-type': 'text/csv' },
+                        body: d3.csvFormat(modRecords),
+                    });
+                    const success = await handleFetchTextResponse(response)
+                    if(success) loadEntity(globalState.loadedEntity)
+                } catch(e) {
+                    alert(e.message)
+                }
+            }
+
+            function uploadFile(file) {
+                if(globalState.loadedEntity==null) return
+                const entity = globalState.loadedEntity
+                let uri = null
+                let method = "PUT"
+                let tabSeparated = true
+                if(file.type === "text/tab-separated-values") {
+                    uri = getRemoteBaseUri() + entity.putUri
+                } else if(file.type === "text/csv") {
+                    uri = getRemoteBaseUri() + entity.putUri
+                    tabSeparated = false;
+                } else {
+                    alert("Unsupported file type: "+file.type)
+                    return;
+                }
+
+                if(!isStatic()) {
+                    submitData(remoteUrl(uri, tabSeparated, true), method, file)
+                } //else {
+                //     serverMessage.modal.open();
+                //     serverText.innerText = noDbMessage;
+                // }
+            }
+
+            function localRecord(record) {
+                if(! record?.w2ui?.changes) return record
+                const changes = record.w2ui.changes
+                var result = {...record, ...changes}
+                delete result.w2ui
+                return result
+            }
+
+            function modifiedRecords(records, onlyChanged = true) {
+                return records.filter(record => 
+                        !onlyChanged || 
+                        record?.w2ui?.changes)
+                    .map(record => localRecord(record))
+                    .map(record => Object.keys(localRecord(record))
+                    .filter(key => key != 'recid' && key != 'w2ui')
+                    .reduce((obj, key) => {
+                        obj[key] = record[key]
+                        return obj }, {})
+                )
+            }
+
+            function downloadSvFile(fileName, delimFormat, records) {
+                if(records == null) return
+                let result;
+                let mimetype = "text/csv";
+                const timeStamp =new Date().toISOString().substring(0,19).replaceAll(/[:.-]/g, '_').replace('T', '-');
+                const modRecords = modifiedRecords(records, false);
+                if(delimFormat == "TSV") {
+                    result = d3.tsvFormat(modRecords)
+                    mimetype = "text/tab-separated-values"
+                } else result = d3.csvFormat(modRecords)
+                const dlLink = document.createElement('a')
+                dlLink.href = 'data:'+mimetype+';charset=utf-8,' + encodeURI(result)
+                dlLink.target = '_blank'
+                dlLink.download = fileName+'-'+ timeStamp +'.'+delimFormat.toLowerCase()
+                dlLink.click()
+                dlLink.remove()
             }
 
             function loadEntity(entity) {
                 console.log(entity)
                 if(entity == null) return
-                loadedEntity = entity
+                globalState.loadedEntity = entity
 
                 function refreshSelection(grid) {
                     const selection = grid.getSelection(true)
                     const recids = [...new Set(selection.map(cell => Number(cell.recid)))].sort((a,b) => a-b)
                     recids.forEach(recid => grid.refreshRow(recid))
-                }
-
-                function modifiedRecord(record) {
-                    if(! record?.w2ui?.changes) return record
-                    const changes = record.w2ui.changes
-                    var result = {...record, ...changes}
-                    delete result.w2ui
-                    return result
                 }
 
                 function deleteSelectionText(grid) {
@@ -77,7 +202,7 @@
                     const columnIndexes = [...new Set(selection.map(cell => Number(cell.column)))].sort((a,b) => a-b)
                     const indexes = [...new Set(selection.map(cell => Number(cell.index)))].sort((a,b) => a-b)
                     const selectedRecords = indexes.map(index => grid.records[index])
-                        .map(record => modifiedRecord(record))
+                        .map(record => localRecord(record))
                         .map(record => { return columnIndexes
                             .map(column => record[grid.columns[column].field]) })
                     const result = d3.tsvFormatBody(selectedRecords)
@@ -96,8 +221,9 @@
 
                 function insertRows(grid, after) {
                     const selection = grid.getSelection(true)
-                    const indexes = [...new Set(selection.map(cell => Number(cell.index)))].sort((a,b) => a-b)
-                    const pos = (after?indexes.slice(-1)[0]+1:indexes[0])%grid.records.length
+                    let indexes = [...new Set(selection.map(cell => Number(cell.index)))].sort((a,b) => a-b)
+                    if(indexes.length==0) { indexes = [0]; after=false; }
+                    const pos = (after?indexes.slice(-1)[0]+1:indexes[0])
                     const newRecords = Array.from(new Array(indexes.length), (x, i) => 
                             i + grid.records.length)
                         .map(index => { 
@@ -132,11 +258,7 @@
                             lineNumbers: true
                         },
                         style: 'font-size:16px; font-family: sans-serif; color:black;',
-                        onDelete(event) {
-                            deleteSelectionText(this)
-                            refreshSelection(this) 
-                            event.preventDefault()
-                        },
+
                         contextMenu: [
                             { id: 'copySelection', text: 'Copy selection', icon: 'w2ui-icon-check' },
                             { text: '--' },
@@ -145,6 +267,12 @@
                             { text: '--' },
                             { id: 'deleteRows', text: 'Delete selected rows', icon: 'w2ui-icon-cross' },
                         ],
+
+                        onDelete(event) {
+                            deleteSelectionText(this)
+                            refreshSelection(this) 
+                            event.preventDefault()
+                        },
 
                         onContextMenuClick(event) {
                             console.log(event)
@@ -183,7 +311,7 @@
                     }
                     let columnDefinition = { 
                         field: attribute.columnName, 
-                        text: attribute.name,
+                        text: attribute.title,
                         sortable: true, 
                         editable: { type: type }
                     }
@@ -254,7 +382,7 @@
                         },
                         { type: 'menu-radio', id: 'format',
                             text(item) { return item.get(item.selected)?.text },
-                            selected: 'TSV',
+                            selected: globalState.delimFormat,
                             style: 'width: 50px; padding-right: 5px;',
                             items: [
                                 { id: 'TSV', text: 'TSV' },
@@ -288,33 +416,37 @@
                         switch(event.target.replace(/:.*/, '')){
                             case "save":
                                 console.log('save')
-                                changes()
+                                save(w2ui.grid.records)
                                 break
 
                             case "upload":
                                 console.log('upload')
+                                importFile()
                                 break
 
                             case "download":
                                 console.log('download')
-                                grid2Csv(w2ui.grid.records)
+                                downloadSvFile(globalState.selectedEntityName, 
+                                    globalState.delimFormat, w2ui.grid.records)
                                 break
 
                             case "refresh":
                                 console.log('refresh')
-                                loadEntity(loadedEntity)
+                                loadEntity(globalState.loadedEntity)
                                 break
 
                             case "entities":
                                 if(event.target.indexOf(':')>0) {
                                     const key = event.target.replace(/.*:/, '')
+                                    globalState.selectedEntityName = key
                                     loadEntity(entities[key])
                                 }
                                 break
 
                             case "format":
                                 if(event.target.indexOf(':')>0)
-                                    console.log('format -> '+event.target.replace(/.*:/, ''))
+                                    globalState.delimFormat = event.target.replace(/.*:/, '')
+                                console.log('format -> '+globalState.delimFormat)
                                 break
                             
                             default: 
@@ -329,8 +461,8 @@
                 const response = await fetch(configUrl)
                 const configuration = await response.json()
                 console.log(configuration)
-                entities = configuration.entities
-                createToolbar(entities)
+                globalState.entities = configuration.entities
+                createToolbar(globalState.entities)
             }
 
             addEventListener('load', (event) => { loadConfiguration() });

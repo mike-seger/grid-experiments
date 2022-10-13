@@ -661,7 +661,8 @@
 		downloadSvFile(currentEntity.name, data);
 	}
 
-	async function saveData(uri, data) {
+	async function saveData(/*uri,*/ data) {
+		const uri = remoteUrl(getRemoteBaseUri() + entity.putUri, false, false);
 		if(data.length<=1) {
 			return true;
 		}
