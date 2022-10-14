@@ -38,7 +38,7 @@
             }
 
             function getColumnWidthFromString(column, string) {
-                if(column.hidden) return 0
+                if(string===null || string===undefined || column.hidden) return 0
                 function findLongestString(arr) {
                     if(arr.length==0) return ""
                     return arr.reduce((a, b)=> a.length > b.length ? a : b)
@@ -76,6 +76,7 @@
                 grid.on('change', function(event) {
                     event.onComplete = function() {
                         const newValue = event.detail.value.new
+                        if(!newValue) return
                         const column = grid.columns[event.detail.column]
                         const oldW = column.size.replace("px", "")
                         const newW = getColumnWidthFromString(column, newValue)
@@ -403,7 +404,7 @@
                     }
                     if(attribute.hidden) columnDefinition.hidden = true
                     if(attribute.id || attribute.readOnly)
-                        delete columnDefinition.editable
+                        columnDefinition.editable = {}
                     return columnDefinition
                 })
 
