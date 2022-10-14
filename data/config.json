@@ -1,5 +1,46 @@
 {
   "entities": {
+    "car.csv": {
+      "attributes": [
+        {
+          "columnName": "id",
+          "enumConstants": null,
+          "hidden": true,
+          "id": true,
+          "name": "id",
+          "readOnly": false,
+          "title": "id",
+          "type": "Int"
+        },
+        {
+          "columnName": "brand",
+          "enumConstants": null,
+          "hidden": false,
+          "id": false,
+          "name": "brand",
+          "readOnly": false,
+          "title": "brand",
+          "type": "String"
+        },
+        {
+          "columnName": "total_price",
+          "enumConstants": null,
+          "hidden": false,
+          "id": false,
+          "name": "totalPrice",
+          "readOnly": false,
+          "title": "totalPrice",
+          "type": "Float"
+        }
+      ],
+      "deleteUri": "?entity=CAR&",
+      "getUri": "car.csv",
+      "id": "CAR",
+      "idField": "id",
+      "name": "CAR",
+      "putUri": "?entity=CAR",
+      "sortable": false
+    },
     "cities-140491.csv ": {
       "attributes": [
         {
@@ -338,6 +379,85 @@
       "name": "CITY-14",
       "putUri": "cities-14.csv",
       "sortable": true
+    }, 
+    "person.csv": {
+      "attributes": [
+        {
+          "columnName": "my_id",
+          "enumConstants": null,
+          "hidden": true,
+          "id": true,
+          "name": "myId",
+          "readOnly": false,
+          "title": "myId",
+          "type": "Int"
+        },
+        {
+          "columnName": "address",
+          "enumConstants": null,
+          "hidden": false,
+          "id": false,
+          "name": "address",
+          "readOnly": false,
+          "title": "address",
+          "type": "String"
+        },
+        {
+          "columnName": "city",
+          "enumConstants": null,
+          "hidden": false,
+          "id": false,
+          "name": "city",
+          "readOnly": false,
+          "title": "city",
+          "type": "String"
+        },
+        {
+          "columnName": "country",
+          "enumConstants": [
+            "Austria",
+            "Belgium",
+            "Luxembourg",
+            "Liechtenstein",
+            "Switzerland",
+            "Germany",
+            "Other"
+          ],
+          "hidden": false,
+          "id": false,
+          "name": "country",
+          "readOnly": false,
+          "title": "country",
+          "type": "Enum"
+        },
+        {
+          "columnName": "first_name",
+          "enumConstants": null,
+          "hidden": false,
+          "id": false,
+          "name": "firstName",
+          "readOnly": false,
+          "title": "firstName",
+          "type": "String"
+        },
+        {
+          "columnName": "last_name",
+          "enumConstants": null,
+          "hidden": false,
+          "id": false,
+          "name": "lastName",
+          "readOnly": false,
+          "title": "lastName",
+          "type": "String"
+        }
+      ],
+      "deleteUri": "?entity=PERSON&",
+      "getUri": "person.csv",
+      "id": "Person",
+      "idField": "myId",
+      "name": "PERSON",
+      "putUri": "?entity=PERSON",
+      "sortable": false
     }
   }
 }

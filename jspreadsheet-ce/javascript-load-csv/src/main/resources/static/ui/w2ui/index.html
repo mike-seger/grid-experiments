@@ -168,7 +168,6 @@
                 dlLink.remove()
             }
 
-
             function refreshSelection(grid) {
                     const selection = grid.getSelection(true)
                     const recids = [...new Set(selection.map(cell => Number(cell.recid)))].sort((a,b) => a-b)
@@ -193,7 +192,9 @@
                     .map(record => localRecord(record))
                     .map(record => { return columnIndexes
                         .map(column => record[grid.columns[column].field]) })
-                const result = d3.tsvFormatBody(selectedRecords)
+                const result = globalState.delimFormat == "TSV"?
+                    d3.tsvFormatBody(selectedRecords):
+                    d3.csvFormatBody(selectedRecords)
                 console.log(result)
                 return result
             }
@@ -313,13 +314,28 @@
                         const list = attribute.enumConstants.map(
                             value => { return { id: value, text: value } }
                         )
-                        columnDefinition.editable.items = list
-                        columnDefinition.editable.type = 'select'
+                        // columnDefinition.editable = {
+                        //     items: list,
+                        //     type: 'select'
+                        // }
+                        columnDefinition.editable = {
+                            items: list,
+                            //type: 'list',
+                            type: 'combo',
+                        }
+                        // columnDefinition.editable.type = 'combo'
+                        // columnDefinition.editable.type = 'list'
+                        //columnDefinition.editable.filter = true
+                        // columnDefinition.render = 
+                        //     function (record, extra) {
+                        //         return extra.value?.text || '';
+                        //     }
                         columnDefinition.editable.showAll = true
                     } else if(! (type === 'text')) {
                         columnDefinition.render = type
                         columnDefinition.editable.type = type
                     }
+                    if(attribute.hidden) columnDefinition.hidden = true
                     return columnDefinition
                 })
 
@@ -343,17 +359,11 @@
                         w2ui.grid.records = data
                         w2ui.grid.total = w2ui.grid.records.length
                         w2ui.grid.buffered = w2ui.grid.total
+                        if(data.length==0) insertRows(grid);
                         w2ui.grid.searches.forEach(search => { search.operator = 'contains' })
-                        hideColumns(grid, entity.attributes)
                         w2ui.grid.render(gridElement)
                         w2ui.grid.focus()
                     }) 
-            }
-
-            function hideColumns(grid, attributes) {
-                grid.hideColumn(...(attributes
-                    .filter(attribute => attribute.hidden))
-                    .map(attribute => attribute.columnName))
             }
 
             function createToolbar(entities) {
