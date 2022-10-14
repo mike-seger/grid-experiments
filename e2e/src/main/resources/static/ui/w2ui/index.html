@@ -288,20 +288,23 @@
                         i + grid.records.length)
                     .map(index => { 
                         const record = Object.fromEntries(grid.columns
-                            .map(col => { return [col.field, null]  }))
+                            .map(
+                                col => { 
+                                    return [col.field, null]  
+                                }))
                         record.recid = index
                         return record
                 })
                 const len = grid.records.length
-                const head = grid.records.slice(0, pos);
-                const tail = grid.records.slice(pos, pos+len);
-                grid.add(newRecords);
+                const head = grid.records.slice(0, pos)
+                const tail = grid.records.slice(pos, pos+len)
+                grid.add(newRecords)
 
                 grid.records = [...head, ...newRecords,  ...tail]
                 grid.total = grid.records.length
                 grid.buffered = grid.total
                 grid.refresh()
-                console.log(grid.records)
+                console.log("Inserted "+newRecords.length+" rows")
             }
 
             function loadEntity(entity) {
