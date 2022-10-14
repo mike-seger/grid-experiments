@@ -18,6 +18,76 @@
                 delimFormat: 'TSV'
             }
 
+            const globalConst = {
+                dropdownMargin: 8,
+                hMargin: 10,
+            }
+
+            function stringWidth(text, font = "16px sans-serif") {
+                const canvas = document.createElement("canvas")
+                const context = canvas.getContext("2d")
+                context.font = font
+                const { width } = context.measureText(text)
+                return width
+            }
+
+            function maxStringWidth(texts) {
+                const max = texts.reduce((element,max) => 
+                    stringWidth(element) > stringWidth(max) ? element : max, 0)
+                return stringWidth(max)
+            }
+
+            function getColumnWidthFromString(column, string) {
+                if(column.hidden) return 0
+                function findLongestString(arr) {
+                    if(arr.length==0) return ""
+                    return arr.reduce((a, b)=> a.length > b.length ? a : b)
+                }
+                const sortableMargin = column.sortable === true?globalConst.dropdownMargin:0
+                let w = Math.max(stringWidth(string), stringWidth(column.text)+sortableMargin)
+                if(column.type === 'list') w += globalConst.dropdownMargin
+                w += 2*globalConst.hMargin
+                return w
+            }
+
+            function getColumnWidth(column, values) {
+                if(column.hidden) return 0
+                function findLongestString(arr) {
+                    if(arr.length==0) return ""
+                    return arr.reduce((a, b)=> a.length > b.length ? a : b)
+                }
+                return getColumnWidthFromString(column, findLongestString(values))
+            }
+
+            function autoAdjustColumnWidth(column, values) {
+                const w = getColumnWidth(column, values)
+                column.size = w+"px"
+                console.log("columnWidth "+column.size)
+            }
+
+            function autoAdjustColumnWidths(grid) {
+                grid.columns.forEach(column => {
+                    const values = grid.records
+                        .map(record => record[column.field])
+                        .filter(value => value)
+                    autoAdjustColumnWidth(column, values)
+                })
+                grid.refresh()
+                grid.on('change', function(event) {
+                    event.onComplete = function() {
+                        const newValue = event.detail.value.new
+                        const column = grid.columns[event.detail.column]
+                        const oldW = column.size.replace("px", "")
+                        const newW = getColumnWidthFromString(column, newValue)
+                        if(newW > oldW) {
+                            console.log(column, newValue)
+                            column.size = newW + "px"
+                            grid.refresh()
+                        }
+                    }
+                })
+            }
+
             function isStatic() {
                 const urlParams = new URLSearchParams(window.location.search)
                 const isStatic = urlParams.get('static')
@@ -320,12 +390,8 @@
                         // }
                         columnDefinition.editable = {
                             items: list,
-                            //type: 'list',
                             type: 'combo',
                         }
-                        // columnDefinition.editable.type = 'combo'
-                        // columnDefinition.editable.type = 'list'
-                        //columnDefinition.editable.filter = true
                         // columnDefinition.render = 
                         //     function (record, extra) {
                         //         return extra.value?.text || '';
@@ -336,13 +402,13 @@
                         columnDefinition.editable.type = type
                     }
                     if(attribute.hidden) columnDefinition.hidden = true
+                    if(attribute.id || attribute.readOnly)
+                        delete columnDefinition.editable
                     return columnDefinition
                 })
 
                 let grid = new w2grid(config.grid)
-                // grid.on('*', (event) => {
-                //     console.log(event)
-                // })
+                //grid.on('*', (event) => { console.log(event) })
 
                 w2ui.grid.columns = columnDefs
                 w2ui.grid.lineNumberWidth = 58
@@ -354,13 +420,14 @@
                     .then(response => response.text())
                     .then(csv => {
                         const data = d3.csvParse(csv)
-                        // entity.attributes.map(attribute => {
                         for (var i = 0; i < data.length; i++) data[i].recid = i
                         w2ui.grid.records = data
                         w2ui.grid.total = w2ui.grid.records.length
                         w2ui.grid.buffered = w2ui.grid.total
-                        if(data.length==0) insertRows(grid);
-                        w2ui.grid.searches.forEach(search => { search.operator = 'contains' })
+                        if(data.length==0) insertRows(grid)
+                        autoAdjustColumnWidths(w2ui.grid)
+                        console.log("w2ui.grid.columns", w2ui.grid.columns)
+                        //w2ui.grid.searches.forEach(search => { search.operator = 'contains' })
                         w2ui.grid.render(gridElement)
                         w2ui.grid.focus()
                     }) 
