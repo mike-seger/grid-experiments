@@ -1,7 +1,26 @@
-<h3>Grid Experiments</h3>
-<ol>
-<li><a href="jspreadsheet-ce/javascript-load-csv/src/main/resources/static/ui/?rows=1000">jSpreadsheet CE (1000 rows)</a></li>
-<li><a href="w2ui/?rows=1000">w2ui (1000 rows)</a></li>
-<li><a href="ag-grid-ce-js/?rows=1000">ag-grid CE (1000 rows)</a></li>
-</ol>
-<br />
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Main</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<link rel="stylesheet" href="navigation.css">
+	<style>
+		:root { --sidebar-width: 250px; }
+		body { font-family: "Lato", sans-serif; color: white; }
+	</style>
+	<script src="navigation.js"></script>
+</head>
+<body>
+
+<div id="sidenav">
+    <h3>Grid Experiments</h3>
+    <a href="e2e/src/main/resources/static/ui/jspreadsheet/?rows=15000">jspreadsheet 15k</a>
+	<a href="e2e/src/main/resources/static/ui/w2ui/">w2grid</a>
+    <a href="ag-grid-ce-js/?rows=1000">ag grid (1000 rows)</a>
+    <a href="ag-grid-ce-js/?rows=10000">ag grid (10000 rows)</a>
+</div>
+
+<div id="main"></div>
+
+</body>
+</html>
