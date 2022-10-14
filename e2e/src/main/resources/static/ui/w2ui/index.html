@@ -19,7 +19,7 @@
             }
 
             const globalConst = {
-                dropdownMargin: 8,
+                dropdownMargin: 6,
                 hMargin: 10,
             }
 
@@ -45,7 +45,7 @@
                 }
                 const sortableMargin = column.sortable === true?globalConst.dropdownMargin:0
                 let w = Math.max(stringWidth(string), stringWidth(column.text)+sortableMargin)
-                if(column.type === 'list') w += globalConst.dropdownMargin
+                if(column?.editable?.type === 'list') w += globalConst.dropdownMargin
                 w += 2*globalConst.hMargin
                 return w
             }
@@ -56,7 +56,14 @@
                     if(arr.length==0) return ""
                     return arr.reduce((a, b)=> a.length > b.length ? a : b)
                 }
-                return getColumnWidthFromString(column, findLongestString(values))
+                let longestText = findLongestString(values)
+                if(column?.editable?.items) {
+                    const longestItemText = 
+                        findLongestString(column.editable.items.map(item => item.text))
+                    if(longestItemText.length > longestText.length) longestText = longestItemText
+                }
+
+                return getColumnWidthFromString(column, longestText)
             }
 
             function autoAdjustColumnWidth(column, values) {
@@ -407,7 +414,7 @@
                     }
                     if(attribute.hidden) columnDefinition.hidden = true
                     if(attribute.id || attribute.readOnly)
-                        columnDefinition.editable = {}
+                        columnDefinition.editable = false
                     return columnDefinition
                 })
 
@@ -550,7 +557,9 @@
         </script>
         
         <style> 
-            :root { --main-tb-height: 27px; }
+            :root { 
+                --main-tb-height: 27px; 
+            }
 
             body * {
                 font-family: sans-serif;
@@ -592,8 +601,8 @@
             }
 
             #toolbar .w2ui-tb-button:hover, #toolbar .w2ui-tb-button:hover * {
-                background-color: rgb(117, 167, 221) !important;
-                color: white;
+                background-color: rgb(239, 239, 239) !important;
+                /* color: white; */
             }
 
             #toolbar .w2ui-tb-break {
@@ -636,8 +645,8 @@
                 background-color: white !important;
             }
 
-            .w2ui-col-header,
-            .w2ui-col-number {
+            .w2ui-col-header/*,
+            .w2ui-col-number*/ {
                 font-weight: 600;
                 color: black !important;
             }
@@ -661,7 +670,63 @@
             }
 
             #w2overlay-context-menu *, .w2ui-overlay * {
-                font-size: 12px !important;
+                font-size: 14px !important;
+            }
+
+            .w2ui-grid .w2ui-grid-toolbar .w2ui-grid-search-input .w2ui-search-drop {
+                display: none;
+            }
+
+            .w2ui-menu {
+                padding: 0 0 0 0;
+                border-radius: 0;
+            }
+
+            .w2ui-menu .menu-icon {
+                display: none;
+            }
+
+            #w2overlay-context-menu .w2ui-menu .menu-icon {
+                display: inline-block;
+            }
+
+            .w2ui-menu .w2ui-menu-item {
+                padding: 6px 10px 6px 16px;
+            }
+
+            .w2ui-menu .w2ui-menu-item:hover {
+                background-color: rgb(239, 239, 239);
+            }
+
+            .w2ui-overlay .w2ui-overlay-body {
+                line-height: 1.2;
+            }
+
+            .w2ui-overlay .w2ui-overlay-body.w2ui-arrow-bottom:after {
+                display: none;
+            }
+
+            #w2overlay-toolbar-drop {
+                top: cal(var(--main-tb-height) + 7px) !important;
+                margin: 0 !important;
+            }
+
+            .w2ui-overlay .w2ui-overlay-body.w2ui-white  {
+                background-color: white;
+                border-radius: 0;
+                border: 0;
+                box-shadow: 
+                    rgba(0, 0, 0, 0.16) 0 2px 3px 0, 
+                    rgba(0, 0, 0, 0.23) 0 2px 3px 0;
+            }
+
+/* 
+            .w2ui-overlay {
+                margin: 0 !important;
+            } */
+
+            #w2overlay-toolbar-drop {
+                --tip-size: 0 !important;
             }
 
             .w2ui-changed {
