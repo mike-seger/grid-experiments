@@ -361,9 +361,11 @@
 			console.log(columns);
 		}
 		getData(entity).then((csv) => {
-			let rawData = d3.csvParse(csv);
-            const data = rawData.slice(0, Math.min(rawData.length, getRows()));
-            rawData = null;
+			let rawData = d3.csvParse(csv)
+			const maxRows = getRows()
+			const data = maxRows==0?rawData:rawData.slice(0, Math.min(rawData.length, maxRows))
+			rawData = null;
+
 			jspreadsheet.tabs(spreadsheet1, [{
 				sheetName: entity.name,
 				data: data,
@@ -927,8 +929,8 @@
 	function getRows() {
 		const urlParams = new URLSearchParams(window.location.search);
 		let rows = urlParams.get('rows');
-		if(!rows) rows = 1000;
-		rows = Math.max(Number(rows), 1);
+		if(!rows) rows = 0;
+		else if(rows!=0) rows = Math.max(Number(rows), 1);
 		return rows;
 	}
 

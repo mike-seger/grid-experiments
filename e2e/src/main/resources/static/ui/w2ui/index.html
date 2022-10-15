@@ -122,6 +122,14 @@
                 return remoteBaseUri
             }
 
+            function getRows() {
+                const urlParams = new URLSearchParams(window.location.search);
+                let rows = urlParams.get('rows');
+                if(!rows) rows = 0;
+                else if(rows!=0) rows = Math.max(Number(rows), 1);
+                return rows;
+            }
+
             function remoteUrl(url, tabSeparated, deleteAll) {
                 return url+(url.includes('?')?"&":"?")+"tabSeparated="+(tabSeparated === true)
                     + "&deleteAll="+(deleteAll === true)
@@ -430,7 +438,10 @@
                 fetch(csvUri)
                     .then(response => response.text())
                     .then(csv => {
-                        const data = d3.csvParse(csv)
+                        let rawData = d3.csvParse(csv)
+                        const maxRows = getRows()
+                        const data = maxRows==0?rawData:rawData.slice(0, Math.min(rawData.length, maxRows))
+                        rawData = null;
                         for (var i = 0; i < data.length; i++) data[i].recid = i
                         w2ui.grid.records = data
                         w2ui.grid.total = w2ui.grid.records.length

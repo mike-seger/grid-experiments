@@ -4,9 +4,9 @@
 	<title>Main</title>
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<link rel="stylesheet" href="navigation.css">
+	<link rel="stylesheet" href="dropdown.css">
 	<style>
-		:root { --sidebar-width: 250px; }
-		body { font-family: "Lato", sans-serif; color: white; }
+		:root { --sidebar-width: 190px; }
 	</style>
 	<script src="navigation.js"></script>
 </head>
@@ -14,10 +14,35 @@
 
 <div id="sidenav">
     <h3>Grid Experiments</h3>
-    <a href="e2e/src/main/resources/static/ui/jspreadsheet/?rows=15000">jspreadsheet 15k</a>
-	<a href="e2e/src/main/resources/static/ui/w2ui/">w2grid</a>
-    <a href="ag-grid-ce-js/?rows=1000">ag grid (1000 rows)</a>
-    <a href="ag-grid-ce-js/?rows=10000">ag grid (10000 rows)</a>
+    <a href="e2e/src/main/resources/static/ui/jspreadsheet/?rows=1000">jspreadsheet</a>
+	<a href="e2e/src/main/resources/static/ui/w2ui/?rows=1000">w2grid</a>
+    <a href="ag-grid-ce-js/?rows=1000">ag grid</a>
+
+	<br />
+	<div style="color:rgb(178, 178, 178)">Limit rows:</div>
+	<script>
+		function limit(select) {
+			console.log(select.value, select)
+			const anchors = Array.from(sidenav.querySelectorAll("a"))
+			anchors.forEach(anchor =>
+				anchor.href = anchor.href.replace(/rows=[0-9]+/, `rows=${select.value}`))
+			resetMain()
+			navigate(anchors[0])
+		}
+	</script>
+	<div class="dropdown dropdown-dark">
+		<select class="dropdown-select" style="width: 150px;" onchange="limit(this)">
+			<option value="10">10</option>
+			<option value="100">100</option>
+			<option selected value="1000">1'000</option>
+			<option value="5000">5'000</option>
+			<option value="10000">10'000</option>
+			<option value="20000">20'000</option>
+			<option value="50000">50'000</option>
+			<option value="100000">100'000</option>
+			<option value="0">unlimited</option>
+		</select>
+	</div>
 </div>
 
 <div id="main"></div>
