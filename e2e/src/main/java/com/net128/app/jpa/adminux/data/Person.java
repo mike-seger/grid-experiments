@@ -18,16 +18,16 @@ public class Person {
 	private Long myId;
 
 	@Column(nullable = false)
-	private String firstName;
-
-	@Column(nullable = false)
-	private String lastName;
+	private String city;
 
 	@Column(nullable = false)
 	private String address;
 
 	@Column(nullable = false)
-	private String city;
+	private String firstName;
+
+	@Column(nullable = false)
+	private String lastName;
 
 	@Column(nullable = false)
 	@Enumerated(EnumType.STRING)

@@ -8,10 +8,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import javax.persistence.EntityManager;
-import java.lang.reflect.Array;
-import java.lang.reflect.GenericArrayType;
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
+import java.lang.reflect.*;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -23,7 +20,8 @@ public class JpaMapper {
 	private final Map<Class<?>, JpaRepository<?, Long>> entityRepoMap;
 	private final List<String> titleRegexes;
 
-	public JpaMapper(EntityManager entityManager, Set<JpaRepository<?, Long>> jpaRepositories, @Value("${com.net128.lib.spring.jpa.csv.util.title-format-regex}") List<String> titleRegexes) {
+	public JpaMapper(EntityManager entityManager, Set<JpaRepository<?, Long>> jpaRepositories,
+			 @Value("${com.net128.lib.spring.jpa.csv.util.title-format-regex}") List<String> titleRegexes) {
 		this.entityManager = entityManager;
 		this.titleRegexes = titleRegexes;
 		entityClassMap = getEntityClassMap();
@@ -33,8 +31,16 @@ public class JpaMapper {
 	public LinkedHashMap<String, Attribute> getAttributes(String entity) {
 		var idFieldName = getIdFieldName(entity);
 		var metaAttributes = getMetaAttributes(entity);
+		var fieldOrder = Arrays.stream(getEntityClass(entity).getDeclaredFields())
+			.map(f -> f.getName().toLowerCase()).collect(Collectors.toList());
+		@SuppressWarnings("rawtypes")
+		var attributeComparator = (Comparator<javax.persistence.metamodel.Attribute>) (a1, a2) -> {
+			var pos1 = fieldOrder.indexOf(a1.getName().toLowerCase());
+			var pos2 = fieldOrder.indexOf(a2.getName().toLowerCase());
+			return Integer.compare(pos1, pos2);
+		};
 		var result = metaAttributes.stream()
-				.sorted(Comparator.comparing(javax.persistence.metamodel.Attribute::getName)).collect(
+				.sorted(/*Comparator.comparing(javax.persistence.metamodel.Attribute::getName)*/attributeComparator).collect(
 			Collectors.toMap(
 				javax.persistence.metamodel.Attribute::getName,
 				a -> new Attribute(a, titleRegexes, a.getName().equals(idFieldName)), (v1,v2) -> v1, LinkedHashMap::new));
@@ -56,10 +62,10 @@ public class JpaMapper {
 		return getEntityMetaData(getEntityClass(entity));
 	}
 
-	public Class<?> getEntityClass(String entityName) {
-		var entityClass = entityClassMap.get(entityName);
+	public Class<?> getEntityClass(String entity) {
+		var entityClass = entityClassMap.get(entity);
 		if(entityClass == null)
-			throw new ValidationException("Unable to find entity class for: "+entityName);
+			throw new ValidationException("Unable to find entity class for: "+entity);
 		return entityClass;
 	}
 

@@ -3,6 +3,8 @@ spring.application.name: adminux
 spring.jpa.open-in-view: true
 #spring.jpa.defer-datasource-initialization: false
 
+spring.devtools.restart.enabled:  false
+
 #liquibase:
 #  change-log: classpath:/db/changelog/db.changelog-master.yaml
 
@@ -40,11 +42,8 @@ logging.level:
 com.net128:
   shared.web.main-package-pat: com.net128.lib.spring.jpa.csv
   lib.spring.jpa.csv:
-    attribute-orders:
-      city: city,population,country
+    attribute-order-overrides:
       person: firstName,lastName,address,city
-      car: brand
-      countrypopulation: country,population
     util:
       title-format-regex: >
         Perc$; %,

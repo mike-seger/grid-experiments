@@ -6,19 +6,19 @@ databaseChangeLog:
       changes:
         - loadData:
             relativeToChangelogFile: true
-            file: ../data/CAR.csv
+            file: ./data/CAR.csv
             separator: ','
             quotchar: '"'
             tableName: CAR
         - loadData:
             relativeToChangelogFile: true
-            file: ../data/CITY.csv.gz
+            file: ./data/CITY.csv.gz
             separator: '\t'
             quotchar:
             tableName: CITY
         - loadData:
             relativeToChangelogFile: true
-            file: ../data/COUNTRY_POPULATION.csv
+            file: ./data/COUNTRY_POPULATION.csv
             separator: ','
             quotchar: '"'
             tableName: COUNTRY_POPULATION

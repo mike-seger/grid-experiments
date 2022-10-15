@@ -60,19 +60,34 @@ public class JpaService {
     }
 
     private LinkedHashMap<String, Attribute> orderedAttributes(String entity) {
-        var attributeOrderMap = jpaCsvConfiguration.getAttributeOrders();
-        var attributeOrders = attributeOrderMap.get(entity.replace("_", "").toLowerCase());
-        if(attributeOrders==null) return jpaMapper.getAttributes(entity);
-        Comparator<Map.Entry<String, Attribute>> attributeComparator = (e1, e2) -> {
-            var pos1 = attributeOrders.indexOf(e1.getKey().toLowerCase());
-            var pos2 = attributeOrders.indexOf(e2.getKey().toLowerCase());
-            if(pos1==pos2) return e1.getKey().compareTo(e2.getKey());
+        var attributeOrderMap = jpaCsvConfiguration.getAttributeOrderOverrides();
+        var attributeOrderOverrides0= attributeOrderMap==null?Collections.<String> emptyList():
+            attributeOrderMap.get(entity.replace("_", "").toLowerCase());
+        if(attributeOrderOverrides0==null) attributeOrderOverrides0 = Collections.emptyList();
+        var attributeOrderOverrides = attributeOrderOverrides0.stream()
+            .map(String::toLowerCase).collect(Collectors.toList());
+        var attributeMap = jpaMapper.getAttributes(entity);
+        var attributeOrders =
+            attributeMap.values().stream().map(a -> a.getName().toLowerCase()).collect(Collectors.toList());
+
+        Comparator<Attribute> attributeOrderComparator = (a1, a2) -> {
+            var pos1 = attributeOrders.indexOf(a1.getName().toLowerCase());
+            var pos2 = attributeOrders.indexOf(a2.getName().toLowerCase());
             if(pos1<0) return 1;
             if(pos2<0) return -1;
             return Integer.compare(pos1, pos2);
         };
 
-        return jpaMapper.getAttributes(entity).entrySet().stream().sorted(attributeComparator)
+        Comparator<Map.Entry<String, Attribute>> attributeOverrideComparator = (e1, e2) -> {
+            var pos1 = attributeOrderOverrides.indexOf(e1.getKey().toLowerCase());
+            var pos2 = attributeOrderOverrides.indexOf(e2.getKey().toLowerCase());
+            if(pos1==pos2) return attributeOrderComparator.compare(e1.getValue(), e2.getValue());
+            if(pos1<0) return 1;
+            if(pos2<0) return -1;
+            return Integer.compare(pos1, pos2);
+        };
+
+        return attributeMap.entrySet().stream().sorted(attributeOverrideComparator)
             .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue,
                 (x, y) -> y, LinkedHashMap::new));
     }
