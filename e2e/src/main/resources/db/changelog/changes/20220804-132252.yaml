@@ -42,6 +42,16 @@ databaseChangeLog:
         - column:
             constraints:
               nullable: false
+            name: city
+            type: VARCHAR(255)
+        - column:
+            constraints:
+              nullable: false
+            name: population
+            type: BIGINT
+        - column:
+            constraints:
+              nullable: false
             name: iso_country
             type: VARCHAR(255)
         - column:
@@ -69,16 +79,6 @@ databaseChangeLog:
               nullable: false
             name: modified
             type: date
-        - column:
-            constraints:
-              nullable: false
-            name: name
-            type: VARCHAR(255)
-        - column:
-            constraints:
-              nullable: false
-            name: population
-            type: BIGINT
         tableName: city
 - changeSet:
     id: 1659619377113-3

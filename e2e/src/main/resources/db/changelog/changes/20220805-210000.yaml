@@ -12,9 +12,9 @@ databaseChangeLog:
             tableName: CAR
         - loadData:
             relativeToChangelogFile: true
-            file: ../data/CITY.csv
-            separator: ','
-            quotchar: '"'
+            file: ../data/CITY.csv.gz
+            separator: '\t'
+            quotchar:
             tableName: CITY
         - loadData:
             relativeToChangelogFile: true

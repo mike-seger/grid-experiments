@@ -9,13 +9,16 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class JpaService {
     private final JpaMapper jpaMapper;
+    private final JpaCsvConfiguration jpaCsvConfiguration;
 
-    public JpaService(JpaMapper jpaMapper) {
+    public JpaService(JpaMapper jpaMapper, JpaCsvConfiguration jpaCsvConfiguration) {
         this.jpaMapper = jpaMapper;
+        this.jpaCsvConfiguration = jpaCsvConfiguration;
     }
 
     public List<String> getEntities() {
@@ -39,8 +42,10 @@ public class JpaService {
         var configuration = new JpaService.Configuration();
         jpaMapper.getEntities().forEach(e -> {
             var idFieldName = jpaMapper.getIdFieldName(e);
+           // .get(e.toLowerCase());
             var entity = jpaMapper.getEntityClass(e);
-            var attributes = jpaMapper.getAttributes(e);
+            var attributes = orderedAttributes(e);
+
             configuration.addEntity(
                 entity.getName(), e,
                 "/"+e+".csv",
@@ -52,6 +57,24 @@ public class JpaService {
             );
         });
         return configuration;
+    }
+
+    private LinkedHashMap<String, Attribute> orderedAttributes(String entity) {
+        var attributeOrderMap = jpaCsvConfiguration.getAttributeOrders();
+        var attributeOrders = attributeOrderMap.get(entity.replace("_", "").toLowerCase());
+        if(attributeOrders==null) return jpaMapper.getAttributes(entity);
+        Comparator<Map.Entry<String, Attribute>> attributeComparator = (e1, e2) -> {
+            var pos1 = attributeOrders.indexOf(e1.getKey().toLowerCase());
+            var pos2 = attributeOrders.indexOf(e2.getKey().toLowerCase());
+            if(pos1==pos2) return e1.getKey().compareTo(e2.getKey());
+            if(pos1<0) return 1;
+            if(pos2<0) return -1;
+            return Integer.compare(pos1, pos2);
+        };
+
+        return jpaMapper.getAttributes(entity).entrySet().stream().sorted(attributeComparator)
+            .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue,
+                (x, y) -> y, LinkedHashMap::new));
     }
 
     @Data
@@ -74,4 +97,5 @@ public class JpaService {
             entities.put(id, new Entity(id, name, getUri, putUri, deleteUri, idField, sortable, new ArrayList<>(attributeMap.values())));
         }
     }
+
 }

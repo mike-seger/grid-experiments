@@ -23,6 +23,11 @@ function navigate(anchor) {
     return false
 }
 
+function resetMain() {
+    const main = document.getElementById("main")
+    main.innerHTML = '';
+}
+
 window.onload = (event) => {
     const sidenav = document.getElementById("sidenav")
     const anchors = Array.from(sidenav.querySelectorAll("a"))

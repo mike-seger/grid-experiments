@@ -39,16 +39,24 @@ logging.level:
 
 com.net128:
   shared.web.main-package-pat: com.net128.lib.spring.jpa.csv
-  lib.spring.jpa.csv.util:
-    title-format-regex: >
-      Perc$; %,
-      perSqKm$;/㎢,
-      SqKm; ㎢,
-      Change$; Δ,
-      Change %; Δ%,
-      popPer;pop. /,
-      popUrban;pop.urban,
-      population; population,
-      countryNameEn;country (EN),
-      modificationDate;mod.date,
-      medAge;age x̄
+  lib.spring.jpa.csv:
+    attribute-orders:
+      city: city,population,country
+      person: firstName,lastName,address,city
+      car: brand
+      countrypopulation: country,population
+    util:
+      title-format-regex: >
+        Perc$; %,
+        perSqKm$;/㎢,
+        SqKm; ㎢,
+        Change$; Δ,
+        Change %; Δ%,
+        popPer;pop. /,
+        popUrban;pop.urban,
+        population; population,
+        a population;population,
+        countryNameEn;country (EN),
+        modificationDate;mod.date,
+        medAge;age x̄
+

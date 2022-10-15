@@ -20,6 +20,7 @@
 
             const globalConst = {
                 dropdownMargin: 6,
+                numberFactor: 1.2,
                 hMargin: 10,
             }
 
@@ -45,7 +46,8 @@
                 }
                 const sortableMargin = column.sortable === true?globalConst.dropdownMargin:0
                 let w = Math.max(stringWidth(string), stringWidth(column.text)+sortableMargin)
-                if(column?.editable?.type === 'list') w += globalConst.dropdownMargin
+                if(column?.editable?.type === 'int') w *= globalConst.numberFactor;
+                else if(column?.editable?.type === 'list') w += globalConst.dropdownMargin
                 w += 2*globalConst.hMargin
                 return w
             }

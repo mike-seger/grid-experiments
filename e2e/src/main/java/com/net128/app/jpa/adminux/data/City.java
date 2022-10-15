@@ -19,7 +19,7 @@ public class City extends Identifiable {
 	private long geoId;
 
 	@Column(nullable = false)
-	private String name;
+	private String city;
 
 	@Column(nullable = false)
 	private String isoCountry;

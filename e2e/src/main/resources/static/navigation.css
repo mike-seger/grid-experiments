@@ -7,20 +7,25 @@ body {
     color: white;
 }
 
+h3 {
+    margin-block-start: 5px;
+    margin-block-end: 8px;
+}
+
 #sidenav {
     height: 100%;
-    width: var(--sidebar-width);
+    width: calc(var(--sidebar-width) - 8px);
     position: fixed;
     z-index: 1;
     top: 0;
-    left: 5px;
+    left: 0;
     background-color: #111;
     overflow-x: hidden;
-    padding-top: 10px;
+    padding: 5px 0 0 8px;
 }
 
 #sidenav a {
-    padding: 6px 8px 6px 16px;
+    padding: 6px 8px 6px 8px;
     text-decoration: none;
     font-size: 15px;
     color: #adadad;
@@ -57,6 +62,6 @@ body {
 }
 
 @media screen and (max-height: 450px) {
-    #sidenav {padding-top: 15px;}
+    #sidenav {padding-top: 5px;}
     #sidenav a {font-size: 18px;}
 }
