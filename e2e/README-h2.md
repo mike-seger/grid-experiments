@@ -1,0 +1,5 @@
+# H2 Query examples
+
+SELECT C.*,CC.name FROM CITY47K C,COUNTRY_CODE CC where C.COUNTRY = CC.ALPHA2
+
+call CSVWRITE ( '/tmp/out.csv', 'SELECT C.*,CC.name FROM CITY47K C,COUNTRY_CODE CC where C.COUNTRY = CC.ALPHA2' ) 

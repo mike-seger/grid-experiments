@@ -5,3 +5,6 @@ https://public.opendatasoft.com/explore/dataset/geonames-all-cities-with-a-popul
 https://www.kaggle.com/datasets/tanuprabhu/population-by-country-2020?resource=download
 https://datahub.io/core/world-cities#data
 https://people.sc.fsu.edu/~jburkardt/data/csv/csv.html
+
+### CSV Tools
+https://csvkit.readthedocs.io/en/latest/

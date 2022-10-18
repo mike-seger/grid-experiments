@@ -18,6 +18,18 @@ databaseChangeLog:
             tableName: CITY
         - loadData:
             relativeToChangelogFile: true
+            file: ./data/maxmind-worldcitiespop.csv.gz
+            separator: ','
+            quotchar:
+            tableName: city47k
+        - loadData:
+            relativeToChangelogFile: true
+            file: ./data/country-codes.csv
+            separator: ','
+            quotchar: '"'
+            tableName: country_code
+        - loadData:
+            relativeToChangelogFile: true
             file: ./data/COUNTRY_POPULATION.csv
             separator: ','
             quotchar: '"'
