@@ -26,10 +26,6 @@ databaseChangeLog:
             name: total_price
             type: DOUBLE
         tableName: car
-- changeSet:
-    id: 1659619377113-2
-    author: adminux
-    changes:
     - createTable:
         columns:
         - column:
@@ -124,10 +120,6 @@ databaseChangeLog:
             name: longitude
             type: DOUBLE
         tableName: city47k
-- changeSet:
-    id: 1659619377113-3
-    author: adminux
-    changes:
     - createTable:
         columns:
         - column:
@@ -234,10 +226,6 @@ databaseChangeLog:
             name: sub_region_code
             type: CHAR(3)
         tableName: country_code
-- changeSet:
-    id: 1659619377113-4
-    author: adminux
-    changes:
     - createTable:
         columns:
         - column:

@@ -8,3 +8,5 @@ https://people.sc.fsu.edu/~jburkardt/data/csv/csv.html
 
 ### CSV Tools
 https://csvkit.readthedocs.io/en/latest/
+
+csvsql --query "select * from C order by population desc, name" csvfile

@@ -9,13 +9,13 @@ databaseChangeLog:
             file: ./data/CAR.csv
             separator: ','
             quotchar: '"'
-            tableName: CAR
+            tableName: car
         - loadData:
             relativeToChangelogFile: true
             file: ./data/CITY.csv.gz
             separator: ','
             quotchar: '"'
-            tableName: CITY
+            tableName: city
         - loadData:
             relativeToChangelogFile: true
             file: ./data/maxmind-worldcitiespop.csv.gz
@@ -33,4 +33,4 @@ databaseChangeLog:
             file: ./data/COUNTRY_POPULATION.csv
             separator: ','
             quotchar: '"'
-            tableName: COUNTRY_POPULATION
+            tableName: country_population

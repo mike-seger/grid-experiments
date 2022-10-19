@@ -12,7 +12,7 @@ spring:
   datasource:
     url: jdbc:h2:mem:adminux
     username: sa
-    # password:
+    password: sa
     #driverClassName: org.h2.Driver
   h2:
     console.enabled: true
@@ -38,11 +38,11 @@ logging.level:
   root: info
   org.h2: trace
   com.zaxxer: info
-  liquibase: trace
+  #com.zaxxer.hikari:
+  #  HikariConfig: debug
+  #  hikari: debug
+  #liquibase: trace
   liquibase.statement: info
-  com.zaxxer.hikari:
-    HikariConfig: debug
-    hikari: debug
 
 com.net128:
   shared.web.main-package-pat: com.net128.lib.spring.jpa.csv

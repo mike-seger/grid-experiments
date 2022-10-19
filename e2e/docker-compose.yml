@@ -8,9 +8,34 @@ services:
       - POSTGRES_PASSWORD=postgres
     ports:
       - '15432:5432'
-    volumes: 
-      - db:/var/lib/postgresql/data
+    volumes:
+      - adminuxv1:/var/lib/postgresql/data
     container_name: adminux-pg
+    
+  adminux-mariadb:
+    image: mariadb
+    restart: always
+    command: mysqld --character-set-server=utf8 --collation-server=utf8_unicode_ci
+#
+#    image: mysql:5.7
+#    restart: always
+    environment:
+      MARIADB_DATABASE: 'db'
+      MARIADB_USER: 'mysql'
+      MARIADB_PASSWORD: 'mysql'
+      MARIADB_ROOT_PASSWORD: 'mysql'
+#    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_general_ci --skip-character-set-client-handshake
+    ports:
+      - '13306:3306'
+    expose:
+      - '3306'
+    volumes:
+      - adminuxv2:/var/lib/mysql
+      - ./src/main/resources/db/changelog/data/staging:/opt/
+    container_name: adminux-mysql
+
 volumes:
-  db:
+  adminuxv1:
+    driver: local
+  adminuxv2:
     driver: local
