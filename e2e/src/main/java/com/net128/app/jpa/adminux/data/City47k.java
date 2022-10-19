@@ -24,6 +24,9 @@ public class City47k extends Identifiable {
 	private String country;
 
 	@Column(nullable = false)
+	private String countryIso;
+
+	@Column(nullable = false)
 	private double latitude;
 
 	@Column(nullable = false)
