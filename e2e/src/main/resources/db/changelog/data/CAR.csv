@@ -1,3 +1,3 @@
-id,brand,total_price
--199,Ferrari,1234.0
--198,Honda,123.0
+brand,total_price
+Ferrari,1234.0
+Honda,123.0

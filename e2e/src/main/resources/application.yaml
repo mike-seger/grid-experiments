@@ -13,7 +13,7 @@ spring:
     url: jdbc:h2:mem:adminux
     username: sa
     # password:
-    driverClassName: org.h2.Driver
+    #driverClassName: org.h2.Driver
   h2:
     console.enabled: true
     settings:
@@ -29,15 +29,20 @@ spring:
 
 spring.liquibase:
   change-log: classpath:db/changelog/db.changelog-master.yaml
-  url: jdbc:h2:mem:adminux
-  user: sa
+  url: ${spring.datasource.url}
+  user: ${spring.datasource.username}
+  password: ${spring.datasource.password}
 #  password: sa
 
 logging.level:
   root: info
   org.h2: trace
   com.zaxxer: info
-  liquibase: info
+  liquibase: trace
+  liquibase.statement: info
+  com.zaxxer.hikari:
+    HikariConfig: debug
+    hikari: debug
 
 com.net128:
   shared.web.main-package-pat: com.net128.lib.spring.jpa.csv

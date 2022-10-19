@@ -18,3 +18,5 @@ HAVING COUNT(combo)>1
 )
 )
 order by l0
+
+drop table car, city, person, city47k,country_code,country_population,databasechangelog,databasechangeloglock
