@@ -7,6 +7,11 @@
 ./gradlew bootRun
 ```
 
+### Spring Boot application (Server) connecting to postgres (from docker-compose)
+```
+./gradlew bootRun  --args='--spring.profiles.active=pglocal'
+```
+
 ### Access Swagger-UI
 http://localhost:8080/swagger-ui/index.html
 
