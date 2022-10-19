@@ -13,8 +13,8 @@ databaseChangeLog:
         - loadData:
             relativeToChangelogFile: true
             file: ./data/CITY.csv.gz
-            separator: '\t'
-            quotchar:
+            separator: ','
+            quotchar: '"'
             tableName: CITY
         - loadData:
             relativeToChangelogFile: true
