@@ -32,16 +32,16 @@ public class CsvServiceTest {
     @ParameterizedTest
     @CsvSource(value = {
         "EMPLOYEE |true  |true  |" +
-            "department   name    salary ;" +
-            "Sales        Henry   1234.0",
+            "name    department   salary ;" +
+            "Henry   Sales        1234.0",
         "EMPLOYEE |true  |true  |"+
-            "department   name    salary ;"+
-            "Sales        Henry   1234.0 ;"+
-            "Engineering  Robert  5080.0 ;",
+            "name    department   salary ;"+
+            "Henry   Sales        1234.0 ;"+
+            "Robert  Engineering  5080.0 ;",
         "EMPLOYEE |true  |false  |"+
-            "department   name    salary ;"+
-            "Sales        Henry   1234.0 ;"+
-            "Engineering  Robert  5080.0 ;",
+            "name    department   salary ;"+
+            "Henry   Sales        1234.0 ;"+
+            "Robert  Engineering  5080.0 ;",
         "PET |true  |true  |"+
             "name   species  weight ;"+
             "Bobby  DOG      20.8",
