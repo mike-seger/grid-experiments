@@ -52,7 +52,7 @@ static def normalizedChangeSet(csString) {
 }
 
 task liquibaseCleanup {
-	shouldRunAfter diffChangeLog
+//	shouldRunAfter diffChangeLog
 	doLast {
 		println("---- ${dbChangeLogFile}: checking generated changeset")
 		def file = new File(dbChangeLogFile)
@@ -83,7 +83,7 @@ task liquibaseCleanup {
 	}
 }
 
-diffChangeLog.finalizedBy liquibaseCleanup
+//diffChangeLog.finalizedBy liquibaseCleanup
 
 task h2Shell(type: JavaExec) {
 	standardInput = System.in

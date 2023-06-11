@@ -6,31 +6,31 @@ databaseChangeLog:
       changes:
         - loadData:
             relativeToChangelogFile: true
-            file: ./data/CAR.csv
+            file: ../data/CAR.csv
             separator: ','
             quotchar: '"'
             tableName: car
         - loadData:
             relativeToChangelogFile: true
-            file: ./data/CITY.csv.gz
+            file: ../data/CITY.csv.gz
             separator: ','
             quotchar: '"'
             tableName: city
         - loadData:
             relativeToChangelogFile: true
-            file: ./data/maxmind-worldcitiespop.csv.gz
+            file: ../data/maxmind-worldcitiespop.csv.gz
             separator: ','
             quotchar:
             tableName: city47k
         - loadData:
             relativeToChangelogFile: true
-            file: ./data/country-codes.csv
+            file: ../data/country-codes.csv
             separator: ','
             quotchar: '"'
             tableName: country_code
         - loadData:
             relativeToChangelogFile: true
-            file: ./data/COUNTRY_POPULATION.csv
+            file: ../data/COUNTRY_POPULATION.csv
             separator: ','
             quotchar: '"'
             tableName: country_population
