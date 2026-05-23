@@ -16,7 +16,7 @@
     border: 1px solid #ccc;
     background-color: #e8ecf0;
     margin-left: 1px;
-    margin-bottom: -1px;
+    margin-bottom: 0;
     padding: 0;
     margin-right: -3em;
     box-shadow: none;
@@ -45,4 +45,76 @@
 .jpicker-content {
     background-image: none;
     border-radius: 0;
+}
+
+/* DARK THEME OVERRIDES */
+.jtoolbar-item,
+.jtoolbar .jpicker,
+.jpicker-header,
+.jpicker-content {
+    background-color: #1b2430;
+    color: #d7deea;
+}
+
+.jtoolbar-item i,
+.jtoolbar-item .material-icons,
+.jtoolbar-item .jtoolbar-label {
+    color: #a7b2c2;
+}
+
+.jtoolbar-item:hover,
+.jtoolbar-item:hover i,
+.jtoolbar-item:hover .material-icons,
+.jtoolbar-item:hover .jtoolbar-label {
+    background-color: #263243;
+    color: #eef3fb;
+}
+
+.jtoolbar-active,
+.jtoolbar-active .jtoolbar-item {
+    background-color: #2b3a4f;
+    color: #f0f5ff;
+}
+
+.jtoolbar-active .jtoolbar-item i,
+.jtoolbar-active .jtoolbar-item .material-icons,
+.jtoolbar-active .jtoolbar-item .jtoolbar-label {
+    color: #f0f5ff;
+}
+
+.jtoolbar-container {
+    border: 1px solid #2b3441;
+    background-color: #1b2430;
+}
+
+.jtoolbar .jtoolbar-divisor {
+    background-color: #2f3a49;
+    border: 2px solid #131821;
+}
+
+/* Ensure picker menu rows are readable in dark mode */
+.jtoolbar .jpicker-content,
+.jtoolbar .jpicker-content > .jpicker-item {
+    background-color: #1b2430 !important;
+    color: #d7deea !important;
+}
+
+.jtoolbar .jpicker-header,
+.jtoolbar .jpicker-header:hover,
+.jtoolbar .jpicker-header:focus,
+.jtoolbar .jpicker:focus .jpicker-header,
+.jtoolbar .jpicker-focus > .jpicker-header {
+    background-color: #2b3a4f !important;
+    color: #f0f5ff !important;
+    border: 1px solid #2b3441 !important;
+    box-shadow: none !important;
+}
+
+.jtoolbar .jpicker-focus > .jpicker-content > .jpicker-item:hover,
+.jtoolbar .jpicker-focus > .jpicker-content > .jpicker-item:focus,
+.jtoolbar .jpicker-focus > .jpicker-content > .jpicker-item:active,
+.jtoolbar .jpicker-content > .jpicker-item[aria-selected="true"],
+.jtoolbar .jpicker-content > .jpicker-item.selected {
+    background-color: #2b3a4f !important;
+    color: #f0f5ff !important;
 }

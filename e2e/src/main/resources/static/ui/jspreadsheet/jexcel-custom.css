@@ -193,3 +193,62 @@
 .jexcel_content_with_search_filter {
     max-height: calc(100vh - 81px);
 }
+
+/* DARK THEME OVERRIDES */
+html, body,
+.container,
+.content,
+.jexcel_container,
+.jexcel_content,
+.jexcel_overflow,
+.jexcel,
+.jexcel > tbody > tr > td {
+    background-color: #121821;
+    color: #d7deea;
+}
+
+.jexcel_tabs .jexcel_tab_link,
+.jexcel_toolbar,
+.jexcel_filter,
+.jexcel > tbody > tr > td:first-child,
+.jexcel > tfoot > tr > td,
+.jexcel > thead > tr > td {
+    background-color: #1b2430;
+    color: #e4ebf7;
+}
+
+.jexcel_tabs .jexcel_tab_link.selected,
+.jexcel > tbody > tr.selected > td:first-child,
+.jexcel > thead > tr > td.selected {
+    background-color: #2b3a4f;
+    color: #f0f5ff;
+}
+
+.jexcel .highlight {
+    background-color: rgba(120, 160, 220, 0.2);
+}
+
+.jexcel_filter,
+.jexcel_content,
+.jexcel,
+.jexcel > thead > tr:nth-child(2) > td {
+    border-color: #2b3441;
+}
+
+.jexcel > thead > tr > td,
+.jexcel > tbody > tr > td,
+.jexcel > tfoot > tr > td {
+    border-color: #3a4556;
+}
+
+.jexcel > thead > tr:first-child > td {
+    border-top: 1px solid #2f3a49 !important;
+}
+
+.jexcel_content {
+    border-top: 1px solid #2f3a49 !important;
+}
+
+.jexcel_content::-webkit-scrollbar-thumb {
+    background-color: #3b4657;
+}

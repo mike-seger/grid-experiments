@@ -30,6 +30,8 @@
 			padding: 0;
 			margin: 0;
 			border: 0;
+			background-color: #0f141c;
+			color: #d7deea;
 		}
 
 		html {
@@ -44,14 +46,14 @@
 		body::-webkit-scrollbar {
 			min-width: 10px;
 			min-height: 10px;
-			color: #ccc;
-			background-color: #ccc;
+			color: #2c3644;
+			background-color: #1b2430;
 		}
 
 		body::-webkit-scrollbar-thumb {
 			min-width: 10px;
 			min-height: 10px;
-			background-color: #aaa;
+			background-color: #3b4657;
 		}
 
 		body::-webkit-scrollbar-button { width: 0; }
@@ -61,11 +63,13 @@
 			height: calc(100vh - 30px);
 			flex-direction: column;
 			padding: 9px;
+			background-color: #0f141c;
 		}
 
 		.content {
 			flex: 1;
 			box-sizing: border-box;
+			background-color: #121821;
 		}
 
 		#toolbar {
@@ -902,8 +906,12 @@
 
 	function isStatic() {
 		const urlParams = new URLSearchParams(window.location.search);
-		const static = urlParams.get('static');
-		return static || location.port==8000 || location.port==8001 || location.host.includes(".github.io");
+		const staticParam = urlParams.get('static');
+		if (staticParam !== null) return staticParam !== 'false' && staticParam !== '0';
+		return location.pathname.includes('/static/ui/')
+			|| location.port==8000
+			|| location.port==8001
+			|| location.host.includes(".github.io");
 	}
 
 	function getConfigUri() {

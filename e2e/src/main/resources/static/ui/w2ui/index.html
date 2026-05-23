@@ -100,8 +100,12 @@
 
             function isStatic() {
                 const urlParams = new URLSearchParams(window.location.search)
-                const isStatic = urlParams.get('static')
-                return isStatic || location.port==8000 || location.port==8001 || location.host.includes(".github.io")
+                const staticParam = urlParams.get('static')
+                if (staticParam !== null) return staticParam !== 'false' && staticParam !== '0'
+                return location.pathname.includes('/static/ui/')
+                    || location.port==8000
+                    || location.port==8001
+                    || location.host.includes(".github.io")
             }
 
             function getConfigUri() {
@@ -342,7 +346,7 @@
                             footer: true,
                             lineNumbers: true
                         },
-                        style: 'font-size:16px; font-family: sans-serif; color:black;',
+                        style: 'font-size:16px; font-family: sans-serif; color:#d7deea; background-color:#121821;',
 
                         contextMenu: [
                             { id: 'copySelection', text: 'Copy selection', icon: 'w2ui-icon-check' },
@@ -572,11 +576,30 @@
         <style> 
             :root { 
                 --main-tb-height: 27px; 
+                --bg-main: #0f141c;
+                --bg-panel: #121821;
+                --bg-toolbar: #1b2430;
+                --bg-hover: #263243;
+                --bg-selection: #2b3a4f;
+                --bg-overlay: #1b2430;
+                --border: #2b3441;
+                --text-main: #d7deea;
+                --text-strong: #eef3fb;
+                --text-muted: #a7b2c2;
+                --changed-bg: #1f3a2d;
             }
 
             body * {
                 font-family: sans-serif;
                 font-size: 16px;
+            }
+
+            html,
+            body {
+                margin: 0;
+                padding: 0;
+                background-color: var(--bg-main);
+                color: var(--text-main);
             }
 
             @font-face {
@@ -591,8 +614,8 @@
 
             #toolbar * {
                 font-size: 16px;
-                color: black;
-                background-color: white;
+                color: var(--text-main);
+                background-color: var(--bg-toolbar);
             }
 
             .w2ui-toolbar {
@@ -604,18 +627,49 @@
                 border: none !important;
                 margin: 0 !important;
                 padding: 2px !important;
-                background-color: white;
+                background-color: var(--bg-toolbar);
             }
 
             #toolbar .w2ui-tb-button {
                 height: calc(var(--main-tb-height) - 6px) !important;
                 border: none !important;
                 padding-left: 3px;
+                background-color: var(--bg-toolbar) !important;
+            }
+
+            #toolbar .w2ui-tb-button .w2ui-tb-icon,
+            #toolbar .w2ui-tb-button .w2ui-tb-icon > span,
+            #toolbar .w2ui-tb-button .w2ui-tb-text,
+            #toolbar .w2ui-tb-button .w2ui-icon {
+                color: var(--text-main) !important;
+            }
+
+            #toolbar #tb_toolbar_item_entities .w2ui-tb-text {
+                background-color: var(--bg-selection) !important;
+                color: var(--text-strong) !important;
+                border: 1px solid var(--border) !important;
+            }
+
+            #toolbar #tb_toolbar_item_entities .w2ui-tb-down > span {
+                border-top-color: var(--text-strong) !important;
+            }
+
+            #toolbar .w2ui-tb-button.checked,
+            #toolbar .w2ui-tb-button.down,
+            #toolbar .w2ui-tb-button.checked *,
+            #toolbar .w2ui-tb-button.down * {
+                background-color: var(--bg-selection) !important;
+                color: var(--text-strong) !important;
+            }
+
+            #toolbar .w2ui-tb-button .w2ui-tb-down,
+            #toolbar .w2ui-tb-button .w2ui-tb-down > span {
+                color: var(--text-main) !important;
             }
 
             #toolbar .w2ui-tb-button:hover, #toolbar .w2ui-tb-button:hover * {
-                background-color: rgb(239, 239, 239) !important;
-                /* color: white; */
+                background-color: var(--bg-hover) !important;
+                color: var(--text-strong) !important;
             }
 
             #toolbar .w2ui-tb-break {
@@ -625,11 +679,12 @@
 
             #toolbar .w2ui-tb-text {
                 padding: 0 0 0 3px !important;
+                color: var(--text-main) !important;
             }
 
             #toolbar .w2ui-tb-line {
                 padding: 2px !important;
-                border: 1px solid rgb(206, 206, 206) !important;
+                border: 1px solid var(--border) !important;
                 min-height: var(--main-tb-height) !important;
                 height: calc(var(--main-tb-height) - 6px) !important;
             }
@@ -643,10 +698,11 @@
             }
 
             .w2ui-grid {
-                border: 0 1px 1px 1px solid #e1e1e1 !important;
+                border: 0 1px 1px 1px solid var(--border) !important;
                 border-radius: 0 !important;
                 overflow: hidden!important;
                 margin-top: -1px !important;
+                background-color: var(--bg-panel) !important;
             }
 
             .w2ui-grid .w2ui-grid-toolbar {
@@ -655,13 +711,27 @@
 
             .w2ui-search-all, 
             #tb_grid_toolbar_item_w2ui-search > * > *:not(.w2ui-action) {
-                background-color: white !important;
+                background-color: var(--bg-panel) !important;
+                color: var(--text-main) !important;
+                border-color: var(--border) !important;
             }
 
-            .w2ui-col-header/*,
-            .w2ui-col-number*/ {
+            .w2ui-col-header,
+            .w2ui-col-number {
                 font-weight: 600;
-                color: black !important;
+                color: var(--text-strong) !important;
+                background-color: var(--bg-toolbar) !important;
+            }
+
+            .w2ui-grid .w2ui-grid-body table .w2ui-head,
+            .w2ui-grid .w2ui-grid-body table .w2ui-col-number.w2ui-head,
+            .w2ui-grid .w2ui-grid-body table .w2ui-col-select.w2ui-head,
+            .w2ui-grid .w2ui-grid-body table .w2ui-col-expand.w2ui-head,
+            .w2ui-grid .w2ui-grid-body table .w2ui-col-order.w2ui-head {
+                background-image: none !important;
+                background-color: var(--bg-toolbar) !important;
+                color: var(--text-strong) !important;
+                border-color: var(--border) !important;
             }
 
             #tb_grid_toolbar_item_w2ui-reload {
@@ -670,7 +740,54 @@
 
             .w2ui-grid .w2ui-grid-body table .w2ui-col-selected,
             .w2ui-grid .w2ui-grid-body table .w2ui-row-selected {
-                background-color: rgb(206, 226, 255) !important;
+                background-color: var(--bg-selection) !important;
+            }
+
+            .w2ui-grid .w2ui-grid-body,
+            .w2ui-grid .w2ui-grid-body table,
+            .w2ui-grid .w2ui-grid-body table td,
+            .w2ui-grid .w2ui-grid-body table tr {
+                background-color: var(--bg-panel) !important;
+                color: var(--text-main) !important;
+                border-color: var(--border) !important;
+            }
+
+            .w2ui-grid .w2ui-grid-body,
+            .w2ui-grid .w2ui-grid-body .w2ui-grid-records,
+            .w2ui-grid .w2ui-grid-body .w2ui-grid-frecords {
+                scrollbar-color: #3b4657 #1b2430;
+                scrollbar-width: thin;
+            }
+
+            .w2ui-grid .w2ui-grid-body::-webkit-scrollbar,
+            .w2ui-grid .w2ui-grid-body .w2ui-grid-records::-webkit-scrollbar,
+            .w2ui-grid .w2ui-grid-body .w2ui-grid-frecords::-webkit-scrollbar {
+                width: 10px;
+                height: 10px;
+                background: #1b2430;
+            }
+
+            .w2ui-grid .w2ui-grid-body::-webkit-scrollbar-thumb,
+            .w2ui-grid .w2ui-grid-body .w2ui-grid-records::-webkit-scrollbar-thumb,
+            .w2ui-grid .w2ui-grid-body .w2ui-grid-frecords::-webkit-scrollbar-thumb {
+                background: #3b4657;
+                border-radius: 6px;
+                border: 1px solid #1b2430;
+            }
+
+            .w2ui-grid .w2ui-grid-body::-webkit-scrollbar-track,
+            .w2ui-grid .w2ui-grid-body .w2ui-grid-records::-webkit-scrollbar-track,
+            .w2ui-grid .w2ui-grid-body .w2ui-grid-frecords::-webkit-scrollbar-track {
+                background: #1b2430;
+            }
+
+            .w2ui-grid .w2ui-grid-toolbar,
+            .w2ui-grid .w2ui-grid-toolbar table,
+            .w2ui-grid .w2ui-grid-header,
+            .w2ui-grid .w2ui-grid-footer {
+                background-color: var(--bg-toolbar) !important;
+                color: var(--text-main) !important;
+                border-color: var(--border) !important;
             }
 
             .w2ui-grid .w2ui-grid-toolbar .w2ui-grid-searches {
@@ -708,7 +825,30 @@
             }
 
             .w2ui-menu .w2ui-menu-item:hover {
-                background-color: rgb(239, 239, 239);
+                background-color: var(--bg-hover);
+            }
+
+            #w2overlay-toolbar-drop .w2ui-menu .w2ui-menu-item.w2ui-selected,
+            #w2overlay-toolbar-drop .w2ui-menu .w2ui-menu-item:focus,
+            #w2overlay-toolbar-drop .w2ui-menu .w2ui-menu-item.w2ui-focused {
+                background-color: var(--bg-selection) !important;
+                color: var(--text-strong) !important;
+            }
+
+            #w2overlay-toolbar-drop .w2ui-menu .w2ui-menu-item.w2ui-selected .menu-text,
+            #w2overlay-toolbar-drop .w2ui-menu .w2ui-menu-item:focus .menu-text,
+            #w2overlay-toolbar-drop .w2ui-menu .w2ui-menu-item.w2ui-focused .menu-text,
+            #w2overlay-toolbar-drop .w2ui-menu .w2ui-menu-item:hover .menu-text {
+                background-color: transparent !important;
+                color: var(--text-strong) !important;
+            }
+
+            #w2overlay-toolbar-drop .w2ui-menu .w2ui-menu-item .menu-icon span,
+            #w2overlay-toolbar-drop .w2ui-menu .w2ui-menu-item .menu-extra,
+            #w2overlay-toolbar-drop .w2ui-menu .w2ui-menu-item .menu-extra span {
+                color: var(--text-main) !important;
+                background-color: transparent !important;
+                border-color: var(--border) !important;
             }
 
             .w2ui-overlay .w2ui-overlay-body {
@@ -725,7 +865,8 @@
             }
 
             .w2ui-overlay .w2ui-overlay-body.w2ui-white  {
-                background-color: white;
+                background-color: var(--bg-overlay);
+                color: var(--text-main);
                 border-radius: 0;
                 border: 0;
                 box-shadow: 
@@ -743,7 +884,17 @@
             }
 
             .w2ui-changed {
-                background-color: rgb(232, 249, 233) !important;
+                background-color: var(--changed-bg) !important;
+            }
+
+            .w2ui-overlay,
+            .w2ui-menu,
+            .w2ui-menu .w2ui-menu-item,
+            #w2overlay-context-menu,
+            #w2overlay-context-menu * {
+                background-color: var(--bg-overlay) !important;
+                color: var(--text-main) !important;
+                border-color: var(--border) !important;
             }
         </style>
     </head>

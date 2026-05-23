@@ -41,7 +41,7 @@
       "putUri": "?entity=CAR",
       "sortable": false
     },
-    "cities.csv ": {
+    "cities.csv": {
       "attributes": [
         {
           "columnName": "ID",
@@ -147,7 +147,7 @@
         }
       ],
       "deleteUri": "cities-140491.csv",
-      "getUri": "cities-140491.csv ",
+      "getUri": "cities-140491.csv",
       "id": "CITY",
       "idField": "Rank",
       "name": "CITY",

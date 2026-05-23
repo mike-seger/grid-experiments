@@ -5,6 +5,7 @@
 body { 
     font-family: "Lato", sans-serif; 
     color: white;
+    background-color: #0b0f14;
 }
 
 h3 {
@@ -50,6 +51,7 @@ h3 {
     left: var(--sidebar-width); /* Same as the width of the sidenav */
     height: 100%;
     width: calc(100% - var(--sidebar-width));
+    background-color: #0f141c;
 }
 
 #main > iframe {
